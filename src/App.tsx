@@ -1,16 +1,17 @@
-import { Typography, Container } from '@mui/material'
+import { Typography } from '@mui/material'
+import AppLayout from './layouts/AppLayout';
 
 function App() {
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Typography variant="h3" component="h1" gutterBottom align="center">
-        Consultorio Benedetta Bellezza
+    <AppLayout>
+      <Typography variant="h4" align="center" sx={{ mt: 4 }}>
+        Bienvenido a la Aplicación Web de Programación de Citas Médicas
       </Typography>
-      <Typography variant="h6" align="center">
-        Aplicación Web para Programación de Citas Médicas y Registro de Tratamientos
+      <Typography variant="body1" align="center" sx={{ mt: 2 }}>
+        Moderniza la gestión clínica del consultorio con IA y registro asistido por voz.
       </Typography>
-    </Container>
-  )
+    </AppLayout>
+  );
 }
 
 export default App
