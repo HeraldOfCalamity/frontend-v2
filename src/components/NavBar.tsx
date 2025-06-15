@@ -1,3 +1,4 @@
+import { Person } from "@mui/icons-material";
 import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material"
 
 interface NavBarProps{
@@ -11,9 +12,9 @@ const NavBar: React.FC<NavBarProps> = () => {
                 <Typography variant="h6" component={"div"} sx={{flexGrow: 1}}>
                     Consultorio Benedetta Bellezza
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, p: 2 }}>
-                    <Button variant="contained" sx={{ minWidth: 120 }}>
-                        Iniciar sesión
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end',  gap: 2, p: 2 }}>
+                    <Button size="small"  variant="contained">
+                        <Person/> Iniciar sesión
                     </Button>
                 </Box>
             </Toolbar>
