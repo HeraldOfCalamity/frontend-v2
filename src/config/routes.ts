@@ -1,9 +1,19 @@
-interface Route{
+import type { ComponentType } from 'react';
+import Home from '../pages/Home'
+
+interface AppRoute{
+    path: string;
+    element: ComponentType;
+}
+
+interface NavRoute{
 
 }
 
-const ROUTES: Route[] = [
-
+export const APP_ROUTES: AppRoute[] = [
+    {path: '/', element: Home}
 ]
 
-export default ROUTES;
+export const NAV_ROUTES: NavRoute[] = [
+
+]
