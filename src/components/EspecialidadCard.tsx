@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, CardMedia, Typography } from "@mui/material";
+import { Box, Card, CardContent, CardMedia, Skeleton, Typography } from "@mui/material";
 
 interface EspecialidadCardProps{
     name: string;
@@ -11,10 +11,11 @@ const EspecialidadCard: React.FC<EspecialidadCardProps> = ({description, name, i
         <Box key={name} p={2}>
             <Card elevation={7} sx={{height: 350}}>
                 <CardMedia
-                    sx={{height: 140}}
+                    sx={{ height: 140, display: image ? "block" : "none" }}
                     image={image}
                     title={`Imagen ${name}`}
-                    />
+                />
+                {!image && <Skeleton variant="rectangular" height={140} />}
                 <CardContent>
                     <Typography variant="h6" align="center" fontWeight={600}>
                     {name}
