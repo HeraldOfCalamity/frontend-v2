@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { useState } from "react";
 import Modal from "../components/Modal";
+import LoginModal from "../components/LoginModal";
 
 interface AppLayoutProps{
     children: React.ReactNode;
@@ -27,19 +28,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
                 {children}
             </Container>
             <Footer />
-            <Modal 
-                open={openLoginModal} 
-                onClose={handleCloseLoginModalClick}
-                title="My Modal"
-                text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Officia repellat, laborum a possimus qui sunt sequi modi optio aspernatur, eius minus iusto reiciendis fuga, magnam illum ipsam laboriosam ab! Sit.
-            Porro obcaecati ex incidunt dolorum voluptates ipsam repellendus quasi asperiores. Repellat veritatis, totam aspernatur quia autem sequi eveniet non sint quam magni. Delectus eius, tempora aliquam totam itaque maxime deleniti.
-            Nesciunt, eligendi? Id natus ad ratione sapiente, magni placeat dolores rerum ullam quas quam facilis ipsum, nihil repellendus eos ex quo! Amet quia ut repellendus fugit veniam voluptatum cum officiis?"
-                actions={
-                    <Box>
-                        <Button size="large" variant="text" onClick={handleCloseLoginModalClick}>Cerrar</Button>
-                    </Box>
-                }
-            />
+            <LoginModal openLoginModal={openLoginModal} handleLoginModalClose={handleCloseLoginModalClick} handleLoginSuccess={() => {}}/>
         </Box>
     );
 };

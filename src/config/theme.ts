@@ -26,6 +26,41 @@ export const lightTheme = createTheme({
   shape: {
     borderRadius: 14,
   },
+  components: {
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.1rem',       // Cambia el tamaño global del input
+        },
+        input: {
+          fontSize: '1.1rem',
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.05rem',     // Tamaño del label (placeholder arriba)
+        },
+      },
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          fontSize: '1rem',
+        },
+      },
+    },
+    // Opcional: el botón
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontSize: "1.1rem",
+          fontWeight: 700,
+        },
+      },
+    }
+  }
 });
 
 export const darkTheme = createTheme({
@@ -49,4 +84,39 @@ export const darkTheme = createTheme({
   shape: {
     borderRadius: 14,
   },
+  components: {
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.1rem',       // Cambia el tamaño global del input
+        },
+        input: {
+          fontSize: '1.1rem',
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          fontSize: '1.05rem',     // Tamaño del label (placeholder arriba)
+        },
+      },
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          fontSize: '1rem',
+        },
+      },
+    },
+    // Opcional: el botón
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontSize: "1.1rem",
+          fontWeight: 700,
+        },
+      },
+    }
+  }
 });
