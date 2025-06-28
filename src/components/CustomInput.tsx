@@ -14,9 +14,10 @@ interface CustomInputProps{
     sx?: SxProps<Theme> | undefined;
     fullWidth?: boolean;
     required?: boolean;
+    disabled?: boolean;
 }
 
-const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, placeholder,handleChange,label,sx, startIcon, endIcon,fullWidth}) => {
+const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, placeholder,handleChange,label,sx, startIcon, endIcon,fullWidth, disabled}) => {
     
     return (
         <FormControl variant="standard">
@@ -40,6 +41,7 @@ const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, plac
                         {endIcon}
                     </InputAdornment>
                 }
+                disabled={disabled}
             />
         </FormControl>
     )

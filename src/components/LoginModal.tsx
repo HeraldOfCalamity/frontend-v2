@@ -1,14 +1,14 @@
-import { Box, Button, IconButton, Typography } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, IconButton, Typography } from "@mui/material";
 import Modal from "./Modal"
-import { CreateRounded, Email, Password, Person4, Person4Outlined, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Email, Password, Person4, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
 import CustomInput from "./CustomInput";
-import { loginUser } from "../services/authService";
+import { loginApi } from "../api/authService";
 
 interface LoginModalProps{
     openLoginModal: boolean;
     handleLoginModalClose: () => void;
-    handleLoginSuccess: () => void;
+    handleLoginSuccess: (token: string) => void;
 }
 
 interface Credentials{
@@ -16,16 +16,31 @@ interface Credentials{
     password: string;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLoginModal}) => {
+const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLoginModal, handleLoginSuccess}) => {
     const [showPass, setShowPass] = useState(false);
     const [credentials, setCredentials] = useState<Credentials>({
         email: '',
         password: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async () => {
-        const response = await loginUser(credentials.email, credentials.password);
-        alert(response);
+        setError('');
+        setLoading(true);
+        try{
+            const response = await loginApi(credentials.email, credentials.password);
+            handleLoginSuccess(response.access_token);
+            setCredentials({email: '', password: ''});
+        }catch(err: any){
+            setError(
+                err?.response?.data.detail ||
+                err?.message ||
+                "Ocurrio un error en el inicio de sesion."
+            );
+        }finally{
+            setLoading(false);
+        }
     }
 
     return(
@@ -50,6 +65,7 @@ const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLogin
                             placeholder="Correo"
                             startIcon={<Email color="primary" />}
                             required
+                            disabled={loading}
                         />
                         <CustomInput
                             id="password-input"
@@ -61,7 +77,14 @@ const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLogin
                             endIcon={<IconButton onClick={() => setShowPass(v => !v)} edge='end' size="small">
                                 {showPass ? <VisibilityOff /> : <Visibility />}
                             </IconButton>}
+                            required
+                            disabled={loading}
                         />
+                        {error && (
+                            <Alert severity='error' sx={{mt: 1}}>
+                                {error}
+                            </Alert>
+                        )}
                     </Box>
                 </Box>
             }
@@ -72,9 +95,12 @@ const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLogin
                     fullWidth
                     size="large"
                     sx={{borderRadius: 2, fontWeight:700, fontSize:'1.1rem',pt:1.2}}
-                    disabled={!credentials.email || !credentials.password}
+                    disabled={!credentials.email || !credentials.password || loading}
                     onClick={handleSubmit}
-                >Ingresar</Button>
+                    endIcon={loading ? <CircularProgress size={24} color="inherit" /> : null}
+                >
+                    {loading ? "Ingresando..." : "Ingresar"}
+                </Button>
             }
         />
     )

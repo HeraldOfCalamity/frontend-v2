@@ -1,9 +1,9 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
-import { APP_ROUTES } from './config/routes'
+import { APP_ROUTES } from './config/routes.config'
 import { ThemeProvider, useMediaQuery } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { darkTheme, lightTheme } from './config/theme';
+import { darkTheme, lightTheme } from './config/theme.config';
 
 
 

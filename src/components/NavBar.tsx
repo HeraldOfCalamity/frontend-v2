@@ -1,22 +1,52 @@
-import { Person } from "@mui/icons-material";
-import { AppBar, Box, Button, Toolbar, Typography } from "@mui/material"
+import { AppBar, Button, Toolbar, Typography } from "@mui/material"
+import { useAuth } from "../context/AuthContext";
 
 interface NavBarProps{
-    handleLoginClick: null | (() => void);
+    handleOpenLoginModal: () => void;
 }
 
-const NavBar: React.FC<NavBarProps> = ({handleLoginClick}) => {
+const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
+    const {user, isAuthenticated, logout} = useAuth();
+    
     return(
-        <AppBar color="secondary" position="static" elevation={4}>
-            <Toolbar>
+        <AppBar color="transparent" position="static" elevation={4}>
+            <Toolbar sx={{justifyContent: 'space-between'}}>
                 <Typography variant="h6" component={"div"} sx={{flexGrow: 1}}>
                     Consultorio Benedetta Bellezza
                 </Typography>
-                {handleLoginClick ? <Box sx={{ display: 'flex', justifyContent: 'flex-end',  gap: 2, p: 2 }}>
-                    <Button size="small"  variant="contained" onClick={handleLoginClick}>
-                        <Person/> Iniciar sesión
+                {isAuthenticated ? (
+                    <>
+                        <Typography
+                            variant="subtitle1"
+                            component='span'
+                            color="textPrimary"
+                            sx={{mr:2, fontWeight: 600}}
+                        >
+                            {user?.name || user?.email || user?.user_id}
+                        </Typography>
+                        <Button
+                            color="primary"
+                            variant="outlined"
+                            onClick={logout}
+                            sx={{ml: 1, fontWeight: 700, borderRadius: 10}}
+                        >
+                            Cerrar Sesion
+                        </Button>
+                        
+                    </>
+                ) : (
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={handleOpenLoginModal}
+                        sx={{ fontWeight: 700, borderRadius: 10, px: 3 }}
+                        >
+                        INICIAR SESIÓN
                     </Button>
-                </Box>:null}
+                    // <Button size="small" variant="contained" onClick={() => handleOpenLoginModal()}>
+                    //     <Person/> Iniciar sesión
+                    // </Button>
+                )}
             </Toolbar>
         </AppBar>
     )

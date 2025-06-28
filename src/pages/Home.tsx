@@ -1,11 +1,17 @@
 import { Box, Typography, Grid, Link } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
 import Carousel from '../components/Carousel'
+import { useEffect } from 'react';
+// import type { Parameter } from '../api/parameterService';
 
 // Simulación de mensaje de BD
 const ubicacionMensaje = "Estamos en Av. América #459, entre Av. Santa Cruz y Pantaleón Dalence. ¡Te esperamos!";
 
 export default function Home() {
+  // const [parameters, setParameters] = useState<Parameter[]>([]);
+  useEffect(() => {
+
+  })
   return (
     <>
       <Box>

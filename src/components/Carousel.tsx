@@ -2,7 +2,7 @@ import Slider from "react-slick";
 import { Typography, Box, IconButton, Snackbar } from "@mui/material";
 import { ArrowCircleLeft, ArrowCircleRightRounded } from "@mui/icons-material";
 import { useEffect, useState } from "react";
-import { getEspecialidades, type Especialidad } from "../services/especialidadService";
+import { getEspecialidades, type Especialidad } from "../api/especialidadService";
 import EspecialidadSkeleton from "./Skeletons/EspecialidadSkeleton";
 import EspecialidadCard from "./EspecialidadCard";
 
