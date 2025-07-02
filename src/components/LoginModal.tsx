@@ -1,6 +1,6 @@
 import { Alert, Box, Button, CircularProgress, IconButton, Typography } from "@mui/material";
 import Modal from "./Modal"
-import { Email, Password, Person4, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Email, Key, Person4, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
 import CustomInput from "./CustomInput";
 import { loginApi } from "../api/authService";
@@ -73,7 +73,7 @@ const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLogin
                             value={credentials.password}
                             handleChange={e => setCredentials({...credentials, password: e.target.value})}
                             placeholder="Contraseña"
-                            startIcon={<Password color="primary"/>}
+                            startIcon={<Key color="primary" />}
                             endIcon={<IconButton onClick={() => setShowPass(v => !v)} edge='end' size="small">
                                 {showPass ? <VisibilityOff /> : <Visibility />}
                             </IconButton>}

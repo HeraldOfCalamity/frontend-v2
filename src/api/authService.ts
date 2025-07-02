@@ -1,4 +1,4 @@
-import { BENEDETTA_API } from "../config/benedetta.api.config";
+import BENEDETTA_API from "../config/benedetta.api.config";
 
 
 const LOGIN_ROUTE = '/auth/login';

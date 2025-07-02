@@ -1,6 +1,5 @@
 import type { Theme } from "@emotion/react";
 import { FormControl, Input, InputAdornment, InputLabel, type SxProps } from "@mui/material"
-import { useState } from "react";
 
 interface CustomInputProps{
     value: unknown;
@@ -23,7 +22,19 @@ const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, plac
         <FormControl variant="standard">
             {label && <InputLabel htmlFor={id} >{label}</InputLabel>}
             <Input
-                sx={sx}
+                sx={theme => ({
+                    ...(typeof sx === "function"
+                        ? sx(theme)
+                        : Array.isArray(sx)
+                            ? Object.assign({}, ...sx)
+                            : (sx || {})),
+                    '& input:-webkit-autofill': {
+                        WebkitBoxShadow: `0 0 0 1000px ${theme.palette.primary} inset`,
+                        WebkitTextFillColor: theme.palette.text.primary,
+                        caretColor: theme.palette.text.primary,
+                        transition: 'background-color 5000s ease-in-out 0s',
+                    }
+                })}
                 id={id}
                 value={value}
                 fullWidth={fullWidth}
