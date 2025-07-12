@@ -74,9 +74,15 @@ export default function RolesPage(){
             field: 'permissions',
             headerName: 'Permisos',
             align: 'center',
-            render: (permisos: Permission[]) =>{ 
+            render: (p_idS: string[]) =>{ 
                 return <Stack direction='row' spacing={1}  justifyContent='center' flexWrap='wrap' gap={0.5}>
-                    {permisos.map(p => <Chip key={p.id} label={p.name}  size="small"  />)}
+                    {p_idS.map(p => {
+                        const permissionObject = permisos.find(pO => pO.id === p);
+                        return (
+                            <Chip key={permissionObject?.id} label={permissionObject?.name}  size="small"  />
+
+                        )
+                    })}
                 </Stack>}
         }
     ]

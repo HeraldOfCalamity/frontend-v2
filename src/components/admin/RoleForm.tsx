@@ -59,25 +59,47 @@ export default function RoleForm({
                             render={({ field }) => (
                                 <Box>
                                     <Typography variant="subtitle2" mb={1}>Permisos</Typography>
-                                    <Stack spacing={1}>
-                                        {permisos.map((permiso) => (
-                                            <FormControlLabel
-                                                key={permiso.id}
-                                                control={
-                                                    <Checkbox
-                                                        checked={field.value?.includes(permiso.id)}
-                                                        onChange={(_, checked) => {
-                                                            const newValue = checked
-                                                                ? [...field.value ?? [], permiso.id]
-                                                                : field.value?.filter((id) => id !== permiso.id);
-                                                            field.onChange(newValue);
-                                                        }}
-                                                    />
-                                                }
-                                                label={permiso.name}
-                                            />
-                                        ))}
-                                    </Stack>
+                                    <Box
+                                        sx={{
+                                            maxHeight: 200, // altura máxima visible
+                                            overflowY: 'auto',
+                                            p: 1,
+                                            bgcolor: 'background.paper',
+                                            // Estilos personalizados para la barra de scroll
+                                            '::-webkit-scrollbar': {
+                                                width: 8,
+                                                backgroundColor: '#f3e0e8',
+                                                borderRadius: 8,
+                                            },
+                                            '::-webkit-scrollbar-thumb': {
+                                                backgroundColor: '#e573a7',
+                                                borderRadius: 8,
+                                            },
+                                            '::-webkit-scrollbar-thumb:hover': {
+                                                backgroundColor: '#d81b60',
+                                            },
+                                        }}
+                                    >
+                                        <Stack spacing={1}>
+                                            {permisos.map((permiso) => (
+                                                <FormControlLabel
+                                                    key={permiso.id}
+                                                    control={
+                                                        <Checkbox
+                                                            checked={field.value?.includes(permiso.id)}
+                                                            onChange={(_, checked) => {
+                                                                const newValue = checked
+                                                                    ? [...field.value ?? [], permiso.id]
+                                                                    : field.value?.filter((id) => id !== permiso.id);
+                                                                field.onChange(newValue);
+                                                            }}
+                                                        />
+                                                    }
+                                                    label={permiso.name}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    </Box>
                                 </Box>
                             )}
                         />

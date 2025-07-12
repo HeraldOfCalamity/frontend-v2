@@ -1,6 +1,8 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { getRoles, type Role } from "../../api/roleService";
+import Swal from "sweetalert2";
 
 interface UsuarioFormProps{
     open: boolean;
@@ -10,11 +12,6 @@ interface UsuarioFormProps{
     loading?: boolean;
 }
 
-const roles = [
-    { value: "admin", label: "Administrador" },
-    { value: "paciente", label: "Paciente" },
-    { value: "especialista", label: "Especialista" },
-]
 
 export default function ({
     onClose,
@@ -27,8 +24,19 @@ export default function ({
         defaultValues: initialData || {name: '', email:'', role: 'paciente'},
     })
 
+    const [roles, setRoles] = useState<Role[]>([]);
+
+    const obtenerRoles = async () => {
+        try {
+            const roles = await getRoles();
+            setRoles(roles);
+        } catch (err: any) {    
+            Swal.fire("Error", "Ocurrio un error al obtener los usuarios", 'error');
+        }
+    }
 
     useEffect(() => {
+        obtenerRoles();
         reset(initialData || {name: '', email: '', role: 'paciente'});
     }, [initialData, reset, open])
 
@@ -69,7 +77,7 @@ export default function ({
                             disabled={loading}
                             >
                             {roles.map(r => (
-                                <MenuItem value={r.value} key={r.value}>{r.label}</MenuItem>
+                                <MenuItem value={r.id} key={r.id}>{r.name}</MenuItem>
                             ))}
                             </Select>
                         )}
