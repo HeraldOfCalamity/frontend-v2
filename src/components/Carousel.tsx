@@ -103,8 +103,8 @@ export default function EspecialidadesCarousel() {
             >
             {!isloading ? especialidades.map((esp) => (
               <EspecialidadCard
-                description={esp.description}
-                name={esp.name}
+                description={esp.descripcion}
+                name={esp.nombre}
                 image={esp.image}
                 />
             )) : [1,2,3,4].map((n) => (

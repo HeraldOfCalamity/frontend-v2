@@ -22,6 +22,7 @@ export const ADMIN_OPTIONS: NavBarConfig = [
         options: [
             {type: 'button', text: 'Especialistas', path:'/admin/especialistas'},
             {type: 'button', text: 'Pacientes', path:'/admin/pacientes'},
+            {type: 'button', text: 'Usuarios', path:'/admin/usuarios'},
         ]
     },
     {

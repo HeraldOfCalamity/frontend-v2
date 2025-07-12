@@ -4,10 +4,13 @@ import { ThemeProvider, useMediaQuery } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { darkTheme, lightTheme } from './config/theme.config';
 import Home from './pages/Home';
-import ProtectedRoute from './components/ProtectedRoute';
 import PerfilPaciente from './pages/PerfilPaciente';
 import PerfilEspecialista from './pages/PerfilEspecialista';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import EspecialidadesPage from './pages/admin/EspecialidadesPage';
+import UsuariosPage from './pages/admin/UsuariosPage';
+import RolesPage from './pages/admin/RolesPage';
 
 
 
@@ -38,6 +41,9 @@ function App() {
 
             <Route element={<ProtectedRoute roles={['admin']} />}>
               <Route path='/admin' element={<AdminDashboard />} />
+              <Route path='/admin/especialidades' element={<EspecialidadesPage />} />
+              <Route path='/admin/usuarios' element={<UsuariosPage />} />
+              <Route path='/admin/roles' element={<RolesPage />} />
             </Route>
           </Routes>
         </AppLayout>

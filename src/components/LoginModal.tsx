@@ -1,8 +1,8 @@
 import { Alert, Box, Button, CircularProgress, IconButton, Typography } from "@mui/material";
-import Modal from "./Modal"
+import Modal from "./common/Modal"
 import { Email, Key, Person4, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
-import CustomInput from "./CustomInput";
+import CustomInput from "./common/CustomInput";
 import { loginApi } from "../api/authService";
 
 interface LoginModalProps{
@@ -93,6 +93,7 @@ const LoginModal: React.FC<LoginModalProps> = ({handleLoginModalClose, openLogin
                     variant="contained"
                     color="primary"
                     fullWidth
+                    type="submit"
                     size="large"
                     sx={{borderRadius: 2, fontWeight:700, fontSize:'1.1rem',pt:1.2}}
                     disabled={!credentials.email || !credentials.password || loading}

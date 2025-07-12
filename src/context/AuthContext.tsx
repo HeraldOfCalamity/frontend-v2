@@ -36,6 +36,7 @@ const getUserFromToken = (token: string): AuthUser | null => {
     }
 };
 
+
 const TOKEN_KEY = 'bb_token';
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) => {

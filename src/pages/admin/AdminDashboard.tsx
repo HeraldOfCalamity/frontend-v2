@@ -1,7 +1,7 @@
 import { AssignmentInd, Category, LocalHospital, PeopleAlt } from "@mui/icons-material";
 import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material"
 import Grid from "@mui/material/Grid";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 interface AdminDashboardProps{
 
@@ -38,44 +38,44 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             </Grid>
              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
                 <Button
-                variant="contained"
-                color="primary"
-                sx={{ minWidth: 180 }}
-                href="/admin/usuarios"
+                    variant="contained"
+                    color="secondary"
+                    sx={{ minWidth: 180 }}
+                    href="/admin/especialistas"
                 >
-                Gestión de Usuarios
+                    Gestión de Especialistas
                 </Button>
                 <Button
-                variant="contained"
-                color="secondary"
-                sx={{ minWidth: 180 }}
-                href="/admin/especialistas"
+                    variant="contained"
+                    color="primary"
+                    sx={{ minWidth: 180 }}
+                    href="/admin/pacientes"
                 >
-                Gestión de Especialistas
+                    Gestión de Pacientes
                 </Button>
                 <Button
-                variant="contained"
-                color="primary"
-                sx={{ minWidth: 180 }}
-                href="/admin/pacientes"
+                    variant="contained"
+                    color="secondary"
+                    sx={{ minWidth: 180 }}
+                    href="/admin/especialidades"
                 >
-                Gestión de Pacientes
+                    Gestión de Especialidades
                 </Button>
                 <Button
-                variant="contained"
-                color="secondary"
-                sx={{ minWidth: 180 }}
-                href="/admin/especialidades"
+                    variant="contained"
+                    color="primary"
+                    sx={{ minWidth: 180 }}
+                    href="/admin/pacientes"
                 >
-                Gestión de Especialidades
+                    Gestión de Roles y Permisos
                 </Button>
                 <Button
-                variant="outlined"
-                color="primary"
-                sx={{ minWidth: 180 }}
-                href="/admin/parametros"
+                    variant="outlined"
+                    color="primary"
+                    sx={{ minWidth: 180 }}
+                    href="/admin/parametros"
                 >
-                Parámetros del Consultorio
+                    Parámetros del Consultorio
                 </Button>
             </Stack>
         </Box>

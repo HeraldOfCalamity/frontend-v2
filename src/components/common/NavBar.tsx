@@ -1,8 +1,8 @@
 import { AppBar, Box, Button, Menu, MenuItem, Stack, Toolbar, Typography } from "@mui/material"
-import { useAuth } from "../context/AuthContext";
-import { ADMIN_OPTIONS, ESPECIALIST_OPTIONS, PATIENT_OPTIONS, type NavBarButton, type NavBarConfig, type NavBarMenu } from "../config/navbar.config";
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { ADMIN_OPTIONS, ESPECIALIST_OPTIONS, PATIENT_OPTIONS, type NavBarButton, type NavBarConfig, type NavBarMenu } from "../../config/navbar.config";
 
 interface NavBarProps{
     handleOpenLoginModal: () => void;

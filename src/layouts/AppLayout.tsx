@@ -1,10 +1,10 @@
 import { Box, Container } from "@mui/material";
-import NavBar from "../components/NavBar";
-import Footer from "../components/Footer";
+import Footer from "../components/common/Footer";
 import { useEffect, useState } from "react";
 import LoginModal from "../components/LoginModal";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import NavBar from "../components/common/NavBar";
 
 
 interface AppLayoutProps{
@@ -16,6 +16,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
 
     const {login, user, isAuthenticated} = useAuth();
     const navigate = useNavigate();
+    const location  = useLocation();
 
     const handleOpenLoginModalClick = () => {
         setOpenLoginModal(true);
@@ -31,16 +32,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
     }
 
     useEffect(() => {
-        console.log('iuthenticated', isAuthenticated)
-        console.log('user',user)
-        console.log('navigate',navigate)
         if(isAuthenticated && user){     
-            if(user?.role === 'admin') navigate('/admin', {replace: true});
-            else if(user?.role === 'pacient') navigate('/perfil/paciente', {replace: true});
-            else if(user?.role === 'especialist') navigate('/perfil/especialista', {replace: true});
+            if(user?.role === 'admin' && location.pathname === '/') navigate('/admin', {replace: true});
+            else if(user?.role === 'pacient' && location.pathname === '/') navigate('/perfil/paciente', {replace: true});
+            else if(user?.role === 'especialist' && location.pathname === '/') navigate('/perfil/especialista', {replace: true});
             
-        } else navigate('/');
-    }, [isAuthenticated, user, navigate])
+        } else if(!isAuthenticated && location.pathname !== '/'){
+            navigate('/');
+        }
+    }, [isAuthenticated, user, navigate, location.pathname]);
 
     return(
         <Box sx={{

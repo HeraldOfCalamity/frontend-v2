@@ -1,10 +1,10 @@
 import BENEDETTA_API from "../config/benedetta.api.config";
-const ESPECIALIDAD_ROUTE = '/especialidades';
+const ESPECIALIDAD_ROUTE = 'especialidades/';
 
 export interface Especialidad{
     id: string;
-    name: string;
-    description: string;
+    nombre: string;
+    descripcion: string;
     image?: string;
 }
 
@@ -43,7 +43,34 @@ export async function createEspecialidad(data: {nombre: string, descripcion:stri
             err?.message ||
             "Ocurrio un error al crear la especialidad."
         )
-        throw new Error('error al obtener especialidades')
+        throw new Error('error al crear especialidad')
     }
 }
-    
+
+export async function updateEspecialidad(id: string, data: {nombre: string; descripcion: string}){
+    try{
+        const res = await BENEDETTA_API.put(`${ESPECIALIDAD_ROUTE}${id}`, data);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.data.detail ||
+            err?.message ||
+            "Ocurrio un error al actualizar la especialidad."
+        )
+        throw new Error('error al actualizar especialidades')
+    }
+}
+
+export async function deleteEspecialidad(id: string){
+    try{
+        const res = await BENEDETTA_API.delete(`${ESPECIALIDAD_ROUTE}${id}`)
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.data.detail ||
+            err?.message ||
+            "Ocurrio un error al eliminar la especialidad."
+        )
+        throw new Error('error al eliminar especialidades')
+    }
+}

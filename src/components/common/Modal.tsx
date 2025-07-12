@@ -1,4 +1,4 @@
-import { Close, CloseFullscreen, CloseOutlined } from "@mui/icons-material";
+import { Close } from "@mui/icons-material";
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton } from "@mui/material";
 
 interface ModalProps{

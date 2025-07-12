@@ -1,9 +1,10 @@
 import type { Theme } from "@emotion/react";
-import { FormControl, Input, InputAdornment, InputLabel, type SxProps } from "@mui/material"
+import { FormControl, Input, InputAdornment, InputLabel, type FormControlOwnProps, type SxProps } from "@mui/material"
+import type React from "react";
 
-interface CustomInputProps{
-    value: unknown;
-    handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+interface CustomInputProps extends FormControlOwnProps{
+    value?: unknown;
+    handleChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     id: string;
     type: string;
     placeholder?: string;
@@ -14,12 +15,44 @@ interface CustomInputProps{
     fullWidth?: boolean;
     required?: boolean;
     disabled?: boolean;
+    registerProps?: any;
+    error?: boolean;
+    helperText?: React.ReactNode;
 }
 
-const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, placeholder,handleChange,label,sx, startIcon, endIcon,fullWidth, disabled}) => {
+const CustomInput: React.FC<CustomInputProps> = ({
+    value, 
+    id, 
+    type,
+    required, 
+    placeholder,
+    handleChange,
+    label,
+    sx, 
+    startIcon, 
+    endIcon,
+    fullWidth, 
+    disabled,
+    registerProps,
+    error,
+    helperText,
+    variant
+}) => {
+
+    const inputProps = registerProps
+        ? {...registerProps}
+        : {
+            value,
+            onChange: handleChange,
+        };
     
     return (
-        <FormControl variant="standard">
+        <FormControl 
+            variant={variant}
+            fullWidth={fullWidth}
+            error={error}
+        >
+            
             {label && <InputLabel htmlFor={id} >{label}</InputLabel>}
             <Input
                 sx={theme => ({
@@ -37,7 +70,6 @@ const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, plac
                 })}
                 id={id}
                 value={value}
-                fullWidth={fullWidth}
                 type={type}
                 required={required}
                 placeholder={placeholder}
@@ -53,7 +85,19 @@ const CustomInput: React.FC<CustomInputProps> = ({value, id, type,required, plac
                     </InputAdornment>
                 }
                 disabled={disabled}
+                {...inputProps}
             />
+            {helperText && (
+                <span
+                    style={{
+                        color: error ? "#d32f2f" : undefined,
+                        fontSize: '0.95em',
+                        marginTop: 2,
+                    }}
+                >
+                    {helperText}
+                </span>
+            )}
         </FormControl>
     )
 }
