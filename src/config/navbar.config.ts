@@ -16,15 +16,7 @@ export interface NavBarMenu {
 
 export const ADMIN_OPTIONS: NavBarConfig = [
     {type: 'button', text: 'Panel Admin', path: '/admin'},
-    {
-        type: 'menu',
-        text: 'Gestion Usuarios', 
-        options: [
-            {type: 'button', text: 'Especialistas', path:'/admin/especialistas'},
-            {type: 'button', text: 'Pacientes', path:'/admin/pacientes'},
-            {type: 'button', text: 'Usuarios', path:'/admin/usuarios'},
-        ]
-    },
+    {type: 'button', text: 'Gestion Usuarios', path: '/admin/usuarios'},
     {
         type: 'menu',
         text: 'Gestion Administrativa',

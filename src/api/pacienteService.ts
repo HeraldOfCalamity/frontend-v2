@@ -1,0 +1,74 @@
+import api from "../config/benedetta.api.config";
+import type { User } from "./userService";
+
+export interface Paciente{
+    id: string;
+    nombre: string;
+    apellido: string;
+    tipo_sangre: string;
+    fecha_nacimiento: string;
+    telefono: string;
+}
+
+export interface PacienteWithUser{
+    user: Partial<User>,
+    paciente: Partial<Paciente>,
+}
+
+const PACIENTES_ROUTE = 'pacientes/'
+
+export async function createPacienteAdmin(data: Partial<PacienteWithUser>){
+    try{
+        const res = await api.post(`${PACIENTES_ROUTE}admin/`, data);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.detail ||
+            err?.message ||
+            "Ocurrio un error al crear paciente."
+        )
+        throw new Error('Ocurrio un error al crear paciente.')
+    }
+}
+
+export async function getPacienteByUserId(user_id: string){
+    try{
+        const res = await api.get(`${PACIENTES_ROUTE}${user_id}`);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.detail ||
+            err?.message ||
+            "Ocurrio un error al obtener paciente."
+        )
+        throw new Error("Ocurrio un error al obtener paciente.")
+    }
+}
+
+export async function deletePaciente(user_id: string){
+        try{
+        const res = await api.delete(`${PACIENTES_ROUTE}${user_id}`);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.detail ||
+            err?.message ||
+            "Ocurrio un error al eliminar paciente."
+        )
+        throw new Error("Ocurrio un error al eliminar paciente.")
+    }
+}
+
+export async function updatePacienteAdmin(user_id: string, data: Partial<PacienteWithUser>){
+        try{
+        const res = await api.put(`${PACIENTES_ROUTE}admin/${user_id}`, data);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.detail ||
+            err?.message ||
+            "Ocurrio un error al actualizar paciente."
+        )
+        throw new Error("Ocurrio un error al actualizar paciente.")
+    }
+}

@@ -2,7 +2,9 @@ import api from "../config/benedetta.api.config";
 
 export interface User{
     id: string;
+    username: string;
     email: string;
+    password: string;
     role: string;
     isActive: boolean;
     isVerified: boolean;

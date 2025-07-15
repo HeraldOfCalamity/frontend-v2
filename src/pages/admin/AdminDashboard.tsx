@@ -17,11 +17,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     const {user} = useAuth();
 
     return(
-        <Box>
-            <Typography variant="h4" fontWeight={700} color="primary" mb={3}>
+        <Box my='auto'>
+            <Typography variant="h4" fontWeight={700} color="primary" mb={7} textAlign='center'>
                 Bienvenido, {user?.name || user?.email || "Administrador"}
             </Typography>
-            <Grid container spacing={3} mb={3}>
+            <Grid container spacing={3} mb={7}>
                 {quickStats.map((stat) => (
                 <Grid size={{xs:12, sm:6, md:3}} key={stat.label}>
                     <Card sx={{ borderRadius: 3, boxShadow: 3 }}>

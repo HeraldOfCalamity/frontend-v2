@@ -1,53 +1,175 @@
 import { useEffect, useState } from "react";
 import type { Column, TableAction } from "../../components/common/GenericTable";
 import { AddCircleOutline, Circle, Delete, Edit } from "@mui/icons-material";
-import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import GenericTable from "../../components/common/GenericTable";
 import Swal from "sweetalert2";
-import { createUsuario, deleteUsuario, getUsuarios, updateUsuario, type User } from "../../api/userService";
-import UsuarioForm from "../../components/admin/UsuarioForm";
+import { getUsuarios, type User } from "../../api/userService";
+import PacienteForm from "../../components/admin/PacienteForm";
+import { createPacienteAdmin, deletePaciente, getPacienteByUserId, updatePacienteAdmin, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
+import { getRoles } from "../../api/roleService";
+import EspecialistaForm from "../../components/admin/EspecialistaForm";
+import { createEspecialistaAdmin, deleteEspecialista, getEspecialistaByUserId, updateEspecialistaAdmin, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
 
 export default function UsuariosPage(){
     const [usuarios, setUsuarios] = useState<User[]>([])
-    const [openForm, setOpenForm] = useState(false);
-    const [editData, setEditData] = useState<User | null>(null);
+    const [openPacienteForm, setOpenPacienteForm] = useState(false);
+    const [openEspecialistaForm, setOpenEspecialistaForm] = useState(false);
+    const [editData, setEditData] = useState<PacienteWithUser | EspecialistaWithUser | null>(null);
     const [loading, setLoading] = useState(false);
+    const [addAnchorEl, setAddAnchorEl] = useState<null | HTMLElement>(null);
+    const openAddUser = Boolean(addAnchorEl);
+    
+    const handleAddUserClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        setAddAnchorEl(e.currentTarget);
+    }
+    const handleAddUserClose = () => {
+        setAddAnchorEl(null);
+    }
     const theme = useTheme()
 
-    const eliminarUsuario = async (userId: string) => {
+    const eliminarUsuario = async (user: User) => {
+        
         setLoading(true);
-        await deleteUsuario(userId);
+
+        const result = await Swal.fire({
+            title: "Estas seguro?",
+            text: `Esta accion eliminara "${user.email}". No se puede deshacer.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: theme.palette.primary.main,
+            confirmButtonText: 'Si, eliminar',
+            cancelButtonText: 'Cancelar',
+        })
+
+        try{
+            if(!result.isConfirmed) return;
+
+            if(user.role === 'paciente'){
+                const paciente = await obtenerPacientePorIdUsuario(user.id);
+                console.log("paciente", paciente);
+                if(paciente){
+                    await deletePaciente(paciente?.id)
+                    Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
+                }else{
+                    Swal.fire("Error", "Paciente no encontrado", "error");
+                }
+            }
+
+            if(user.role === 'especialista'){
+                const especialista = await obtenerEspecialistaPorIdUsuario(user.id);
+                if(especialista){
+                    await deleteEspecialista(especialista?.id)
+                    Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
+                }else{
+                    Swal.fire("Error", "Especialista no encontrado", "error");
+                }
+            }
+        }catch(err: any){
+            Swal.fire('Error', `${err}`, 'error');
+        }finally{
+            await obtenerUsuarios();
+        }
         setLoading(false);
+    }
+
+    const editarUsuario = async (user: User) => {
+        try{
+            if(user.role === 'paciente'){
+                const pacienteResponse = await obtenerPacientePorIdUsuario(user.id);
+                if(pacienteResponse){
+                    setEditData((o) => o ? { ...o, user: user } : { user: user, paciente: pacienteResponse ?? {} });
+                    setOpenPacienteForm(true);
+                }
+            }
+
+            if(user.role === 'especialista'){
+                const especialistaResponse = await obtenerEspecialistaPorIdUsuario(user.id);
+                if(especialistaResponse){
+                    setEditData((o) => o ? { ...o, user: user } : { user: user, especialista: especialistaResponse ?? {} });
+                    setOpenEspecialistaForm(true);
+                }
+            }   
+        }catch(err: any){
+            Swal.fire('Error', `${err}`, 'error');
+        }
     }
 
     const obtenerUsuarios = async () => {
         try{
             const usuarios = await getUsuarios();
-            setUsuarios(usuarios);
+            const roles = await getRoles();
+            const usuariosWithRoleName = usuarios.map(u => ({
+                ...u,
+                role: roles.find(r => r.id === u.role)?.name!
+            }));
+            setUsuarios(usuariosWithRoleName);
         }catch{
             Swal.fire("Error", "Ocurrio un error al obtener los usuarios", 'error');
         }
     }
 
-    const handleUserFormSubmit = async (data: Partial<User>) => {
+
+
+    const obtenerPacientePorIdUsuario = async (user_id: string): Promise<Paciente | undefined> => {
+        try{
+            return await getPacienteByUserId(user_id)
+        }catch(err: any){
+            Swal.fire("Error", `${err}`, 'error');
+        }
+    }
+
+    const obtenerEspecialistaPorIdUsuario = async (user_id: string): Promise<Especialista | undefined> => {
+        try{
+            return await getEspecialistaByUserId(user_id)
+        }catch(err: any){
+            Swal.fire("Error", `${err}`, 'error');
+        }
+    }
+
+    const handlePacienteFormSubmit = async (data: Partial<PacienteWithUser>) => {
         setLoading(true);
         try{
             if(editData){ // Editar
-                const updated = await updateUsuario(editData.id, data);
+                const { paciente } = editData as PacienteWithUser;
+                await updatePacienteAdmin(paciente.id!, data);
                 await obtenerUsuarios()
                 Swal.fire("Operacion exitosa!", "Usuario actualizado con exito", "success");
             }else { // Crear
-                const created = await createUsuario(data);
+                await createPacienteAdmin(data);
                 await obtenerUsuarios()
                 Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
             }
         }catch{
             setEditData(null);
-            setOpenForm(false);
+            setOpenPacienteForm(false);
             Swal.fire("Error", "Error al guardar", "error");
         }finally{
             setEditData(null);
-            setOpenForm(false);
+            setOpenPacienteForm(false);
+            setLoading(false);
+        }
+    }
+    const handleEspecialistaFormSubmit = async (data: Partial<EspecialistaWithUser>) => {
+        setLoading(true);
+        try{
+            if(editData){ // Editar
+                const { especialista } = editData as EspecialistaWithUser;
+                await updateEspecialistaAdmin(especialista.id!, data);
+                await obtenerUsuarios()
+                Swal.fire("Operacion exitosa!", "Usuario actualizado con exito", "success");
+            } else { // Crear
+                await createEspecialistaAdmin(data);
+                await obtenerUsuarios()
+                Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
+            }
+        }catch{
+            setEditData(null);
+            setOpenEspecialistaForm(false);
+            Swal.fire("Error", "Error al guardar", "error");
+        }finally{
+            setEditData(null);
+            setOpenEspecialistaForm(false);
             setLoading(false);
         }
     }
@@ -63,46 +185,36 @@ export default function UsuariosPage(){
     }, []);
 
     const columns: Column<User>[] = [
-        {field: 'name', headerName: 'Nombre', align: 'center'},
+        {field: 'username', headerName: 'Nombre', align: 'center'},
         {field: 'email', headerName: 'Correo', align: 'center'},
-        {field: 'role', headerName: 'Rol', align: 'center'},
-        {field: 'isActive', headerName: 'Activo', align: 'center', render: (v) => <Circle fontSize="small" color={v ? "success" : "error"} />},
+        {
+            field: 'role', 
+            headerName: 'Rol', 
+            align: 'center', 
+            render: (roleName: string) => {
+                return `${roleName.charAt(0).toUpperCase()}${roleName.slice(1)}`
+            }
+        },
+        {
+            field: 'isActive', 
+            headerName: 'Activo', 
+            align: 'center', 
+            render: (v) => 
+                <Circle fontSize="small" color={v ? "success" : "error"} />
+        },
     ];
 
     const actions: TableAction<User>[] = [
         {
             icon: <Edit />,
             label: 'Editar',
-            onClick: (row) => {
-                setEditData(row);
-                setOpenForm(true);
-            }
+            onClick: (userRow) => editarUsuario(userRow)
         },
         {
             icon: <Delete />,
             label: 'Eliminar',
             color: 'error',
-            onClick: async (row) => {
-                const result = await Swal.fire({
-                    title: "Estas seguro?",
-                    text: `Esta accion eliminara "${row.email}". No se puede deshacer.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: theme.palette.primary.main,
-                    confirmButtonText: 'Si, eliminar',
-                    cancelButtonText: 'Cancelar',
-                })
-
-                if(result.isConfirmed){
-                    try {
-                        await eliminarUsuario(row.id)
-                        await obtenerUsuarios();
-                        Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
-                    } catch (e) {
-                        Swal.fire("Error", "No se pudo eliminar.", "error");
-                    }
-                }
-            }
+            onClick: (userRow) => eliminarUsuario(userRow)
         }
     ]
 
@@ -116,27 +228,53 @@ export default function UsuariosPage(){
                     variant="contained" 
                     color="primary" 
                     startIcon={<AddCircleOutline />}
-                    onClick={() => {
-                        setEditData(null);
-                        setOpenForm(true);
-                    }
-                }>
+                    onClick={handleAddUserClick}
+                >
                     Agregar
                 </Button>
+                <Menu
+                    id="add-user-menu"
+                    anchorEl={addAnchorEl}
+                    open={openAddUser}
+                    onClose={handleAddUserClose}
+                >
+                    <MenuItem onClick={() => {
+                        setEditData(null);
+                        setOpenPacienteForm(true);
+                        handleAddUserClose();
+                    }}>Paciente</MenuItem>
+                    <MenuItem onClick={() => {
+                        setEditData(null);
+                        setOpenEspecialistaForm(true);
+                        handleAddUserClose();
+                    }}>Especialista</MenuItem>
+                </Menu>
             </Stack>
-            <GenericTable
-                columns={columns}
-                data={usuarios}
-                actions={actions}
-            />
-            <UsuarioForm
-                open={openForm}
+            <Stack spacing={5}>
+                <GenericTable
+                    columns={columns}
+                    data={usuarios}
+                    actions={actions}
+                />
+            </Stack>
+            <PacienteForm
+                open={openPacienteForm}
                 onClose={() => {
                     setEditData(null);
-                    setOpenForm(false);
+                    setOpenPacienteForm(false);
                 }}
-                onSubmit={handleUserFormSubmit}
-                initialData={editData || undefined}
+                onSubmit={handlePacienteFormSubmit}
+                initialData={editData as PacienteWithUser || undefined}
+                loading={loading}
+            />
+            <EspecialistaForm
+                open={openEspecialistaForm}
+                onClose={() => {
+                    setEditData(null);
+                    setOpenEspecialistaForm(false);
+                }}
+                onSubmit={handleEspecialistaFormSubmit}
+                initialData={editData as EspecialistaWithUser || undefined}
                 loading={loading}
             />
         </Box>

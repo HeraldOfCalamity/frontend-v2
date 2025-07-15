@@ -68,7 +68,9 @@ export default function RolesPage(){
     }, [])
 
     const columns: Column<Role>[] = [
-        {field: 'name', headerName: 'Nombre', align: 'center'},
+        {field: 'name', headerName: 'Nombre', align: 'center', render: (name: string) => {
+            return `${name.charAt(0).toUpperCase()}${name.slice(1)}`
+        }},
         {field: 'description', headerName: 'Descripcion', align: 'center'},
         {
             field: 'permissions',

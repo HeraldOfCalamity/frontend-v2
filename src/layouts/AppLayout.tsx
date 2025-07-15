@@ -52,7 +52,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
         }}>
             <NavBar handleOpenLoginModal={handleOpenLoginModalClick}/>
             <Container 
-                maxWidth="md" 
+                maxWidth="lg" 
                 sx={{
                     pt:4,
                     flex: 1,
