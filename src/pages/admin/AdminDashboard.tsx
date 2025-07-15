@@ -2,6 +2,7 @@ import { AssignmentInd, Category, LocalHospital, PeopleAlt } from "@mui/icons-ma
 import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material"
 import Grid from "@mui/material/Grid";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface AdminDashboardProps{
 
@@ -15,6 +16,7 @@ const quickStats = [
 
 const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     const {user} = useAuth();
+    const navigate = useNavigate();
 
     return(
         <Box my='auto'>
@@ -41,23 +43,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                     variant="contained"
                     color="secondary"
                     sx={{ minWidth: 180 }}
-                    href="/admin/especialistas"
+                    onClick={() => navigate('/admin/usuarios', {replace: true})}
                 >
-                    Gestión de Especialistas
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ minWidth: 180 }}
-                    href="/admin/pacientes"
-                >
-                    Gestión de Pacientes
+                    Gestión de Usuarios
                 </Button>
                 <Button
                     variant="contained"
                     color="secondary"
                     sx={{ minWidth: 180 }}
-                    href="/admin/especialidades"
+                    onClick={() => navigate('/admin/especialidades', {replace: true})}
                 >
                     Gestión de Especialidades
                 </Button>
@@ -65,7 +59,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                     variant="contained"
                     color="primary"
                     sx={{ minWidth: 180 }}
-                    href="/admin/pacientes"
+                    onClick={() => navigate('/admin/roles', {replace: true})}
                 >
                     Gestión de Roles y Permisos
                 </Button>

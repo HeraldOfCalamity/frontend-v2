@@ -34,8 +34,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
     useEffect(() => {
         if(isAuthenticated && user){     
             if(user?.role === 'admin' && location.pathname === '/') navigate('/admin', {replace: true});
-            else if(user?.role === 'pacient' && location.pathname === '/') navigate('/perfil/paciente', {replace: true});
-            else if(user?.role === 'especialist' && location.pathname === '/') navigate('/perfil/especialista', {replace: true});
+            else if(user?.role === 'paciente' && location.pathname === '/') navigate('/perfil/paciente', {replace: true});
+            else if(user?.role === 'especialista' && location.pathname === '/') navigate('/perfil/especialista', {replace: true});
             
         } else if(!isAuthenticated && location.pathname !== '/'){
             navigate('/');

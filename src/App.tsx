@@ -31,11 +31,11 @@ function App() {
           <Routes>
             <Route path='/' element={<Home />} />
 
-            <Route element={<ProtectedRoute roles={['admin', 'patient']} />}>
+            <Route element={<ProtectedRoute roles={['admin', 'paciente']} />}>
               <Route path='/perfil/paciente' element={<PerfilPaciente />} />
             </Route>
 
-            <Route element={<ProtectedRoute roles={['admin', 'especialist']} />}>
+            <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
               <Route path='/perfil/especialista' element={<PerfilEspecialista />} />
             </Route>
 

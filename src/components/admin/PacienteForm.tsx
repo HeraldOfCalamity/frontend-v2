@@ -1,10 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select, TextField } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { getRoles, type Role } from "../../api/roleService";
-import Swal from "sweetalert2";
 import type { PacienteWithUser } from "../../api/pacienteService";
-import { Password } from "@mui/icons-material";
 
 interface PacienteFormProps{
     open: boolean;

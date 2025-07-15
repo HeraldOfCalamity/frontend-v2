@@ -25,9 +25,9 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
         switch (user?.role) {
             case 'admin':
                 return ADMIN_OPTIONS;
-            case 'patient':
+            case 'paciente':
                 return PATIENT_OPTIONS;
-            case 'especialist':
+            case 'especialista':
                 return ESPECIALIST_OPTIONS;
 
             default:
