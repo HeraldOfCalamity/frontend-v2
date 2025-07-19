@@ -79,14 +79,14 @@ export default function ({
                         email: data.email,
                         role: data.role,
                         password: data.password,
-                        isActive: data.isActive
+                        isActive: data.isActive                        
                     },
                     paciente: {
                         nombre: data.nombre,
                         apellido: data.apellido,
                         tipo_sangre: data.tipo_sangre,
                         fecha_nacimiento: data.fecha_nacimiento,
-                        telefono: data.telefono
+                        telefono: data.telefono,
                     }
                 };
                 onSubmit(submitData);

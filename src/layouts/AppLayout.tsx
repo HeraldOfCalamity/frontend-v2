@@ -31,6 +31,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
         setOpenLoginModal(false);
     }
 
+
     useEffect(() => {
         if(isAuthenticated && user){     
             if(user?.role === 'admin' && location.pathname === '/') navigate('/admin', {replace: true});
@@ -63,7 +64,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
                 {children}
             </Container>
             <Footer />
-            <LoginModal openLoginModal={openLoginModal} handleLoginModalClose={handleCloseLoginModalClick} handleLoginSuccess={handleLoginSuccess}/>
+            <LoginModal 
+                openLoginModal={openLoginModal} 
+                handleLoginModalClose={handleCloseLoginModalClick} 
+                handleLoginSuccess={handleLoginSuccess}
+            />
         </Box>
     );
 };

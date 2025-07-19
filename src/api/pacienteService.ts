@@ -15,6 +15,15 @@ export interface PacienteWithUser{
     paciente: Partial<Paciente>,
 }
 
+export interface PacienteAutoCreate {
+    user_id: string 
+    nombre: string
+    apellido: string
+    fecha_nacimiento: string
+    tipo_sangre: string
+    telefono: string
+}
+
 const PACIENTES_ROUTE = 'pacientes/'
 
 export async function createPacienteAdmin(data: Partial<PacienteWithUser>){
@@ -31,17 +40,39 @@ export async function createPacienteAdmin(data: Partial<PacienteWithUser>){
     }
 }
 
+export async function createPaciente(data: Partial<PacienteAutoCreate>){
+    try{
+        const res = await api.post(`${PACIENTES_ROUTE}`, data);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.data?.detail ||
+            err?.message ||
+            "Ocurrio un error al crear paciente."
+        )
+        throw new Error(
+            err?.response?.data?.detail ||
+            err?.message ||
+            "Ocurrio un error al crear paciente."
+        )
+    }
+}
+
 export async function getPacienteByUserId(user_id: string){
     try{
         const res = await api.get(`${PACIENTES_ROUTE}${user_id}`);
         return res.data;
     }catch(err: any){
         console.error(
-            err?.response?.detail ||
+            err?.response?.data?.detail ||
             err?.message ||
             "Ocurrio un error al obtener paciente."
         )
-        throw new Error("Ocurrio un error al obtener paciente.")
+        throw new Error(
+            err?.response?.data?.detail ||
+            err?.message ||
+            "Ocurrio un error al obtener paciente."
+        )
     }
 }
 

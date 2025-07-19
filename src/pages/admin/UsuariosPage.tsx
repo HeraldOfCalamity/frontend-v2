@@ -6,7 +6,7 @@ import GenericTable from "../../components/common/GenericTable";
 import Swal from "sweetalert2";
 import { getUsuarios, type User } from "../../api/userService";
 import PacienteForm from "../../components/admin/PacienteForm";
-import { createPacienteAdmin, deletePaciente, getPacienteByUserId, updatePacienteAdmin, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
+import { createPaciente, createPacienteAdmin, deletePaciente, getPacienteByUserId, updatePacienteAdmin, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
 import { getRoles } from "../../api/roleService";
 import EspecialistaForm from "../../components/admin/EspecialistaForm";
 import { createEspecialistaAdmin, deleteEspecialista, getEspecialistaByUserId, updateEspecialistaAdmin, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
@@ -74,25 +74,32 @@ export default function UsuariosPage(){
     }
 
     const editarUsuario = async (user: User) => {
-        try{
-            if(user.role === 'paciente'){
-                const pacienteResponse = await obtenerPacientePorIdUsuario(user.id);
-                if(pacienteResponse){
-                    setEditData((o) => o ? { ...o, user: user } : { user: user, paciente: pacienteResponse ?? {} });
-                    setOpenPacienteForm(true);
-                }
-            }
 
-            if(user.role === 'especialista'){
-                const especialistaResponse = await obtenerEspecialistaPorIdUsuario(user.id);
-                if(especialistaResponse){
-                    setEditData((o) => o ? { ...o, user: user } : { user: user, especialista: especialistaResponse ?? {} });
-                    setOpenEspecialistaForm(true);
-                }
-            }   
-        }catch(err: any){
-            Swal.fire('Error', `${err}`, 'error');
+        if(user.role === 'paciente'){
+            const pacienteResponse = await obtenerPacientePorIdUsuario(user.id);
+            let data: PacienteWithUser | null = null;
+            if(pacienteResponse){
+                data = {user: user, paciente: pacienteResponse}
+            }else{
+                data = {user: user, paciente: {}}
+                await Swal.fire(
+                    'Atencion', 
+                    'El usuario registrado no ha registrado sus datos personales, debe registrarlos para continuar.',
+                    "info"
+                )
+            }
+            setEditData(data);
+            setOpenPacienteForm(true);
         }
+
+        if(user.role === 'especialista'){
+            const especialistaResponse = await obtenerEspecialistaPorIdUsuario(user.id);
+            if(especialistaResponse){
+                setEditData((o) => o ?? { user: user, especialista: especialistaResponse ?? {} });
+                setOpenEspecialistaForm(true);
+            }
+        }   
+
     }
 
     const obtenerUsuarios = async () => {
@@ -115,7 +122,7 @@ export default function UsuariosPage(){
         try{
             return await getPacienteByUserId(user_id)
         }catch(err: any){
-            Swal.fire("Error", `${err}`, 'error');
+            await Swal.fire("Error", `${err}`, 'error');
         }
     }
 
@@ -123,7 +130,7 @@ export default function UsuariosPage(){
         try{
             return await getEspecialistaByUserId(user_id)
         }catch(err: any){
-            Swal.fire("Error", `${err}`, 'error');
+            await Swal.fire("Error", `${err}`, 'error');
         }
     }
 
@@ -132,7 +139,11 @@ export default function UsuariosPage(){
         try{
             if(editData){ // Editar
                 const { paciente } = editData as PacienteWithUser;
-                await updatePacienteAdmin(paciente.id!, data);
+                if(paciente && Object.keys(paciente).length > 0){
+                    await updatePacienteAdmin(paciente.id!, data);
+                }else{
+                    await createPaciente({...data.paciente, user_id: editData.user.id})
+                }
                 await obtenerUsuarios()
                 Swal.fire("Operacion exitosa!", "Usuario actualizado con exito", "success");
             }else { // Crear
@@ -198,6 +209,13 @@ export default function UsuariosPage(){
         {
             field: 'isActive', 
             headerName: 'Activo', 
+            align: 'center', 
+            render: (v) => 
+                <Circle fontSize="small" color={v ? "success" : "error"} />
+        },
+        {
+            field: 'isVerified', 
+            headerName: 'Verificado', 
             align: 'center', 
             render: (v) => 
                 <Circle fontSize="small" color={v ? "success" : "error"} />
