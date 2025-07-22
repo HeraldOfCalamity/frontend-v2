@@ -8,7 +8,7 @@ interface ProtectedRouteProps{
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     roles,
-    redirectTo = '/login'
+    redirectTo = '/'
 }) => {
     const {isAuthenticated, user} = useAuth();
 

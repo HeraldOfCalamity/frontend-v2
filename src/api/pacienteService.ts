@@ -103,3 +103,19 @@ export async function updatePacienteAdmin(user_id: string, data: Partial<Pacient
         throw new Error("Ocurrio un error al actualizar paciente.")
     }
 }
+
+export async function getPacienteProfile(){
+    try{
+        const res = await api.get(`${PACIENTES_ROUTE}perfil`);
+        return res.data;
+    }catch(err: any){
+        console.error(
+            err?.response?.data?.detail ||
+            err?.message ||
+            "Ocurrio un error al obtener perfil paciente."
+        )
+        throw new Error(err?.response?.data?.detail ||
+            err?.message ||
+            "Ocurrio un error al obtener perfil paciente.")
+    }
+}

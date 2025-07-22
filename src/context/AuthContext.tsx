@@ -16,6 +16,7 @@ interface AuthContextPorps{
     login: (token: string) => void;
     logout: () => void;
     isAuthenticated: boolean;
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextPorps | undefined>(undefined);
@@ -42,6 +43,7 @@ const TOKEN_KEY = 'bb_token';
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<AuthUser | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const savedToken = localStorage.getItem(TOKEN_KEY);
@@ -49,6 +51,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) 
             setToken(savedToken);
             setUser(getUserFromToken(savedToken));
         }
+        setIsLoading(false);
     }, []);
 
     useEffect(() => {
@@ -70,7 +73,8 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) 
             token,
             login,
             logout,
-            isAuthenticated: !!user
+            isAuthenticated: !!user,
+            isLoading
         }}>
             {children}
         </AuthContext.Provider>

@@ -1,9 +1,8 @@
 import { Box, Container } from "@mui/material";
 import Footer from "../components/common/Footer";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import LoginModal from "../components/LoginModal";
 import { useAuth } from "../context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../components/common/NavBar";
 
 
@@ -14,9 +13,8 @@ interface AppLayoutProps{
 const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
     const [openLoginModal, setOpenLoginModal] = useState(false);
 
-    const {login, user, isAuthenticated} = useAuth();
-    const navigate = useNavigate();
-    const location  = useLocation();
+    const {login} = useAuth();
+
 
     const handleOpenLoginModalClick = () => {
         setOpenLoginModal(true);
@@ -32,16 +30,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
     }
 
 
-    useEffect(() => {
-        if(isAuthenticated && user){     
-            if(user?.role === 'admin' && location.pathname === '/') navigate('/admin', {replace: true});
-            else if(user?.role === 'paciente' && location.pathname === '/') navigate('/perfil/paciente', {replace: true});
-            else if(user?.role === 'especialista' && location.pathname === '/') navigate('/perfil/especialista', {replace: true});
-            
-        } else if(!isAuthenticated && location.pathname !== '/'){
-            navigate('/');
-        }
-    }, [isAuthenticated, user, navigate, location.pathname]);
 
     return(
         <Box sx={{
