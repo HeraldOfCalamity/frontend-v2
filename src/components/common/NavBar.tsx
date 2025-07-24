@@ -21,6 +21,10 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
         setAnchorEls((prev) => ({ ...prev, [index]: null }));
     };
 
+    const handleLogOutClick = () => {
+        logout();
+        navigate('/', {replace: true});
+    }
     const getOptions = (): NavBarConfig => {
         switch (user?.role) {
             case 'admin':
@@ -131,7 +135,7 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                             <Button
                                 color="primary"
                                 variant="outlined"
-                                onClick={logout}
+                                onClick={handleLogOutClick}
                                 size="small"
                                 sx={{ 
                                     ml: 1,

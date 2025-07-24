@@ -27,8 +27,12 @@ const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
     const handlePacienteFormSubmit = async (data: Partial<PacienteWithUser>) => {
         setLoading(true);
         try{
-            console.log('profile', profile)
-            console.log('data', data)
+            if(Object.keys(profile?.paciente || {}).length > 0){
+                console.log('no hay paciente', profile)
+                return;
+            }
+
+            console.log('hay datos de paciente', profile);
         }catch(err: any){
             Swal.fire('Error', `${err || 'Ocurrio un error al editar.'}`, 'error');
         }finally{
