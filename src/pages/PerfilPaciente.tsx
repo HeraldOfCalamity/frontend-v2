@@ -42,7 +42,10 @@ const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
             const perfil: PacienteWithUser | null = await getPacienteProfile();
 
             if (perfil?.paciente) {
-                setProfile(perfil);
+                setProfile({
+                    paciente: perfil.paciente,
+                    user: perfil.user
+                });
             } else {
                 setProfile(v => ({ user: perfil?.user!, paciente: {} }));
 

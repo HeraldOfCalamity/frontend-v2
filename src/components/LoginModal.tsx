@@ -24,8 +24,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
 }) => {
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [loginError, setLoginError] = useState('');
     const [openRegisterForm, setOpenRegisterForm] = useState(false);
+    const [loginMessage, setLoginMessage] = useState<{message: string, severity:'error' | 'info' | 'success' | 'warning'}>({
+        message: '',
+        severity: 'info'
+    })
     const [credentials, setCredentials] = useState<Credentials>({
         email: '',
         password: ''
@@ -37,16 +40,24 @@ const LoginModal: React.FC<LoginModalProps> = ({
     }
 
     const handleRegisterSubmit = async(data: Partial<User>) => {
+        setLoginMessage({
+          message: ''      ,
+          severity: 'info'
+        })
         setLoading(true);
         try {
             const resUser = await createUsuario(data);
-            if(resUser.user){
-                await Swal.fire('Operacion Exitosa', 'Usuario registrado con exito', 'success');
-            }else{
-                Swal.fire('Error', 'Ocurrio un error al registrar el usuario', 'error');
+            if(resUser){
+                setLoginMessage({
+                    message: 'Credenciales registradas con exito!',
+                    severity: 'success'
+                })
             }
         } catch (err: any) {
-            Swal.fire('Error', `${err ? err : 'Ocurrio un error al registrar el usuario'}`, 'error');
+            setLoginMessage({
+                message: `${err || 'afewfaw'}`,
+                severity: 'error'
+            })
         }finally{
             setLoading(false);
             setOpenRegisterForm(false);
@@ -54,14 +65,20 @@ const LoginModal: React.FC<LoginModalProps> = ({
     }
 
     const handleLoginSubmit = async () => {
-        setLoginError('');
+        setLoginMessage({
+            message: '',
+            severity: 'info'
+        })
         setLoading(true);
         try{
             const response = await loginApi(credentials.email, credentials.password);
             handleLoginSuccess(response.access_token);
             setCredentials({email: '', password: ''});
         }catch(err: any){
-            setLoginError(err?.response?.data?.detail || 'Error al iniciar Sesion')
+            setLoginMessage({
+                message: err?.response?.data?.detail || 'Error al iniciar Sesion',
+                severity: 'error'
+            })
 
         }finally{
             setLoading(false);
@@ -124,9 +141,9 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                 
                             />
                         </Stack>
-                        {loginError && (
-                            <Alert severity='error' sx={{mt: 1}}>
-                                {loginError}
+                        {loginMessage.message !== '' && (
+                            <Alert severity={loginMessage.severity} sx={{mt: 1}}>
+                                {loginMessage.message}
                             </Alert>
                         )}
                         <DialogActions>
