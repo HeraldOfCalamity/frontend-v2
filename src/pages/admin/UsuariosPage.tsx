@@ -4,7 +4,7 @@ import { AddCircleOutline, Circle, Delete, Edit } from "@mui/icons-material";
 import { Box, Button, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import GenericTable from "../../components/common/GenericTable";
 import Swal from "sweetalert2";
-import { getUsuarios, type User } from "../../api/userService";
+import { deleteUsuario, getUsuarios, type User } from "../../api/userService";
 import PacienteForm from "../../components/admin/PacienteForm";
 import { createPaciente, createPacienteAdmin, deletePaciente, getPacienteByUserId, updatePacienteAdmin, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
 import { getRoles } from "../../api/roleService";
@@ -52,6 +52,21 @@ export default function UsuariosPage(){
                     await deletePaciente(paciente?.id)
                     Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
                 }else{
+                    const resultDeleteUserOnly = await Swal.fire({
+                        title: "Estas seguro?",
+                        text: `No se tienen datos de paciente.\nEsta accion eliminara al usuario"${user.email}". No se puede deshacer.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: theme.palette.primary.main,
+                        confirmButtonText: 'Si, eliminar',
+                        cancelButtonText: 'Cancelar',
+                    })
+                    if(resultDeleteUserOnly.isConfirmed){
+                        await deleteUsuario(user.id);
+                        Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
+                        return;
+                    }
+
                     Swal.fire("Error", "Paciente no encontrado", "error");
                 }
             }
