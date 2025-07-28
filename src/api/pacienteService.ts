@@ -1,4 +1,5 @@
 import api from "../config/benedetta.api.config";
+import { handleError } from "../utils/errorHandler";
 import type { User } from "./userService";
 
 export interface Paciente{
@@ -26,23 +27,9 @@ export interface PacienteAutoCreate {
 
 const PACIENTES_ROUTE = 'pacientes/'
 
-export async function createPacienteAdmin(data: Partial<PacienteWithUser>){
+export async function createPacientePerfil(data: Partial<PacienteWithUser>){
     try{
-        const res = await api.post(`${PACIENTES_ROUTE}admin/`, data);
-        return res.data;
-    }catch(err: any){
-        console.error(
-            err?.response?.detail ||
-            err?.message ||
-            "Ocurrio un error al crear paciente."
-        )
-        throw new Error('Ocurrio un error al crear paciente.')
-    }
-}
-
-export async function createPaciente(data: Partial<PacienteAutoCreate>){
-    try{
-        const res = await api.post(`${PACIENTES_ROUTE}`, data);
+        const res = await api.post(`${PACIENTES_ROUTE}perfil/`, data);
         return res.data;
     }catch(err: any){
         console.error(
@@ -55,6 +42,15 @@ export async function createPaciente(data: Partial<PacienteAutoCreate>){
             err?.message ||
             "Ocurrio un error al crear paciente."
         )
+    }
+}
+
+export async function createPaciente(data: Partial<PacienteAutoCreate>){
+    try{
+        const res = await api.post(`${PACIENTES_ROUTE}`, data);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al crear paciente');
     }
 }
 
@@ -90,17 +86,21 @@ export async function deletePaciente(user_id: string){
     }
 }
 
-export async function updatePacienteAdmin(user_id: string, data: Partial<PacienteWithUser>){
-        try{
-        const res = await api.put(`${PACIENTES_ROUTE}admin/${user_id}`, data);
+export async function updatePacientePerfil(user_id: string, data: Partial<PacienteWithUser>){
+    try{
+        const res = await api.put(`${PACIENTES_ROUTE}perfil/${user_id}`, data);
         return res.data;
     }catch(err: any){
         console.error(
-            err?.response?.detail ||
+            err?.response?.data?.detail ||
             err?.message ||
             "Ocurrio un error al actualizar paciente."
         )
-        throw new Error("Ocurrio un error al actualizar paciente.")
+        throw new Error(
+            err?.response?.data?.detail ||
+            err?.message ||
+            "Ocurrio un error al actualizar paciente."
+        )
     }
 }
 
@@ -117,5 +117,14 @@ export async function getPacienteProfile(){
         throw new Error(err?.response?.data?.detail ||
             err?.message ||
             "Ocurrio un error al obtener perfil paciente.")
+    }
+}
+
+export async function updatePaciente(paciente_id: string, data: Partial<Paciente>){
+    try{
+        const res = await api.put(`${PACIENTES_ROUTE}${paciente_id}`, data);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al actualizar paciente');
     }
 }

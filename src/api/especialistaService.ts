@@ -1,4 +1,5 @@
 import api from "../config/benedetta.api.config";
+import { handleError } from "../utils/errorHandler";
 import type { User } from "./userService";
 
 export interface Especialista{
@@ -24,9 +25,9 @@ export interface EspecialistaWithUser {
 
 const ESPECIALISTA_ROUTE = 'especialistas/';
 
-export async function createEspecialistaAdmin(data: Partial<EspecialistaWithUser>){
+export async function createEspecialistaPerfil(data: Partial<EspecialistaWithUser>){
     try{
-        const res = await api.post(`${ESPECIALISTA_ROUTE}admin`, data);
+        const res = await api.post(`${ESPECIALISTA_ROUTE}perfil`, data);
         return res.data;
     }catch(err: any){
         console.error(
@@ -38,17 +39,12 @@ export async function createEspecialistaAdmin(data: Partial<EspecialistaWithUser
     }
 }
 
-export async function updateEspecialistaAdmin(especialista_id: string, data: Partial<EspecialistaWithUser>){
+export async function updateEspecialistaPerfil(especialista_id: string, data: Partial<EspecialistaWithUser>){
     try{
-        const res = await api.put(`${ESPECIALISTA_ROUTE}admin/${especialista_id}`, data);
+        const res = await api.put(`${ESPECIALISTA_ROUTE}perfil/${especialista_id}`, data);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.detail ||
-            err?.message ||
-            "Ocurrio un error al actualizar especialista."
-        )
-        throw new Error('Ocurrio un error al actualizar especialista.')
+        handleError(err, 'Ocurrio un error al actualizar especialista.')
     }
 }
 
@@ -71,11 +67,24 @@ export async function deleteEspecialista(especialista_id: string){
         const res = await api.delete(`${ESPECIALISTA_ROUTE}${especialista_id}`);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.detail ||
-            err?.message ||
-            "Ocurrio un error al eliminar especialista."
-        )
-        throw new Error('Ocurrio un error al eliminar especialista.')
+        handleError(err, 'Ocurrio un error al eliminar especialista.');
+    }
+}
+
+export async function updateEspecialista(especialista_id: string, data: Partial<Especialista>){
+    try{
+        const res = await api.put(`${ESPECIALISTA_ROUTE}${especialista_id}`, data);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Ocurrio un error al eliminar especialista.');
+    }
+}
+
+export async function getEspecialistaProfile(){
+    try{
+        const res = await api.get(`${ESPECIALISTA_ROUTE}perfil`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Ocurrio un error al obtener perfil de especialista.')
     }
 }

@@ -6,10 +6,10 @@ import GenericTable from "../../components/common/GenericTable";
 import Swal from "sweetalert2";
 import { deleteUsuario, getUsuarios, type User } from "../../api/userService";
 import PacienteForm from "../../components/admin/PacienteForm";
-import { createPaciente, createPacienteAdmin, deletePaciente, getPacienteByUserId, updatePacienteAdmin, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
+import { createPaciente, createPacientePerfil, deletePaciente, getPacienteByUserId, updatePacientePerfil, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
 import { getRoles } from "../../api/roleService";
 import EspecialistaForm from "../../components/admin/EspecialistaForm";
-import { createEspecialistaAdmin, deleteEspecialista, getEspecialistaByUserId, updateEspecialistaAdmin, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
+import { createEspecialistaPerfil, deleteEspecialista, getEspecialistaByUserId, updateEspecialistaPerfil, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
 
 export default function UsuariosPage(){
     const [usuarios, setUsuarios] = useState<User[]>([])
@@ -155,21 +155,21 @@ export default function UsuariosPage(){
             if(editData){ // Editar
                 const { paciente } = editData as PacienteWithUser;
                 if(paciente && Object.keys(paciente).length > 0){
-                    await updatePacienteAdmin(paciente.id!, data);
+                    await updatePacientePerfil(paciente.id!, data);
                 }else{
                     await createPaciente({...data.paciente, user_id: editData.user.id})
                 }
                 await obtenerUsuarios()
                 Swal.fire("Operacion exitosa!", "Usuario actualizado con exito", "success");
             }else { // Crear
-                await createPacienteAdmin(data);
+                await createPacientePerfil(data);
                 await obtenerUsuarios()
                 Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
             }
-        }catch{
+        }catch(err: any){
             setEditData(null);
             setOpenPacienteForm(false);
-            Swal.fire("Error", "Error al guardar", "error");
+            Swal.fire(`${err}`);
         }finally{
             setEditData(null);
             setOpenPacienteForm(false);
@@ -181,11 +181,11 @@ export default function UsuariosPage(){
         try{
             if(editData){ // Editar
                 const { especialista } = editData as EspecialistaWithUser;
-                await updateEspecialistaAdmin(especialista.id!, data);
+                await updateEspecialistaPerfil(especialista.id!, data);
                 await obtenerUsuarios()
                 Swal.fire("Operacion exitosa!", "Usuario actualizado con exito", "success");
             } else { // Crear
-                await createEspecialistaAdmin(data);
+                await createEspecialistaPerfil(data);
                 await obtenerUsuarios()
                 Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
             }

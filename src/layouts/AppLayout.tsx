@@ -1,4 +1,4 @@
-import { Box, Container } from "@mui/material";
+import { Box, CircularProgress, Container } from "@mui/material";
 import Footer from "../components/common/Footer";
 import { useState } from "react";
 import LoginModal from "../components/LoginModal";
@@ -28,8 +28,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
         login(token);
         setOpenLoginModal(false);
     }
-
-
 
     return(
         <Box sx={{
