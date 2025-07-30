@@ -11,6 +11,7 @@ import EspecialidadesPage from './pages/admin/EspecialidadesPage';
 import UsuariosPage from './pages/admin/UsuariosPage';
 import RolesPage from './pages/admin/RolesPage';
 import HomeRedirect from './pages/HomeRedirect';
+import ConfiguracionPage from './pages/admin/ConfiguracionPage';
 
 
 
@@ -44,6 +45,7 @@ function App() {
               <Route path='/admin/especialidades' element={<EspecialidadesPage />} />
               <Route path='/admin/usuarios' element={<UsuariosPage />} />
               <Route path='/admin/roles' element={<RolesPage />} />
+              <Route path='/admin/configuracion' element={<ConfiguracionPage />} />
             </Route>
           </Routes>
         </AppLayout>

@@ -23,6 +23,7 @@ export const ADMIN_OPTIONS: NavBarConfig = [
         options: [
             {type: 'button', text: 'Roles y Permisos', path: '/admin/roles'},
             {type: 'button', text: 'Especialidades', path: '/admin/especialidades'},
+            {type: 'button', text: 'Configuracion', path: '/admin/configuracion'},
         ]
     }
 ]
