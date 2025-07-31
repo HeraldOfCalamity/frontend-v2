@@ -211,6 +211,7 @@ export default function UsuariosPage(){
     }, []);
 
     const columns: Column<User>[] = [
+        {field: 'id', headerName: 'Id', align: 'center'},
         {field: 'username', headerName: 'Nombre', align: 'center'},
         {field: 'email', headerName: 'Correo', align: 'center'},
         {

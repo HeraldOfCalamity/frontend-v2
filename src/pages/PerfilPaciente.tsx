@@ -121,8 +121,8 @@ const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
     };
 
     const handleReservaCitaModalClose = () => {
-        setSelectedEspecialidad(undefined);
         setOpenReservaCitaModal(false);
+        setSelectedEspecialidad(undefined);
     }
 
     
@@ -205,7 +205,7 @@ const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
                 open={openReservaCitaModal}
                 onClose={handleReservaCitaModalClose}
                 especialidad={selectedEspecialidad || {}}
-                setEspecialidad={setSelectedEspecialidad}
+                paciente={profile?.paciente || {}}
             />
         </Box>
     );

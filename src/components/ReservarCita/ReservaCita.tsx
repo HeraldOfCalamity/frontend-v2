@@ -1,14 +1,19 @@
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Slide, Stack, Step, StepButton, Stepper, Typography } from "@mui/material";
 import type { TransitionProps } from "@mui/material/transitions";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReservarCitaPaso1 from "./ReservarCitaPaso1";
 import type { Especialidad } from "../../api/especialidadService";
 import type { Especialista } from "../../api/especialistaService";
 import ReservarCitaPaso2 from "./ReservarCitaPaso2";
+import Swal from "sweetalert2";
+import type { Paciente } from "../../api/pacienteService";
+import { reservarCita, type CreateCita } from "../../api/citaService";
+import ReservarCitaPaso3 from "./ReservarCitaPaso3";
+
 interface ReservaCitaProps {
     open: boolean;
     especialidad: Partial<Especialidad>
-    setEspecialidad: (especialidad: Especialidad) => void;
+    paciente: Partial<Paciente>
     onClose: () => void;
 }
 
@@ -20,39 +25,131 @@ const Transition = React.forwardRef(function Transition(
 ) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
+
 export default function ReservaCita({
     onClose,
     open,
     especialidad,
-    setEspecialidad
+    paciente
 }: ReservaCitaProps){
     const [activeStep, setActiveStep] = React.useState(0);
+    const [shouldGoNext, setShouldGoNext] = useState(false);
     const [especialista, setEspecialista] = useState<Especialista>()
+    const [fechaCita, setFechaCita] = useState('');
+    const [motivoCita, setMotivoCita] = useState('');
+    const [createCita, setCreateCita] = useState<CreateCita>({
+        paciente_id: paciente.id || '',
+        especialidad_id: especialidad.id || '',
+        especialista_id: '',
+        fecha_inicio: '',
+        motivo: '',
+    });
     const [completed, setCompleted] = React.useState<{
         [k: number]: boolean;
     }>({});
+    
+    
+    const handleEspecialistaClick = async (especialista: Especialista) => {
+        const alert = await Swal.fire({
+            title: 'Seleccionando Especialista',
+            text: `Esta seleccionando al especialista ${especialista.nombre} ${especialista.apellido}, desea continuar?`,
+            showCancelButton: true,
+            confirmButtonText: 'Si',
+            cancelButtonText: 'No',
+            icon: 'info',
+            topLayer: true
+        })
+
+        if(alert.isConfirmed){
+            setEspecialista(especialista);
+            handleComplete()
+        }
+    }
+
+    const handlePaso2Complete = async (fecha: string, hora: string) => {
+        const alert = await Swal.fire({
+            title: 'Seleccionando Fecha y Hora',
+            text: `Su cita sera reservada el dia ${fecha} a las ${hora}, desea continuar?`,
+            showCancelButton: true,
+            confirmButtonText: 'Si',
+            cancelButtonText: 'No',
+            icon: 'info',
+            topLayer: true
+        })
+
+        if(alert.isConfirmed){
+            setFechaCita(`${fecha}T${hora}`)
+            handleComplete()
+        }
+    }
+
     const APPOINTMENT_STEPS = [
         {
             title:'Seleccion de Especialista', 
             component: <ReservarCitaPaso1
                 especialidad={especialidad}
-                especialista={especialista || {}}
-                setEspecialista={setEspecialista}
+                handleEspecialistaClick={handleEspecialistaClick}
             />
         },
         {
             title:'Seleccion de fecha y hora', 
-            component: <ReservarCitaPaso2 />
+            component: <ReservarCitaPaso2 
+                especialista={especialista || {}}
+                onSelect={handlePaso2Complete}
+            />
         },
         {
             title:'Confirmacion de reserva',
-            component: <Box>
-                <Typography textAlign={'center'}>
-                    ESTA SEGURO DE CONFIRMAR LA CITA?
-                </Typography>
-            </Box>
+            component: <ReservarCitaPaso3
+                cita={{
+                    especialidad: especialidad.nombre!,
+                    especialista: especialista!.nombre,
+                    paciente: paciente.nombre!,
+                    fecha: fechaCita
+                }}
+                motivo={motivoCita}
+                setMotivo={setMotivoCita}
+            />
         }
     ]
+
+    const crearCita = async () => {
+        try{
+            const result = await Swal.fire({
+                title: 'Reservando Cita',
+                text: 'Esta seguro de reservar la cita?',
+                icon: 'question',
+                showCancelButton: true,
+                showConfirmButton: true,
+                confirmButtonText: 'Reservar',
+                cancelButtonText: 'Cancelar',
+                topLayer: true
+            })
+
+            if(!result.isConfirmed) return;
+
+            const cita = await reservarCita(createCita);
+            if(cita){
+                await Swal.fire({
+                    title:'Exito!',
+                    text:'Cita reservada con exito!',
+                    icon:'success',
+                    topLayer: true
+                });  
+                handleReset();              
+            }
+
+        }catch(err: any){
+            Swal.fire({
+                title:'Error!',
+                text: `${err}`,
+                icon:'error',
+                topLayer: true
+            });
+        }finally{
+            onClose();
+        }
+    }
     
     const totalSteps = () => {
         return APPOINTMENT_STEPS.length;
@@ -71,12 +168,24 @@ export default function ReservaCita({
     };
 
     const handleNext = () => {
-        const newActiveStep =
-        isLastStep() && !allStepsCompleted()
-            ? // It's the last step, but not all steps have been completed,
-            // find the first step that has been completed
-            APPOINTMENT_STEPS.findIndex((step, i) => !(i in completed))
-            : activeStep + 1;
+        let newActiveStep: number;
+        if(isLastStep() && !allStepsCompleted()){
+            newActiveStep = APPOINTMENT_STEPS.findIndex((step, i) => !(i in completed));
+        }else if (isLastStep() && allStepsCompleted()){
+            crearCita();
+            newActiveStep = activeStep;
+        }else if (activeStep in completed){
+            newActiveStep = activeStep + 1;
+        }else{
+            Swal.fire({
+                title: `${APPOINTMENT_STEPS[activeStep].title}`,
+                text: 'Es necesario completar el paso primero.',
+                icon: 'warning',
+                topLayer: true 
+            });
+            newActiveStep = activeStep;
+        }
+
         setActiveStep(newActiveStep);
     };
 
@@ -85,7 +194,9 @@ export default function ReservaCita({
     };
 
     const handleStep = (step: number) => () => {
-        setActiveStep(step);
+        if(step in completed || step-1 in completed){
+            setActiveStep(step);
+        }
     };
 
     const handleComplete = () => {
@@ -93,19 +204,41 @@ export default function ReservaCita({
         ...completed,
         [activeStep]: true,
         });
-        handleNext();
+        
+        setShouldGoNext(true);
     };
+
+    useEffect(() => {
+        if (shouldGoNext && !isLastStep()) {
+            handleNext();
+            setShouldGoNext(false);
+        }
+    }, [completed, shouldGoNext]);
+
+    useEffect(() => {
+        setCreateCita(prev => ({
+            especialidad_id: especialidad?.id || prev.especialidad_id,
+            especialista_id: especialista?.id || prev.especialista_id,
+            paciente_id: paciente?.id || prev.paciente_id,
+            fecha_inicio: fechaCita || prev.fecha_inicio,
+            motivo: motivoCita || prev.motivo
+        }))
+    }, [paciente, especialista, especialidad, fechaCita, motivoCita])
 
     const handleReset = () => {
         setActiveStep(0);
         setCompleted({});
     };
+
     return(
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={() => {
+                handleReset();
+                onClose();
+            }}
             fullWidth
-            maxWidth="lg"
+            maxWidth="md"
             slots={{
                 transition: Transition
             }}
@@ -126,11 +259,18 @@ export default function ReservaCita({
                     </Stepper>
                 </Box>
                 <Box mt={3}>
-                    {APPOINTMENT_STEPS[activeStep].component}
+                    {activeStep < totalSteps() && APPOINTMENT_STEPS[activeStep].component}
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Cancelar</Button>
+                <Button disabled={activeStep === 0} onClick={handleBack}>Atras</Button>
+                <Button onClick={() => {
+                    handleReset();
+                    onClose();
+                }}>Cancelar</Button>
+                <Button onClick={allStepsCompleted() ? crearCita : isLastStep() ? handleComplete : handleNext}>
+                    {allStepsCompleted() ? 'Reservar' : isLastStep() ? 'Confirmar' : 'Siguiente'}
+                </Button>
             </DialogActions>
         </Dialog>
     )

@@ -29,9 +29,9 @@ export const ADMIN_OPTIONS: NavBarConfig = [
 ]
 
 export const PATIENT_OPTIONS: NavBarConfig = [
+    {type: 'button', text: 'Inicio', path: '/perfil/paciente'},
     {type: 'button', text: 'Mi Perfil', path: '/perfil/paciente'},
     {type: 'button', text: 'Mis Citas', path: '/citas'},
-    {type: 'button', text: 'Inicio', path: '/inicio/paciente'}
 ]
 
 export const ESPECIALIST_OPTIONS: NavBarConfig = [

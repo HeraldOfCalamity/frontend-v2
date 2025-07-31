@@ -6,33 +6,37 @@ import { Box, Card, CardActionArea, CardContent, CardHeader, Typography } from "
 
 interface ReservarCitaPaso1Props {
     especialidad: Partial<Especialidad>
-    especialista: Partial<Especialista>
-    setEspecialista: (especialista: Especialista) => void
+    // especialista: Partial<Especialista>
+    handleEspecialistaClick: (especialista: Especialista) => void
 }
 
 export default function ReservarCitaPaso1({
     especialidad,
-    especialista,
-    setEspecialista
+    // especialista,
+    handleEspecialistaClick
 }: ReservarCitaPaso1Props) {
     const [especialistas, setEspecialistas] = useState<Especialista[]>([]);
+
 
     useEffect(() => {
         const obtenerEspecialistasPorEspecialidad = async () => {
             try{
-                const especialistas = await getEspecialistasByEspecialidadId(especialidad.id!);
+                const especialistas = await getEspecialistasByEspecialidadId(especialidad.id || '');
                 setEspecialistas(especialistas);
             }catch(err: any){
                 Swal.fire('Error', `${err}`, 'error');
             }
         }
-        obtenerEspecialistasPorEspecialidad();
-    }, [])
+        if(especialidad.id){
+            obtenerEspecialistasPorEspecialidad();
+        }
+    }, [especialidad])
+
     return (
-        <Box>
+        <Box display={'flex'} gap={3} justifyContent={'space-around'}>
             {especialistas.map(esp => (
                 <Card key={esp.id}>
-                    <CardActionArea onClick={() => setEspecialista(esp)}>
+                    <CardActionArea onClick={() => handleEspecialistaClick(esp)}>
                         <CardContent>
                             <Typography variant="h5">
                                 {esp.nombre}

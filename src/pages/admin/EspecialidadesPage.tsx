@@ -57,6 +57,7 @@ export default function EspecialidadesPage(){
     }, []);
 
     const columns: Column<Especialidad>[] = [
+        {field: 'id', headerName: 'Id', align: 'center'},
         {field: 'nombre', headerName: 'Nombre', align: 'center'},
         {field: 'descripcion', headerName: 'Descripcion', align: 'center'}
     ];
