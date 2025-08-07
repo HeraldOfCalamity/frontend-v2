@@ -8,7 +8,7 @@ import { DatePicker, TimePicker } from '@mui/x-date-pickers'
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isBetween from "dayjs/plugin/isBetween";
-import { useParams } from "../../context/ParameterContext";
+import { useConfig } from "../../context/ParameterContext";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
@@ -25,8 +25,9 @@ export default function ReservarCitaPaso2({
 }: ReservarCitaPaso2Props) {
   const [fecha, setFecha] = useState<Dayjs | null>(null);
   const [hora, setHora] = useState<Dayjs | null>(null);
-  const {getParam} = useParams();
+  const {getParam} = useConfig();
   const [citas, setCitas] = useState<Cita[]>([]);
+  const [_slotsDisponibles, _setSlotsDisponibles] = useState<string[]>([]);
 
  
 
@@ -50,26 +51,34 @@ export default function ReservarCitaPaso2({
 
   const diasDisponibles = (especialista.disponibilidades || []).map(d => d.dia);
 
-  let slotsDisponibles: string[] = [];
-  if(fecha && especialista.disponibilidades){
-    const duracionCita = getParam('duracion_cita_minutos');
-    slotsDisponibles = getSlotsFromDisponibilidades(fecha, especialista.disponibilidades, duracionCita);
+  useEffect(() => {
+    if(fecha && especialista.disponibilidades){
+      let duracionCita = getParam('duracion_cita_minutos');
+      if(!duracionCita){
+        console.error('No se pudo obtener duracion de cita, se usaran 45 mins');
+        duracionCita = 45;
+      }
+      const slots = getSlotsFromDisponibilidades(fecha, especialista.disponibilidades, duracionCita);
+      // _setSlotsDisponibles(slots);
+      
 
-    const diaActual = fecha.format('YYYY-MM-DD');
+      const diaActual = fecha.format('YYYY-MM-DD');
 
-    const citasEseDia = citas.filter(c => dayjs(c.fecha_inicio).format('YYYY-MM-DD') === diaActual);
-    const intervalosOcupados = citasEseDia.map(c => ({
-      inicio: dayjs(c.fecha_inicio),
-      fin: dayjs(c.fecha_fin)
-    }));
-
-    slotsDisponibles = slotsDisponibles.filter(slotStr => {
-      const slot = dayjs(`${diaActual}T${slotStr}`);
-      return !intervalosOcupados.some(int => 
-        slot.isSameOrAfter(int.inicio) && slot.isBefore(int.fin)
-      );
-    });
-  }
+      const citasEseDia = citas.filter(c => dayjs(c.fecha_inicio).format('YYYY-MM-DD') === diaActual);
+      const intervalosOcupados = citasEseDia.map(c => ({
+        inicio: dayjs(c.fecha_inicio),
+        fin: dayjs(c.fecha_fin)
+      }));
+      const slotsFiltered = slots.filter(slotStr => {
+        const slot = dayjs(`${diaActual}T${slotStr}`);
+        return !intervalosOcupados.some(int => 
+          slot.isSameOrAfter(int.inicio) && slot.isBefore(int.fin)
+        );
+      });
+      
+      _setSlotsDisponibles(slotsFiltered)
+    }
+  }, [fecha])
 
  return (
     <Box>
@@ -91,7 +100,7 @@ export default function ReservarCitaPaso2({
           <>
             <Typography variant="subtitle1">Horarios disponibles:</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap">
-              {slotsDisponibles.map((slot) => (
+              {_slotsDisponibles.map((slot) => (
                 <Button
                   key={slot}
                   variant={hora?.format("HH:mm") === slot ? "contained" : "outlined"}
@@ -100,7 +109,7 @@ export default function ReservarCitaPaso2({
                   {slot}
                 </Button>
               ))}
-              {slotsDisponibles.length === 0 && (
+              {_slotsDisponibles.length === 0 && (
                 <Typography color="error">No hay horarios disponibles para este día</Typography>
               )}
             </Stack>
@@ -133,11 +142,11 @@ function getSlotsFromDisponibilidades(
   let slots: string[] = [];
   intervalosEseDia.forEach(intervalo => {
     let hora = fecha.hour(Number(intervalo.desde.split(':')[0])).minute(Number(intervalo.desde.split(':')[1])).second(0);
-    let fin = fecha.hour(Number(intervalo.hasta.split(':')[0])).minute(Number(intervalo.hasta.split(':')[1]))
+    let fin = fecha.hour(Number(intervalo.hasta.split(':')[0])).minute(Number(intervalo.hasta.split(':')[1])).second(0);
     while(hora.add(duracionMin, 'minute').isSameOrBefore(fin)){
       const slot = hora.format('HH:mm');
-
       if(hora.isAfter(fin)) break;
+
       slots.push(slot);
       hora = hora.add(duracionMin, 'minute');
     }

@@ -15,6 +15,8 @@ import ConfiguracionPage from './pages/admin/ConfiguracionPage';
 import { ParamsProvider } from './context/ParameterContext';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import MisCitasPaciente from './pages/MisCitasPaciente';
+import { UserProfileProvider } from './context/userProfileContext';
 
 
 
@@ -33,27 +35,31 @@ function App() {
       <ParamsProvider>
         <BrowserRouter>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <AppLayout>
-              <Routes>
-                <Route path='/' element={<HomeRedirect />} />
+            <UserProfileProvider>
+              <AppLayout>
+                <Routes>
+                  <Route path='/' element={<HomeRedirect />} />
 
-                <Route element={<ProtectedRoute roles={['admin', 'paciente']} />}>
-                  <Route path='/perfil/paciente' element={<PerfilPaciente />} />
-                </Route>
+                  <Route element={<ProtectedRoute roles={['admin', 'paciente']} />}>
+                    <Route path='/perfil/paciente' element={<PerfilPaciente />} />
+                    <Route path='/perfil/citas' element={<MisCitasPaciente />} />
 
-                <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
-                  <Route path='/perfil/especialista' element={<PerfilEspecialista />} />
-                </Route>
+                  </Route>
 
-                <Route element={<ProtectedRoute roles={['admin']} />}>
-                  <Route path='/admin' element={<AdminDashboard />} />
-                  <Route path='/admin/especialidades' element={<EspecialidadesPage />} />
-                  <Route path='/admin/usuarios' element={<UsuariosPage />} />
-                  <Route path='/admin/roles' element={<RolesPage />} />
-                  <Route path='/admin/configuracion' element={<ConfiguracionPage />} />
-                </Route>
-              </Routes>
-            </AppLayout>
+                  <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
+                    <Route path='/perfil/especialista' element={<PerfilEspecialista />} />
+                  </Route>
+
+                  <Route element={<ProtectedRoute roles={['admin']} />}>
+                    <Route path='/admin' element={<AdminDashboard />} />
+                    <Route path='/admin/especialidades' element={<EspecialidadesPage />} />
+                    <Route path='/admin/usuarios' element={<UsuariosPage />} />
+                    <Route path='/admin/roles' element={<RolesPage />} />
+                    <Route path='/admin/configuracion' element={<ConfiguracionPage />} />
+                  </Route>
+                </Routes>
+              </AppLayout>
+            </UserProfileProvider>
           </LocalizationProvider>
         </BrowserRouter>
       </ParamsProvider>

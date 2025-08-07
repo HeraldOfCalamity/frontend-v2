@@ -255,7 +255,7 @@ export default function UsuariosPage(){
     return (
         <Box>
             <Typography variant="h5" fontWeight={700} mb={3}>
-                Gestion de Especialidades
+                Gestion de Usuarios
             </Typography>
             <Stack direction='row' justifyContent='flex-end' mb={2}>
                 <Button 

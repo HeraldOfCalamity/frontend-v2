@@ -21,7 +21,7 @@ const DIAS_SEMANA = [
     { value: 4, label: "Jueves" },
     { value: 5, label: "Viernes" },
     { value: 6, label: "Sábado" },
-    // { value: 7, label: "Domingo" }, 
+    { value: 0, label: "Domingo" }, 
 ]
 
 export default function ({
@@ -177,7 +177,7 @@ export default function ({
                                 error={!!errors.apellido}
                                 helperText={errors.apellido?.message?.toString()}
                             />
-                            <TextField
+                            {/* <TextField
                                 label='Matricula Profesional'
                                 fullWidth
                                 size="small"
@@ -185,7 +185,7 @@ export default function ({
                                 {...register('matriculaProfesional', {required: 'Matricula requerida'})}
                                 error={!!errors.matriculaProfesional}
                                 helperText={errors.matriculaProfesional?.message?.toString()}
-                            />
+                            /> */}
                             <TextField
                                 label='Telefono'
                                 type="number"

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getOfficeConfig, type OfficeConfiguration } from "../api/configService";
+import { useAuth } from "./AuthContext";
 
 interface ParamsContextType{
     params: OfficeConfiguration[];
@@ -14,12 +15,12 @@ export const ParamsProvider: React.FC<{children: React.ReactNode}> = ({children}
     const [params, setParams] = useState<OfficeConfiguration[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
+    const {isAuthenticated} = useAuth();
 
     const fetchParams = async () => {
         setLoading(true);
         try{
             const res = await getOfficeConfig();
-            console.log('params', res)
             setParams(res || []);
             setError(null);
         }catch(err: any){   
@@ -31,7 +32,9 @@ export const ParamsProvider: React.FC<{children: React.ReactNode}> = ({children}
     }
 
     const getParam = (name: string) => {
+        
         const param = params.find(p => p.name === name);
+        console.log(`founded param: ${name}`, param)
         return param ? param.value : null;
     }
 
@@ -46,7 +49,7 @@ export const ParamsProvider: React.FC<{children: React.ReactNode}> = ({children}
     )
 }
 
-export const useParams = () => {
+export const useConfig = () => {
     const context = useContext(paramsContext);
     if(!context){
         throw new Error("useParams must be used within a ParamsProvider");

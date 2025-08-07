@@ -8,6 +8,7 @@ import { LocalDiningOutlined } from "@mui/icons-material";
 import { updateUsuario } from "../api/userService";
 import { getEspecialidades, type Especialidad } from "../api/especialidadService";
 import ReservaCita from "../components/ReservarCita/ReservaCita";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 interface PerfilPacienteProps{
 
@@ -149,6 +150,7 @@ const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
                 Bienvenid@, paciente: {user?.name}
             </Typography>
             <Box display={'flex'} flexDirection={'column'} flexGrow={1} justifyContent={'center'}>
+                {/* {(loading || isLoading) && } */}
                 {!profile?.user?.isVerified && !loading ? (
                     <Stack display={'flex'} alignItems={'center'}>
                         <Typography textAlign={'center'} variant="h5">

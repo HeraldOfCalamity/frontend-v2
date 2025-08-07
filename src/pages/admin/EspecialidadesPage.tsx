@@ -23,7 +23,7 @@ export default function EspecialidadesPage(){
         }
     }
 
-    const handleEspecialidadFormSubmit = async (data: {nombre: string; descripcion: string}) => {
+    const handleEspecialidadFormSubmit = async (data: {nombre: string; descripcion: string, image?: string}) => {
         setLoading(true);
         try{
             if(editData){ // Editar
@@ -59,7 +59,12 @@ export default function EspecialidadesPage(){
     const columns: Column<Especialidad>[] = [
         {field: 'id', headerName: 'Id', align: 'center'},
         {field: 'nombre', headerName: 'Nombre', align: 'center'},
-        {field: 'descripcion', headerName: 'Descripcion', align: 'center'}
+        {field: 'descripcion', headerName: 'Descripcion', align: 'center'},
+        {field: 'image', headerName: 'Imagen', align: 'center', render: (image) => {
+            return image 
+                ? <img src={image} alt="imagen" height={120} width={120}></img>
+                : 'Sin Imagen'
+        }},
     ];
 
     const actions: TableAction<Especialidad>[] = [

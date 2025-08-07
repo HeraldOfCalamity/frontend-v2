@@ -98,35 +98,35 @@ export default function RolesPage(){
                 setOpenForm(true);
             }
         },
-        {
-            icon: <Delete />,
-            label: 'Eliminar',
-            color: 'error',
-            onClick: async (row) => {
-                const result = await Swal.fire({
-                    title: 'Estas Seguro?',
-                    text: `Esta accion eliminara el rol "${row.name}". No se puede deshacer.`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: theme.palette.primary.main,
-                    confirmButtonText: 'Si, eliminar',
-                    cancelButtonText: 'Cancelar'
-                })
+        // {
+        //     icon: <Delete />,
+        //     label: 'Eliminar',
+        //     color: 'error',
+        //     onClick: async (row) => {
+        //         const result = await Swal.fire({
+        //             title: 'Estas Seguro?',
+        //             text: `Esta accion eliminara el rol "${row.name}". No se puede deshacer.`,
+        //             icon: 'warning',
+        //             showCancelButton: true,
+        //             confirmButtonColor: theme.palette.primary.main,
+        //             confirmButtonText: 'Si, eliminar',
+        //             cancelButtonText: 'Cancelar'
+        //         })
 
-                if(result.isConfirmed){
-                    setLoading(true)
-                    try{
-                        await deleteRol(row.id);
-                        await obtenerRoles()
-                        Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success")
-                    }catch{
-                        Swal.fire("Error", "No se pudo eliminar.", "error");
-                    }finally{
-                        setLoading(false);
-                    }
-                }
-            }
-        }
+        //         if(result.isConfirmed){
+        //             setLoading(true)
+        //             try{
+        //                 await deleteRol(row.id);
+        //                 await obtenerRoles()
+        //                 Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success")
+        //             }catch{
+        //                 Swal.fire("Error", "No se pudo eliminar.", "error");
+        //             }finally{
+        //                 setLoading(false);
+        //             }
+        //         }
+        //     }
+        // }
     ]
 
     const permisosColumns: Column<Permission>[] = [
@@ -139,7 +139,7 @@ export default function RolesPage(){
             <Typography variant="h5" fontWeight={700} mb={3}>
                 Roles y Permisos
             </Typography>
-            <Stack direction="row" justifyContent="flex-end" mb={2}>
+            {/* <Stack direction="row" justifyContent="flex-end" mb={2}>
                 <Button
                     variant="contained"
                     color="primary"
@@ -151,7 +151,7 @@ export default function RolesPage(){
                 >
                     Agregar Rol
                 </Button>
-            </Stack>
+            </Stack> */}
             <GenericTable
                 columns={columns}
                 actions={actions}

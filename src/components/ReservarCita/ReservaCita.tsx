@@ -34,7 +34,8 @@ export default function ReservaCita({
 }: ReservaCitaProps){
     const [activeStep, setActiveStep] = React.useState(0);
     const [shouldGoNext, setShouldGoNext] = useState(false);
-    const [especialista, setEspecialista] = useState<Especialista>()
+
+    const [especialista, setEspecialista] = useState<Especialista | null>(null)
     const [fechaCita, setFechaCita] = useState('');
     const [motivoCita, setMotivoCita] = useState('');
     const [createCita, setCreateCita] = useState<CreateCita>({
@@ -102,9 +103,9 @@ export default function ReservaCita({
             title:'Confirmacion de reserva',
             component: <ReservarCitaPaso3
                 cita={{
-                    especialidad: especialidad.nombre!,
-                    especialista: especialista!.nombre,
-                    paciente: paciente.nombre!,
+                    especialidad: especialidad.nombre || '',
+                    especialista: especialista?.nombre || '',
+                    paciente: paciente.nombre || '',
                     fecha: fechaCita
                 }}
                 motivo={motivoCita}
@@ -147,6 +148,7 @@ export default function ReservaCita({
                 topLayer: true
             });
         }finally{
+            handleReset()
             onClose();
         }
     }
@@ -204,7 +206,13 @@ export default function ReservaCita({
         ...completed,
         [activeStep]: true,
         });
-        
+        setCreateCita(prev => ({
+            especialidad_id: especialidad?.id || prev.especialidad_id,
+            especialista_id: especialista?.id || prev.especialista_id,
+            paciente_id: paciente?.id || prev.paciente_id,
+            fecha_inicio: fechaCita || prev.fecha_inicio,
+            motivo: motivoCita || prev.motivo
+        }))
         setShouldGoNext(true);
     };
 
@@ -216,16 +224,20 @@ export default function ReservaCita({
     }, [completed, shouldGoNext]);
 
     useEffect(() => {
-        setCreateCita(prev => ({
-            especialidad_id: especialidad?.id || prev.especialidad_id,
-            especialista_id: especialista?.id || prev.especialista_id,
-            paciente_id: paciente?.id || prev.paciente_id,
-            fecha_inicio: fechaCita || prev.fecha_inicio,
-            motivo: motivoCita || prev.motivo
-        }))
-    }, [paciente, especialista, especialidad, fechaCita, motivoCita])
+        console.log('createCita', createCita);
+    }, [createCita])
 
     const handleReset = () => {
+        setCreateCita({
+            paciente_id: paciente.id || '',
+            especialidad_id: especialidad.id || '',
+            especialista_id: '',
+            fecha_inicio: '',
+            motivo: '',
+        })
+        setEspecialista(null)
+        setFechaCita('')
+        setMotivoCita('')
         setActiveStep(0);
         setCompleted({});
     };
