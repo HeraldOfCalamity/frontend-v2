@@ -1,0 +1,31 @@
+.swal2-container {
+  z-index: 99999;
+}
+
+/* .rbc-today {
+  background-color: #e07d9e !important; 
+  color: #ffffff !important;
+  opacity: 0.9 !important;           
+} */
+
+.rbc-time-header .rbc-today {
+  background-color: #e07d9e !important; 
+  color: #ffffff !important;
+}
+
+.rbc-day-bg.rbc-today {
+  background-color: inherit !important;
+}
+
+/* .rbc-btn-group button {
+  background: #333;
+  color: #ffb6c1;
+  border: 1px solid #ffb6c1;
+  font-size: 1.1em;
+}
+
+.rbc-btn-group button.rbc-active, .rbc-btn-group button:active {
+  background: #ffb6c1;
+  color: #222;
+  font-size: 1.1em;
+} */

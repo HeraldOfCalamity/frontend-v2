@@ -31,7 +31,7 @@ function App() {
   }, [prefersDarkMode]);
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={lightTheme}>
       <ParamsProvider>
         <BrowserRouter>
           <LocalizationProvider dateAdapter={AdapterDayjs}>

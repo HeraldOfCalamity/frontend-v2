@@ -9,8 +9,8 @@ export interface Cita {
     paciente: Paciente;
     especialista: Especialista;
     especialidad: Especialidad;
-    fecha_inicio: string;
-    fecha_fin: string;
+    fecha_inicio: string | Date;
+    fecha_fin: string | Date;
     duration_minutes: number;
     estado: {
         id: string;
@@ -63,5 +63,14 @@ export async function getMisCitas(){
         return res.data;
     }catch(err: any){
         handleError(err, 'Error al obtener citas del perfil')
+    }
+}
+
+export async function getCitas(){
+    try{
+        const res = await api.get(`${CITA_ROUTE}admin`)        ;
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al obtener citas')
     }
 }

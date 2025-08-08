@@ -35,10 +35,10 @@ export default function EspecialidadesPage(){
                 await obtenerEspecialidades()
                 Swal.fire("Operacion Exitosa!", "Especialidad creada con exito", "success");
             } 
-        }catch{
+        }catch(err: any){
             setEditData(null);
             setOpenForm(false);
-            Swal.fire("Error", "Error al guardar", "error");
+            Swal.fire("Error", `${err}`, "error");
         }finally{
             setEditData(null);
             setOpenForm(false);

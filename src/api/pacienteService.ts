@@ -4,6 +4,7 @@ import type { User } from "./userService";
 
 export interface Paciente{
     id: string;
+    ci: string;
     nombre: string;
     apellido: string;
     tipo_sangre: string;
@@ -22,7 +23,14 @@ export interface PacienteAutoCreate {
     apellido: string
     fecha_nacimiento: string
     tipo_sangre: string
+    ci: string;
     telefono: string
+}
+
+export interface FilterPaciente {
+    ci: string;
+    nombre: string;
+    apellido: string;
 }
 
 const PACIENTES_ROUTE = 'pacientes/'
@@ -32,16 +40,7 @@ export async function createPacientePerfil(data: Partial<PacienteWithUser>){
         const res = await api.post(`${PACIENTES_ROUTE}perfil/`, data);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al crear paciente."
-        )
-        throw new Error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al crear paciente."
-        )
+        handleError(err, 'Error al crear perfil de paciente')
     }
 }
 
@@ -59,16 +58,7 @@ export async function getPacienteByUserId(user_id: string){
         const res = await api.get(`${PACIENTES_ROUTE}${user_id}`);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al obtener paciente."
-        )
-        throw new Error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al obtener paciente."
-        )
+        handleError(err, 'Error al obtener paciente')
     }
 }
 
@@ -77,12 +67,7 @@ export async function deletePaciente(user_id: string){
         const res = await api.delete(`${PACIENTES_ROUTE}${user_id}`);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.detail ||
-            err?.message ||
-            "Ocurrio un error al eliminar paciente."
-        )
-        throw new Error("Ocurrio un error al eliminar paciente.")
+        handleError(err, 'Error al eliminar paciente')
     }
 }
 
@@ -91,16 +76,7 @@ export async function updatePacientePerfil(user_id: string, data: Partial<Pacien
         const res = await api.put(`${PACIENTES_ROUTE}perfil/${user_id}`, data);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al actualizar paciente."
-        )
-        throw new Error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al actualizar paciente."
-        )
+        handleError(err, 'Error al actualizar perfil')
     }
 }
 
@@ -109,14 +85,7 @@ export async function getPacienteProfile(){
         const res = await api.get(`${PACIENTES_ROUTE}perfil`);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al obtener perfil paciente."
-        )
-        throw new Error(err?.response?.data?.detail ||
-            err?.message ||
-            "Ocurrio un error al obtener perfil paciente.")
+        handleError(err, 'Error al obtener perfil')
     }
 }
 
@@ -126,5 +95,14 @@ export async function updatePaciente(paciente_id: string, data: Partial<Paciente
         return res.data;
     }catch(err: any){
         handleError(err, 'Error al actualizar paciente');
+    }
+}
+
+export async function filterPacientes(filter: FilterPaciente){
+    try{
+        const res = await api.post(`${PACIENTES_ROUTE}filter`, filter);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al filtrar pacientes');
     }
 }

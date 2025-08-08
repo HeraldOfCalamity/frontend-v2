@@ -47,10 +47,10 @@ export default function RolesPage(){
                 await obtenerRoles();
                 Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
             }
-        } catch (error: any) {
+        } catch (err: any) {
             setEditData(null);
             setOpenForm(false);
-            Swal.fire("Error", "Error al guardar", "error");
+            Swal.fire("Error", `${err}`, "error");
         }finally{
             setEditData(null);
             setOpenForm(false);

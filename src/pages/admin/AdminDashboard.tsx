@@ -1,8 +1,17 @@
-import { AssignmentInd, Category, LocalHospital, PeopleAlt } from "@mui/icons-material";
+import { AddCircleOutline, AssignmentInd, Category, LocalHospital, PeopleAlt } from "@mui/icons-material";
 import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material"
 import Grid from "@mui/material/Grid";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import CalendarioCitas from "../../components/CalendarioCitas";
+import { getCitas, type Cita } from "../../api/citaService";
+import Swal from "sweetalert2";
+import BuscarPaciente from "../../components/admin/BuscarPaciente";
+import type { Paciente } from "../../api/pacienteService";
+import ReservaCita from "../../components/ReservarCita/ReservaCita";
+import BuscarEspecialidad from "../../components/admin/BuscarEspecialidad";
+import type { Especialidad } from "../../api/especialidadService";
 
 interface AdminDashboardProps{
 
@@ -16,62 +25,92 @@ const quickStats = [
 
 const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     const {user} = useAuth();
+    const [citas, setCitas] = useState<Cita[]>([]);
+    const [openSearchPaciente, setOpenSearchPaciente] = useState(false);
+    const [openReservaCita, setOpenReservaCita] = useState(false);
+    const [openSearchEspecialidad, setOpenSearchEspecialidad] = useState(false);
+    const [selectedPaciente, setSelectedPaciente] = useState<Partial<Paciente> | null>(null);
+    const [selectedEspecialidad, setSelectedEspecialidad] = useState<Especialidad | null>(null);
     const navigate = useNavigate();
+
+    const handleNewCitaClick = () => {
+        setOpenSearchPaciente(true);
+    }
+
+    const handleSearchPacienteClose = () => {
+        setOpenSearchPaciente(false);
+    }
+
+    const handleSelectPaciente = (paciente: Paciente) => {
+        setSelectedPaciente(paciente);
+        setOpenSearchEspecialidad(true);
+    }
+
+    const handleReservarCitaClose = async () => {
+        await obtenerCitas();
+        setSelectedPaciente(null);
+        setOpenReservaCita(false);
+    }
+
+    const handleSearchEspecialidadClose = () => {
+        setSelectedEspecialidad(null);
+        setOpenSearchEspecialidad(false);
+    }
+    
+    const handleSelectEspecialidad = (especialidad: Especialidad) => {
+        setSelectedEspecialidad(especialidad)
+        setOpenSearchEspecialidad(false);
+        setOpenReservaCita(true);
+    }
+
+    const obtenerCitas = async () => {
+        try{
+            const citas = await getCitas();
+            setCitas(citas);
+        }catch (err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
+        }
+    }
+    useEffect(() => {
+        obtenerCitas();
+    }, [])
 
     return(
         <Box my='auto'>
             <Typography variant="h4" fontWeight={700} color="primary" mb={7} textAlign='center'>
                 Bienvenido, {user?.name || user?.email || "Administrador"}
             </Typography>
-            <Grid container spacing={3} mb={7}>
-                {quickStats.map((stat) => (
-                <Grid size={{xs:12, sm:6, md:3}} key={stat.label}>
-                    <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
-                        <CardContent sx={{ textAlign: "center" }}>
-                            {stat.icon}
-                            <Typography variant="h5" fontWeight={600} mt={1}>
-                                {stat.count}
-                            </Typography>
-                            <Typography color="textSecondary">{stat.label}</Typography>
-                        </CardContent>
-                    </Card>
-                </Grid>
-                ))}
-            </Grid>
-             <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
+            <Stack mb={2}>
                 <Button
-                    variant="contained"
-                    color="secondary"
-                    sx={{ minWidth: 180 }}
-                    onClick={() => navigate('/admin/usuarios', {replace: true})}
-                >
-                    Gestión de Usuarios
-                </Button>
-                <Button
-                    variant="contained"
-                    color="secondary"
-                    sx={{ minWidth: 180 }}
-                    onClick={() => navigate('/admin/especialidades', {replace: true})}
-                >
-                    Gestión de Especialidades
-                </Button>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ minWidth: 180 }}
-                    onClick={() => navigate('/admin/roles', {replace: true})}
-                >
-                    Gestión de Roles y Permisos
-                </Button>
-                <Button
-                    variant="outlined"
-                    color="primary"
-                    sx={{ minWidth: 180 }}
-                    href="/admin/parametros"
-                >
-                    Parámetros del Consultorio
-                </Button>
+                    variant="contained" 
+                    color="primary" 
+                    startIcon={<AddCircleOutline />}
+                    onClick={handleNewCitaClick}
+                >Reservar Cita</Button>
             </Stack>
+            <CalendarioCitas citas={citas} />
+            <BuscarPaciente 
+                open={openSearchPaciente} 
+                onClose={handleSearchPacienteClose}
+                onSelectPaciente={handleSelectPaciente} 
+            />
+            <BuscarEspecialidad
+                open={openSearchEspecialidad}
+                onClose={handleSearchEspecialidadClose}
+                onSelectEspecialidad={handleSelectEspecialidad}
+            />
+
+            <ReservaCita
+                open={openReservaCita}
+                especialidad={selectedEspecialidad || {}}
+                onClose={handleReservarCitaClose}
+                paciente={selectedPaciente || {}}
+            />
+
         </Box>
     )
 }

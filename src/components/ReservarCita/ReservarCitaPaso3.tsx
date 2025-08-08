@@ -25,7 +25,7 @@ export default function ReservarCitaPaso3({
                 title: 'Confirmacion de la cita',
                 text: 'Por favor, verifique los datos de la cita y escriba el motivo',
                 icon: 'info',
-                topLayer: true
+                
             }) 
         }
     }, [])

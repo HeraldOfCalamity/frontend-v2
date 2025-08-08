@@ -4,6 +4,7 @@ import type { User } from "./userService";
 
 export interface Especialista{
     id: string;
+    ci: string;
     especialidad_ids: string[];
     disponibilidades: Disponibilidad[];
     matricula_profesional: string;
@@ -30,12 +31,7 @@ export async function createEspecialistaPerfil(data: Partial<EspecialistaWithUse
         const res = await api.post(`${ESPECIALISTA_ROUTE}perfil`, data);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.detail ||
-            err?.message ||
-            "Ocurrio un error al crear especialista."
-        )
-        throw new Error('Ocurrio un error al crear especialista.')
+        handleError(err, 'Error al crear perfil de especialista')
     }
 }
 
@@ -53,12 +49,8 @@ export async function getEspecialistaByUserId(user_id: string){
         const res = await api.get(`${ESPECIALISTA_ROUTE}${user_id}`);
         return res.data;
     }catch(err: any){
-        console.error(
-            err?.response?.detail ||
-            err?.message ||
-            "Ocurrio un error al obtener especialista."
-        )
-        throw new Error('Ocurrio un error al obtener especialista.')
+        console.log('error service', err)
+        handleError(err, 'Error al obtener especialista')
     }
 }
 

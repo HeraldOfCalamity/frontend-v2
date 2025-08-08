@@ -44,6 +44,7 @@ export default function ({
         apellido: initialData.especialista?.apellido || '',
         telefono: initialData.especialista?.telefono || '',
         password: initialData.user?.password || '',
+        ci: initialData.especialista?.ci || '',
         especialidades: initialData.especialista?.especialidad_ids || [],
         isActive: initialData.user?.isActive,
         matriculaProfesional: initialData.especialista?.matricula_profesional || ''
@@ -58,6 +59,7 @@ export default function ({
         apellido: '',
         telefono: '',
         password: '',
+        ci: '',
         matriculaProfesional: '',
         especialidades: [],
         isActive: true
@@ -120,7 +122,9 @@ export default function ({
                         telefono: data.telefono,
                         disponibilidades: disponibilidades,
                         especialidad_ids: data.especialidades,
-                        matricula_profesional: data.matriculaProfesional
+                        matricula_profesional: data.matriculaProfesional,
+                        ci: data.ci,
+                        
                     }
                 };
                 onSubmit(submitData);
@@ -195,6 +199,16 @@ export default function ({
                                 {...register('telefono', {required: 'Telefono requerido'})}
                                 error={!!errors.telefono}
                                 helperText={errors.telefono?.message?.toString()}
+                            />
+                            <TextField
+                                label='CI'
+                                type="text"
+                                fullWidth
+                                size="small"
+                                margin="normal"
+                                {...register('ci', {required: 'CI requerido'})}
+                                error={!!errors.ci}
+                                helperText={errors.ci?.message?.toString()}
                             />
                         </Grid>
                         <Grid size={{md:7, xs: 12}} spacing={1} alignItems={'center'}>

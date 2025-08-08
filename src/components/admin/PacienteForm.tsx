@@ -35,7 +35,8 @@ export default function ({
                 : '',
             telefono: initialData.paciente?.telefono || '',
             password: initialData.user?.password || '',
-            isActive: initialData.user?.isActive
+            isActive: initialData.user?.isActive,
+            ci: initialData.paciente?.ci || ''
                 
         }
         : {
@@ -48,6 +49,7 @@ export default function ({
             tipo_sangre: '',
             telefono: '',
             password: '',
+            ci: '',
             fecha_nacimiento: '',
             isActive: true
         };
@@ -87,6 +89,7 @@ export default function ({
                         tipo_sangre: data.tipo_sangre,
                         fecha_nacimiento: data.fecha_nacimiento,
                         telefono: data.telefono,
+                        ci: data.ci
                     }
                 };
                 onSubmit(submitData);
@@ -142,7 +145,7 @@ export default function ({
                                 render={({ field }) => (
                                     <Select
                                         labelId="tipo-sangre-label"
-                                        label="Tipo Sangre"
+                                        label="Tipo Sangre"                                        
                                         {...field}
                                         disabled={loading}
                                         >
@@ -182,6 +185,16 @@ export default function ({
                             {...register('telefono', {required: 'Telefono requerido'})}
                             error={!!errors.telefono}
                             helperText={errors.telefono?.message?.toString()}
+                        />
+                        <TextField
+                            label='CI'
+                            type="text"
+                            fullWidth
+                            size="small"
+                            margin="normal"
+                            {...register('ci', {required: 'CI requerido'})}
+                            error={!!errors.ci}
+                            helperText={errors.ci?.message?.toString()}
                         />
                     </Grid>
                 </DialogContent>

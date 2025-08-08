@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Column, TableAction } from "../../components/common/GenericTable";
-import { AddCircleOutline, Circle, Delete, Edit } from "@mui/icons-material";
+import { AddCircleOutline, Circle, Delete, Edit, ReplayOutlined } from "@mui/icons-material";
 import { Box, Button, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
 import GenericTable from "../../components/common/GenericTable";
 import Swal from "sweetalert2";
@@ -47,7 +47,6 @@ export default function UsuariosPage(){
 
             if(user.role === 'paciente'){
                 const paciente = await obtenerPacientePorIdUsuario(user.id);
-                console.log("paciente", paciente);
                 if(paciente){
                     await deletePaciente(paciente?.id)
                     Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
@@ -76,8 +75,6 @@ export default function UsuariosPage(){
                 if(especialista){
                     await deleteEspecialista(especialista?.id)
                     Swal.fire("¡Eliminado!", "El registro fue eliminado.", "success");
-                }else{
-                    Swal.fire("Error", "Especialista no encontrado", "error");
                 }
             }
         }catch(err: any){
@@ -89,45 +86,52 @@ export default function UsuariosPage(){
     }
 
     const editarUsuario = async (user: User) => {
-
-        if(user.role === 'paciente'){
-            const pacienteResponse = await obtenerPacientePorIdUsuario(user.id);
-            let data: PacienteWithUser | null = null;
-            if(pacienteResponse){
-                data = {user: user, paciente: pacienteResponse}
-            }else{
-                data = {user: user, paciente: {}}
-                await Swal.fire(
-                    'Atencion', 
-                    'El usuario registrado no ha registrado sus datos personales, debe registrarlos para continuar.',
-                    "info"
-                )
+        try{
+            if(user.role === 'paciente'){
+                const pacienteResponse = await obtenerPacientePorIdUsuario(user.id);
+                let data: PacienteWithUser | null = null;
+                if(pacienteResponse){
+                    data = {user: user, paciente: pacienteResponse}
+                }else{
+                    data = {user: user, paciente: {}}
+                    await Swal.fire(
+                        'Atencion', 
+                        'El usuario registrado no ha registrado sus datos personales, debe registrarlos para continuar.',
+                        "info"
+                    )
+                }
+                setEditData(data);
+                setOpenPacienteForm(true);
             }
-            setEditData(data);
-            setOpenPacienteForm(true);
+
+            if(user.role === 'especialista'){
+                const especialistaResponse = await obtenerEspecialistaPorIdUsuario(user.id);
+                if(especialistaResponse){
+                    setEditData((o) => o ?? { user: user, especialista: especialistaResponse ?? {} });
+                    setOpenEspecialistaForm(true);
+                }
+            }   
+
+        }catch(err:any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
         }
-
-        if(user.role === 'especialista'){
-            const especialistaResponse = await obtenerEspecialistaPorIdUsuario(user.id);
-            if(especialistaResponse){
-                setEditData((o) => o ?? { user: user, especialista: especialistaResponse ?? {} });
-                setOpenEspecialistaForm(true);
-            }
-        }   
-
     }
 
     const obtenerUsuarios = async () => {
         try{
             const usuarios = await getUsuarios();
             const roles = await getRoles();
-            const usuariosWithRoleName = usuarios.map(u => ({
+            const usuariosWithRoleName = usuarios?.map(u => ({
                 ...u,
                 role: roles.find(r => r.id === u.role)?.name!
             }));
-            setUsuarios(usuariosWithRoleName);
-        }catch{
-            Swal.fire("Error", "Ocurrio un error al obtener los usuarios", 'error');
+            setUsuarios(usuariosWithRoleName || []);
+        }catch(err:any){
+            Swal.fire("Error", `${err}`, 'error');
         }
     }
 
@@ -137,7 +141,7 @@ export default function UsuariosPage(){
         try{
             return await getPacienteByUserId(user_id)
         }catch(err: any){
-            await Swal.fire("Error", `${err}`, 'error');
+            Swal.fire("Error", `${err}`, 'error');
         }
     }
 
@@ -145,7 +149,7 @@ export default function UsuariosPage(){
         try{
             return await getEspecialistaByUserId(user_id)
         }catch(err: any){
-            await Swal.fire("Error", `${err}`, 'error');
+            Swal.fire("Error", `${err}`, 'error');
         }
     }
 
@@ -166,13 +170,13 @@ export default function UsuariosPage(){
                 await obtenerUsuarios()
                 Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
             }
+            setEditData(null);
+            setOpenPacienteForm(false);
         }catch(err: any){
-            setEditData(null);
-            setOpenPacienteForm(false);
-            Swal.fire(`${err}`);
+            Swal.fire('Error', `${err}`, 'error');
         }finally{
-            setEditData(null);
-            setOpenPacienteForm(false);
+            // setEditData(null);
+            // setOpenPacienteForm(false);
             setLoading(false);
         }
     }
@@ -189,14 +193,28 @@ export default function UsuariosPage(){
                 await obtenerUsuarios()
                 Swal.fire("Operacion Exitosa!", "Usuario creado con exito", "success");
             }
-        }catch{
+        }catch(err: any){
             setEditData(null);
             setOpenEspecialistaForm(false);
-            Swal.fire("Error", "Error al guardar", "error");
+            Swal.fire("Error", `${err}`, "error");
         }finally{
             setEditData(null);
             setOpenEspecialistaForm(false);
             setLoading(false);
+        }
+    }
+
+    const handleRefresh = () => {
+        try{
+            setLoading(true);
+            obtenerUsuarios()
+            setLoading(false);
+        }catch(err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
         }
     }
 
@@ -211,7 +229,7 @@ export default function UsuariosPage(){
     }, []);
 
     const columns: Column<User>[] = [
-        {field: 'id', headerName: 'Id', align: 'center'},
+        // {field: 'id', headerName: 'Id Usuario', align: 'center'},
         {field: 'username', headerName: 'Nombre', align: 'center'},
         {field: 'email', headerName: 'Correo', align: 'center'},
         {
@@ -258,6 +276,18 @@ export default function UsuariosPage(){
                 Gestion de Usuarios
             </Typography>
             <Stack direction='row' justifyContent='flex-end' mb={2}>
+                <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    size="small"
+                    startIcon={<ReplayOutlined />}
+                    onClick={handleRefresh}
+                    sx={{
+                        mr: 2
+                    }}
+                >
+                    Refrescar
+                </Button>
                 <Button 
                     variant="contained" 
                     color="primary" 

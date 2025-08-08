@@ -7,6 +7,8 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import "react-big-calendar/lib/css/react-big-calendar.css"
+import './main.css'
 
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'

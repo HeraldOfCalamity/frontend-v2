@@ -11,7 +11,7 @@ export const lightTheme = createTheme({
     primary: { main: pinkMain },
     secondary: { main: pinkLight },
     background: {
-      default: "#FFF6FA",
+      default: "#feebf4ff",
       paper: "#FFFFFF",
     },
     text: {
@@ -30,7 +30,7 @@ export const lightTheme = createTheme({
     MuiInputBase: {
       styleOverrides: {
         root: {
-          fontSize: '1.1rem',       // Cambia el tamaño global del input
+          fontSize: '1.rem',       // Cambia el tamaño global del input
         },
         input: {
           fontSize: '1.1rem',

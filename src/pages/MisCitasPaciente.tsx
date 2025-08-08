@@ -4,7 +4,7 @@ import { getCitasByPaciente, type Cita } from "../api/citaService";
 import Swal from "sweetalert2";
 import type { Paciente } from "../api/pacienteService";
 import dayjs from "dayjs";
-import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography, useTheme } from "@mui/material";
 import { useUserProfile } from "../context/userProfileContext";
 
 interface MisCitasPacienteProps{
@@ -17,6 +17,7 @@ export default function MisCitasPaciente({
     const {profile: paciente} = useUserProfile();
     const [citas, setCitas] = useState<Cita[]>([]);
     const [loading, setLoading] = useState(false);
+    const theme = useTheme();
 
     const obtenerCitasPaciente = async () => {
         setLoading(true);
@@ -69,7 +70,7 @@ export default function MisCitasPaciente({
     };
 
     return(
-        <Box sx={{maxHeight: '70vh', overflowY: 'auto', pr: 1}}>
+        <Box sx={{maxHeight: '70vh', overflowY: 'auto', pr: 1}} flexGrow={1}>
             <Typography variant="h5" mb={3}>
                 Mis Citas
             </Typography>
@@ -79,9 +80,11 @@ export default function MisCitasPaciente({
             ) : citas.length === 0 ? (
                 <Typography>No tienes citas registradas.</Typography>
             ) : (
-                <Stack spacing={2} >
+                <Stack spacing={2}>
                     {citas.map(cita => (
-                        <Card key={cita.id} variant="outlined">
+                        <Card key={cita.id} variant="elevation" elevation={7} sx={{
+                            border: `1px solid ${theme.palette.primary.main}`
+                        }}>
                             <CardContent>
                                 <Stack direction={{xs: 'column', sm:'row'}} spacing={2} alignItems={'center'} justifyContent={'space-between'}>
                                     <Box flex={1}>

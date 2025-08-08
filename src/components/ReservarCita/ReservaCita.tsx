@@ -58,7 +58,6 @@ export default function ReservaCita({
             confirmButtonText: 'Si',
             cancelButtonText: 'No',
             icon: 'info',
-            topLayer: true
         })
 
         if(alert.isConfirmed){
@@ -75,7 +74,6 @@ export default function ReservaCita({
             confirmButtonText: 'Si',
             cancelButtonText: 'No',
             icon: 'info',
-            topLayer: true
         })
 
         if(alert.isConfirmed){
@@ -124,7 +122,6 @@ export default function ReservaCita({
                 showConfirmButton: true,
                 confirmButtonText: 'Reservar',
                 cancelButtonText: 'Cancelar',
-                topLayer: true
             })
 
             if(!result.isConfirmed) return;
@@ -135,7 +132,6 @@ export default function ReservaCita({
                     title:'Exito!',
                     text:'Cita reservada con exito!',
                     icon:'success',
-                    topLayer: true
                 });  
                 handleReset();              
             }
@@ -145,7 +141,6 @@ export default function ReservaCita({
                 title:'Error!',
                 text: `${err}`,
                 icon:'error',
-                topLayer: true
             });
         }finally{
             handleReset()
@@ -183,7 +178,6 @@ export default function ReservaCita({
                 title: `${APPOINTMENT_STEPS[activeStep].title}`,
                 text: 'Es necesario completar el paso primero.',
                 icon: 'warning',
-                topLayer: true 
             });
             newActiveStep = activeStep;
         }
