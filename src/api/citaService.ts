@@ -68,9 +68,27 @@ export async function getMisCitas(){
 
 export async function getCitas(){
     try{
-        const res = await api.get(`${CITA_ROUTE}admin`)        ;
+        const res = await api.get(`${CITA_ROUTE}admin`);
         return res.data;
     }catch(err: any){
         handleError(err, 'Error al obtener citas')
+    }
+}
+
+export async function confirmCita(id: string){
+    try{
+        const res = await api.put(`${CITA_ROUTE}confirmar/${id}`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al confirmar cita')
+    }
+}
+
+export async function cancelCita(id: string){
+    try{
+        const res = await api.put(`${CITA_ROUTE}cancelar/${id}`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al confirmar cita')
     }
 }

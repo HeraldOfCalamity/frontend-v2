@@ -128,23 +128,28 @@ export default function ReservaCita({
 
             const cita = await reservarCita(createCita);
             if(cita){
+                // console.log('cita', cita)
                 await Swal.fire({
                     title:'Exito!',
                     text:'Cita reservada con exito!',
                     icon:'success',
                 });  
-                handleReset();              
+                handleReset();  
+                onClose();            
             }
 
         }catch(err: any){
-            Swal.fire({
+            await Swal.fire({
                 title:'Error!',
                 text: `${err}`,
                 icon:'error',
             });
+            setCompleted({})
+            setShouldGoNext(false)
+            setActiveStep(0)
         }finally{
-            handleReset()
-            onClose();
+            // handleReset()
+            // onClose();
         }
     }
     
@@ -170,16 +175,17 @@ export default function ReservaCita({
             newActiveStep = APPOINTMENT_STEPS.findIndex((step, i) => !(i in completed));
         }else if (isLastStep() && allStepsCompleted()){
             crearCita();
-            newActiveStep = activeStep;
+            return;
         }else if (activeStep in completed){
             newActiveStep = activeStep + 1;
-        }else{
+        }else {
             Swal.fire({
                 title: `${APPOINTMENT_STEPS[activeStep].title}`,
                 text: 'Es necesario completar el paso primero.',
                 icon: 'warning',
             });
             newActiveStep = activeStep;
+            console.log('active step', newActiveStep)
         }
 
         setActiveStep(newActiveStep);
@@ -217,11 +223,12 @@ export default function ReservaCita({
         }
     }, [completed, shouldGoNext]);
 
-    useEffect(() => {
-        console.log('createCita', createCita);
-    }, [createCita])
+    // useEffect(() => {
+    //     console.log('createCita', createCita);
+    // }, [createCita])
 
     const handleReset = () => {
+        setShouldGoNext(false);
         setCreateCita({
             paciente_id: paciente.id || '',
             especialidad_id: especialidad.id || '',

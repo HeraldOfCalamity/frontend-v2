@@ -1,31 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Cita } from "../api/citaService";
+import { cancelCita, type Cita } from "../api/citaService";
 import dayjs from "dayjs";
-import { Box, Dialog, DialogContent, DialogTitle, useTheme } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, useTheme } from "@mui/material";
 import { Calendar, Views, type View } from "react-big-calendar";
 import { localizer } from "../utils/calendarLocalazer";
+import Swal from "sweetalert2";
 
 interface CalendarioCitaProps {
-    citas: Cita[]
+    citas: Cita[],
+    handleCancelClick: (cita: Cita) => void;
+    handleConfirmClick: (cita: Cita) => void;
 }
 
 
 export default function CalendarioCitas({
     citas,
+    handleCancelClick,
+    handleConfirmClick
 }: CalendarioCitaProps) {
-    // const eventos = useMemo<{title: string, start: Date, end: Date}>(() => 
-    //     citas.map(cita => ({
-    //         title: `${}`
-    //         end: new Date(cita.fecha_fin), 
-    //         start: new Date(cita.fecha_inicio)
-    //     }))
-    // , [citas])
     const [eventos, setEventos] = useState<Cita[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{start: Date, end: Date} | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<Cita | null>(null);
     const [date, setDate] = useState(new Date());
-    const [view, setView] = useState('week');
+    const [view, setView] = useState('month');
     const theme = useTheme()
     
 
@@ -83,7 +81,6 @@ export default function CalendarioCitas({
         const title = `${cita.especialidad.nombre}: ${cita.especialista.nombre} ${cita.especialista.nombre}`;
         return title;
     }
-    
 
     useEffect(() => {
         setEventos(citas)
@@ -112,7 +109,7 @@ export default function CalendarioCitas({
                     startAccessor={cita => new Date(cita.fecha_inicio)}
                     endAccessor={cita => new Date(cita.fecha_fin)}
                     titleAccessor={getEventTitleFromCita}
-                    defaultView={'week'}
+                    defaultView={'month'}
                     views={['month', 'week', 'day', 'agenda']}
                     step={15}
                     timeslots={2}
@@ -142,23 +139,50 @@ export default function CalendarioCitas({
                     
                 />
             </Box>
-            <Dialog open={openDialog} onClose={() => {setOpenDialog(false); setSelectedSlot(null); setSelectedEvent(null)}} maxWidth={"sm"} fullWidth>
-                <DialogTitle>{selectedEvent ? 'Detalle Cita' : 'Nueva Cita'}</DialogTitle>
+            <Dialog open={openDialog && !!selectedEvent} onClose={() => {setOpenDialog(false); setSelectedSlot(null); setSelectedEvent(null)}} maxWidth={"sm"} fullWidth>
+                <DialogTitle>Detalle</DialogTitle>
                 <DialogContent>
-                    {selectedEvent ? (
+                    {selectedEvent && (
                         <>
                             <p><b>Título:</b> {selectedEvent.especialidad.nombre}</p>
                             <p><b>Inicio:</b> {dayjs(selectedEvent.fecha_inicio).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Fin:</b> {dayjs(selectedEvent.fecha_fin).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Estado:</b> {selectedEvent.estado.nombre}</p>
+                            <p><b>Paciente:</b> {selectedEvent.paciente.nombre} {selectedEvent.paciente.apellido}</p>
                         </>
-                    ) : selectedSlot ? (
-                        <>
-                            <p><b>Inicio:</b> {dayjs(selectedSlot?.start).format('DD/MM/YYYY HH:mm')}</p>
-                            <p><b>Fin:</b> {dayjs(selectedSlot?.end).format('DD/MM/YYYY HH:mm')}</p>
-                        </>
-                    ) : null}
+                    )}
                 </DialogContent>
+                <DialogActions>
+                    {(selectedEvent?.estado.nombre === 'confirmada' || selectedEvent?.estado.nombre === 'pendiente') && (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleCancelClick(selectedEvent)}
+                        >
+                            Cancelar Cita
+                        </Button>
+                    )}
+                    {selectedEvent?.estado.nombre === 'pendiente' && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleConfirmClick(selectedEvent)}
+                        >
+                            Confirmar Cita
+                        </Button>
+                    )}
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => {
+                            setOpenDialog(false); 
+                            setSelectedSlot(null); 
+                            setSelectedEvent(null)
+                        }}
+                    >
+                        Cerrar
+                    </Button>
+                </DialogActions>
             </Dialog>
         </>
     )
