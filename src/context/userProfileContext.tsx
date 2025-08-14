@@ -1,5 +1,5 @@
 // src/context/UserProfileContext.tsx
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { getPacienteByUserId, getPacienteProfile, type Paciente } from "../api/pacienteService";
 import { getEspecialistaByUserId, getEspecialistaProfile, type Especialista } from "../api/especialistaService";
@@ -48,7 +48,9 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
     };
 
     useEffect(() => {
+
         fetchProfile();
+
         // eslint-disable-next-line
     }, [user]);
 

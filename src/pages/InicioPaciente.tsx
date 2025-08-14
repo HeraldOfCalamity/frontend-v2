@@ -10,11 +10,11 @@ import { getEspecialidades, type Especialidad } from "../api/especialidadService
 import ReservaCita from "../components/ReservarCita/ReservaCita";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 
-interface PerfilPacienteProps{
+interface InicioPacienteProps{
 
 }
 
-const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
+const InicioPaciente: React.FC<InicioPacienteProps> = ({
 
 }) => {
     const {user, isLoading} = useAuth();
@@ -213,4 +213,4 @@ const PerfilPaciente: React.FC<PerfilPacienteProps> = ({
     );
 }
 
-export default PerfilPaciente;
+export default InicioPaciente;

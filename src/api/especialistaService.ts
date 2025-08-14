@@ -5,9 +5,10 @@ import type { User } from "./userService";
 export interface Especialista{
     id: string;
     ci: string;
+    image?: string;
     especialidad_ids: string[];
     disponibilidades: Disponibilidad[];
-    matricula_profesional: string;
+    informacion?: string;
     telefono: string;
     nombre: string;
     apellido: string;

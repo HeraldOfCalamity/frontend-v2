@@ -3,8 +3,7 @@ import AppLayout from './layouts/AppLayout'
 import { ThemeProvider, useMediaQuery } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
 import { darkTheme, lightTheme } from './config/theme.config';
-import PerfilPaciente from './pages/PerfilPaciente';
-import PerfilEspecialista from './pages/PerfilEspecialista';
+import InicioPaciente from './pages/InicioPaciente';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import EspecialidadesPage from './pages/admin/EspecialidadesPage';
@@ -17,6 +16,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import MisCitasPaciente from './pages/MisCitasPaciente';
 import { UserProfileProvider } from './context/userProfileContext';
+import InicioEspecialista from './pages/InicioEspecialista';
 
 
 
@@ -41,13 +41,13 @@ function App() {
                   <Route path='/' element={<HomeRedirect />} />
 
                   <Route element={<ProtectedRoute roles={['admin', 'paciente']} />}>
-                    <Route path='/perfil/paciente' element={<PerfilPaciente />} />
-                    <Route path='/perfil/citas' element={<MisCitasPaciente />} />
+                    <Route path='/paciente/inicio' element={<InicioPaciente />} />
+                    <Route path='/paciente/citas' element={<MisCitasPaciente />} />
 
                   </Route>
 
                   <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
-                    <Route path='/perfil/especialista' element={<PerfilEspecialista />} />
+                    <Route path='/especialista/inicio' element={<InicioEspecialista />} />
                   </Route>
 
                   <Route element={<ProtectedRoute roles={['admin']} />}>

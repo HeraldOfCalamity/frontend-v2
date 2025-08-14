@@ -5,16 +5,21 @@ import { getEspecialistaProfile, updateEspecialista, type Especialista, type Esp
 import EspecialistaForm from "../components/admin/EspecialistaForm";
 import Swal from "sweetalert2";
 import { updateUsuario } from "../api/userService";
+import { getCitasByEspecialista, getMisCitas, type Cita } from "../api/citaService";
+import CalendarioCitas from "../components/CalendarioCitas";
+import { ReplayOutlined } from "@mui/icons-material";
+import dayjs from "dayjs";
 
-interface PerfilEspecialistaProps{
+interface InicioEspecialistaProps{
 
 }
 
-const PerfilEspecialista: React.FC<PerfilEspecialistaProps> = () => {
+const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
     const {user} = useAuth();
     const [openEspecialistaForm, setOpenEspecialistaForm] = useState(false)
     const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState<EspecialistaWithUser>();
+    // const [citas, setCitas] = useState<Cita[]>([]);
     const hasRun = useRef(false);
     
     const handleEspecialistaFormClose = () => {
@@ -95,10 +100,28 @@ const PerfilEspecialista: React.FC<PerfilEspecialistaProps> = () => {
             setLoading(false);
         }
     }
+    // const obtenerCitasEspecialista = async () => {
+    //     setLoading(true);
+    //     try{
+    //         const citas = await getCitasByEspecialista(profile?.especialista!.id || '') as Cita[];
+    //         console.log('citas', citas);
+    //         setCitas(citas.sort((a, b) => dayjs(b.fecha_inicio).valueOf() - dayjs(a.fecha_inicio).valueOf()));
+    //     }catch(err: any){
+    //         Swal.fire({
+    //             title: 'Error',
+    //             text: `${err}`,
+    //             icon: 'error'
+    //         })
+    //     }finally{
+    //         setLoading(false)
+    //     }
+    // }
+
     useEffect(() => {
         if(!hasRun.current){
             hasRun.current = true;
             checkUserVerified();
+            // obtenerCitasEspecialista();
         }
     }, [])
     return (
@@ -107,7 +130,7 @@ const PerfilEspecialista: React.FC<PerfilEspecialistaProps> = () => {
             <Typography variant="h5" fontWeight={600} color="primary" mb={7} textAlign='center'>
                     Bienvenid@, especialista: {user?.name}
             </Typography>
-                        {!profile?.user?.isVerified && !loading && (
+                {!profile?.user?.isVerified && !loading ? (
                     <Stack display={'flex'} alignItems={'center'}>
                         <Typography textAlign={'center'} variant="h5">
                             Es necesario verificar tus datos personales!
@@ -122,6 +145,14 @@ const PerfilEspecialista: React.FC<PerfilEspecialistaProps> = () => {
                             Verificar Datos
                         </Button>
                     </Stack>
+                ) : (
+                    <>
+                        <CalendarioCitas
+                            // citas={citas}
+                            // handleCancelClick={handleCancelCitaEspecialista}
+                            // handleConfirmClick={HandleConfirmCitaEspecialista}
+                        />
+                    </>
                 )}
     
              <EspecialistaForm
@@ -135,4 +166,4 @@ const PerfilEspecialista: React.FC<PerfilEspecialistaProps> = () => {
     )
 }
 
-export default PerfilEspecialista;
+export default InicioEspecialista;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { getOfficeConfig, type OfficeConfiguration } from "../api/configService";
 import { useAuth } from "./AuthContext";
 
@@ -16,6 +16,7 @@ export const ParamsProvider: React.FC<{children: React.ReactNode}> = ({children}
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
     const {isAuthenticated} = useAuth();
+    const hasRun = useRef(false);
 
     const fetchParams = async () => {
         setLoading(true);
@@ -39,7 +40,10 @@ export const ParamsProvider: React.FC<{children: React.ReactNode}> = ({children}
     }
 
     useEffect(() => {
-        fetchParams();
+        if(!hasRun.current){
+            hasRun.current = true;
+            fetchParams();
+        }
     }, [])
     
     return(

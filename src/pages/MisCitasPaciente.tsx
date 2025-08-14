@@ -6,6 +6,7 @@ import type { Paciente } from "../api/pacienteService";
 import dayjs from "dayjs";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography, useTheme } from "@mui/material";
 import { useUserProfile } from "../context/userProfileContext";
+import { ReplayOutlined } from "@mui/icons-material";
 
 interface MisCitasPacienteProps{
     
@@ -34,6 +35,9 @@ export default function MisCitasPaciente({
         }finally{
             setLoading(false)
         }
+    }
+    const handleCitasRefresh = async () => {
+        await obtenerCitasPaciente();
     }
     useEffect(() => {
         console.log('perfilpaciente',paciente)
@@ -74,61 +78,68 @@ export default function MisCitasPaciente({
             <Typography variant="h5" mb={3}>
                 Mis Citas
             </Typography>
+            <Stack direction={'row'} mb={1} justifyContent={'end'}>
+                <Button variant="contained" onClick={handleCitasRefresh} startIcon={<ReplayOutlined />}>
+                    Refrescar
+                </Button>
+            </Stack>
             {loading ? (
                 <Typography>Cargando citas...</Typography>
                 // <CircularProgress />
             ) : citas.length === 0 ? (
                 <Typography>No tienes citas registradas.</Typography>
             ) : (
-                <Stack spacing={2}>
-                    {citas.map(cita => (
-                        <Card key={cita.id} variant="elevation" elevation={7} sx={{
-                            border: `1px solid ${theme.palette.primary.main}`
-                        }}>
-                            <CardContent>
-                                <Stack direction={{xs: 'column', sm:'row'}} spacing={2} alignItems={'center'} justifyContent={'space-between'}>
-                                    <Box flex={1}>
-                                        <Typography fontWeight={600}>
-                                          {dayjs(cita.fecha_inicio).format("DD/MM/YYYY HH:mm")} — {dayjs(cita.fecha_fin).format("HH:mm")}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Especialidad: {cita.especialidad?.nombre || "-"}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Especialista: {cita.especialista?.nombre} {cita.especialista?.apellido}
-                                        </Typography>
-                                        {cita.motivo && (
-                                            <Typography variant="body2" color="text.secondary">
-                                                Motivo: {cita.motivo}
+                <>
+                    <Stack spacing={2}>
+                        {citas.map(cita => (
+                            <Card key={cita.id} variant="elevation" elevation={7} sx={{
+                                border: `1px solid ${theme.palette.primary.main}`
+                            }}>
+                                <CardContent>
+                                    <Stack direction={{xs: 'column', sm:'row'}} spacing={2} alignItems={'center'} justifyContent={'space-between'}>
+                                        <Box flex={1}>
+                                            <Typography fontWeight={600}>
+                                            {dayjs(cita.fecha_inicio).format("DD/MM/YYYY HH:mm")} — {dayjs(cita.fecha_fin).format("HH:mm")}
                                             </Typography>
-                                        )}
-                                    </Box>
-                                    <Stack direction={'row'} spacing={2} alignItems={'center'}>
-                                        <Chip
-                                            label={cita.estado.nombre}
-                                            color={
-                                                cita.estado?.nombre === 'confirmada'
-                                                    ? 'success'
-                                                    : cita.estado?.nombre === 'cancelada'
-                                                    ? 'error'
-                                                    : 'warning'
-                                            }
-                                            variant="outlined"
-                                        />
-                                        <Button
-                                            variant="outlined"
-                                            color="error"
-                                            disabled={!puedeCancelar(cita)}
-                                            onClick={() => handleCancelar(cita)}
-                                        >
-                                            {puedeCancelar(cita) ? 'Cancelar' : 'No se puede cancelar'}
-                                        </Button>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Especialidad: {cita.especialidad?.nombre || "-"}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Especialista: {cita.especialista?.nombre} {cita.especialista?.apellido}
+                                            </Typography>
+                                            {cita.motivo && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Motivo: {cita.motivo}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                                            <Chip
+                                                label={cita.estado.nombre}
+                                                color={
+                                                    cita.estado?.nombre === 'confirmada'
+                                                        ? 'success'
+                                                        : cita.estado?.nombre === 'cancelada'
+                                                        ? 'error'
+                                                        : 'warning'
+                                                }
+                                                variant="outlined"
+                                            />
+                                            <Button
+                                                variant="outlined"
+                                                color="error"
+                                                disabled={!puedeCancelar(cita)}
+                                                onClick={() => handleCancelar(cita)}
+                                            >
+                                                {puedeCancelar(cita) ? 'Cancelar' : 'No se puede cancelar'}
+                                            </Button>
+                                        </Stack>
                                     </Stack>
-                                </Stack>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </Stack>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </Stack>
+                </>
             )}
         </Box>
     )

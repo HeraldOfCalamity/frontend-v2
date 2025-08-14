@@ -251,7 +251,7 @@ export default function ReservaCita({
                 onClose();
             }}
             fullWidth
-            maxWidth="md"
+            maxWidth="lg"
             slots={{
                 transition: Transition
             }}

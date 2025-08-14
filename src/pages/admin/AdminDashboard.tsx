@@ -75,68 +75,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             )
         }
     }
-    const handleCancelCitaClick = async (cita: Cita) => {
-        try{
-            const isConfirmed = await Swal.fire({
-                title: 'Cancelar Cita',
-                text: 'Esta seguro de cancelar la cita?, esta accion no se puede deshacer.',
-                icon: 'warning',
-                showCancelButton: true,
-                showConfirmButton: true,
-                confirmButtonText: 'Si, cancelar',
-                cancelButtonText: 'No',
-            })
 
-            if(isConfirmed.isConfirmed){
-                const canceled = await cancelCita(cita.id);
-                await obtenerCitas();
-                Swal.fire(
-                    'Operacion Exitosa',
-                    'Cita cancelada con exito, en un momento recibira un correo de confirmación.',
-                    'success'
-                )
-                console.log('cita, cancelada', canceled);
-            }
-
-        }catch(err: any){
-            Swal.fire(
-                'Error',
-                `${err}`,
-                'error'
-            )
-        }
-    }
-    const handleConfirmCitaClick = async (cita: Cita) => {
-        try{
-            const isConfirmed = await Swal.fire({
-                title: 'Confirmar Cita',
-                text: 'Esta seguro de confirmar la cita?, esta accion no se puede deshacer.',
-                icon: 'warning',
-                showCancelButton: true,
-                showConfirmButton: true,
-                confirmButtonText: 'Si, confirmar',
-                cancelButtonText: 'No',
-            })
-
-            if(isConfirmed.isConfirmed){
-                const confirmed = await confirmCita(cita.id);
-                await obtenerCitas();
-                Swal.fire(
-                    'Operacion Exitosa',
-                    'Cita confirmada con exito, en un momento recibira un correo de verificacion.',
-                    'success'
-                )
-                console.log('cita, confirmada', confirmed);
-            }
-
-        }catch(err: any){
-            Swal.fire(
-                'Error',
-                `${err}`,
-                'error'
-            )
-        }
-    }
     useEffect(() => {
         obtenerCitas();
     }, [])
@@ -155,9 +94,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                 >Reservar Cita</Button>
             </Stack>
             <CalendarioCitas 
-                citas={citas} 
-                handleCancelClick={handleCancelCitaClick}
-                handleConfirmClick={handleConfirmCitaClick}
+                // citas={citas} 
+                // handleCancelClick={handleCancelCitaClick}
+                // handleConfirmClick={handleConfirmCitaClick}
             />
             <BuscarPaciente 
                 open={openSearchPaciente} 

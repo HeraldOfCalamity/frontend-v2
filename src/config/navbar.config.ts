@@ -29,13 +29,13 @@ export const ADMIN_OPTIONS: NavBarConfig = [
 ]
 
 export const PATIENT_OPTIONS: NavBarConfig = [
-    {type: 'button', text: 'Inicio', path: '/perfil/paciente'},
-    {type: 'button', text: 'Mi Perfil', path: '/perfil/paciente'},
-    {type: 'button', text: 'Mis Citas', path: '/perfil/citas'},
+    {type: 'button', text: 'Inicio', path: '/paciente/inicio'},
+    // {type: 'button', text: 'Mi Perfil', path: '/paciente/perfil'},
+    {type: 'button', text: 'Mis Citas', path: '/paciente/citas'},
 ]
 
 export const ESPECIALIST_OPTIONS: NavBarConfig = [
-    {type: 'button', text: 'Mi Perfil', path: '/perfil/especialista'},
-    {type: 'button', text: 'Pacientes Asignados', path: '/pacientes'},
-    {type: 'button', text: 'Agenda', path: '/agenda'},
+    {type: 'button', text: 'Inicio', path: '/especialista/inicio'},
+    {type: 'button', text: 'Mi Perfil', path: '/especialista/perfil'},
+    {type: 'button', text: 'Pacientes Asignados', path: '/especialista/pacientes'},
 ]

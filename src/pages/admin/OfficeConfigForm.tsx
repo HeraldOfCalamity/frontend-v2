@@ -39,6 +39,18 @@ export default function OfficeConfigForm({
     // })}
     const getFieldValidation = (parameterName: ConfigNames | string) => {
         switch(parameterName){
+            case "correos_encendidos":
+                return (value: string | undefined) => {
+                    if (value === undefined) return 'El valor no puede ser vacío';
+                    return ['0', '1'].includes(value) ? true : 'El valor debe ser "0" o "1"';
+                }
+
+            case "confirmacion_automatica_admin":
+                return (value: string | undefined) => {
+                    if (value === undefined) return 'El valor no puede ser vacío';
+                    return ['0', '1'].includes(value) ? true : 'El valor debe ser "0" o "1"';
+                }
+                
             case "confirmacion_automatica":
                 return (value: string | undefined) => {
                     if (value === undefined) return 'El valor no puede ser vacío';
