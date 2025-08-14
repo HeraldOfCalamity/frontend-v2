@@ -11,7 +11,7 @@ export const lightTheme = createTheme({
     primary: { main: pinkMain },
     secondary: { main: pinkLight },
     background: {
-      default: "##FFFFFF",
+      default: "#FFFFFF",
       paper: "#FFFFFF",
     },
     text: {

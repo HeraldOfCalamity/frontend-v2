@@ -136,7 +136,7 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                         alt="Benedetta Bellezza Logo"
                         sx={{height: 44}}
                     />
-                    {!isMobile && <Typography
+                    {(!isMobile && isAuthenticated) && <Typography
                         variant="subtitle2"
                         color="primary"
                         sx={{
