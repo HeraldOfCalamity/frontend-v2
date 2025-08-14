@@ -57,12 +57,11 @@ export default function EspecialidadesPage(){
     }, []);
 
     const columns: Column<Especialidad>[] = [
-        {field: 'id', headerName: 'Id', align: 'center'},
         {field: 'nombre', headerName: 'Nombre', align: 'center'},
         {field: 'descripcion', headerName: 'Descripcion', align: 'center'},
         {field: 'image', headerName: 'Imagen', align: 'center', render: (image) => {
             return image 
-                ? <img src={image} alt="imagen" height={120} width={120}></img>
+                ? <img src={image} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
                 : 'Sin Imagen'
         }},
     ];

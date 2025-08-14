@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import {useForm} from 'react-hook-form'
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, InputLabel, Link, Stack, TextField } from '@mui/material';
 import Modal from '../common/Modal';
 import CustomInput from '../common/CustomInput';
+import InputFileUpload from '../InputFileUpload';
 
 interface EspecialidadFormProps {
     open: boolean;
@@ -22,7 +23,8 @@ export default function EspecialidadForm({
     const {register, handleSubmit, reset, setValue} = useForm({
         defaultValues: initialData || {nombre: '', descripcion: '', image: ''},
     });
-    const [preview, setPreview] = useState<string | null>(null);
+    const [preview, setPreview] = useState<string | null>(initialData?.image || null);
+    const [openImagePreviewDialog, setOpenImagePreviewDialog] = useState(false);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -41,49 +43,70 @@ export default function EspecialidadForm({
 
     useEffect(() => {
         reset(initialData || {nombre: '', descripcion: '', image: ''});
-        setPreview('')
+        setPreview(initialData?.image || '')
     }, [initialData, reset, open]);
 
     return(
-        <Dialog open={open} onClose={onClose}>
-            <DialogTitle>{initialData ? "Editar Especialidad" : "Nueva Especialidad"}</DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
+        <>
+            <Dialog open={open} onClose={onClose}>
+                <DialogTitle>{initialData ? "Editar Especialidad" : "Nueva Especialidad"}</DialogTitle>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <DialogContent>
+                        <TextField
+                            variant='standard'
+                            label='Nombre'
+                            fullWidth
+                            margin='normal'
+                            {...register('nombre', {required: 'Nombre requerido'})}
+                        />
+                        <TextField
+                            variant='filled'
+                            label="Descripción"
+                            fullWidth
+                            margin="normal"
+                            multiline
+                            rows={5}
+                            {...register("descripcion")}
+                        />
+                        <Stack mt={1} spacing={1}>
+                            <InputLabel>Fotografia Personal</InputLabel>
+                            <InputFileUpload 
+                                label="Subir Fotografia" 
+                                handleChange={handleImageChange} 
+                                accept="image/"
+                                variant={'outlined'}
+                            />
+                            {preview && <Link 
+                                component={'button'} 
+                                type="button"
+                                textAlign={'center'} 
+                                onClick={() => setOpenImagePreviewDialog(true)}>
+                                Ver imagen cargada
+                            </Link>}
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onClose}>Cancelar</Button>
+                        <Button type='submit' variant='contained' loading={loading}>
+                            {loading ? 'Guardando...' : 'Guardar'}
+                        </Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
+            <Dialog
+                open={openImagePreviewDialog}
+                onClose={() => setOpenImagePreviewDialog(false)}
+            >
+                <DialogTitle>
+                    Imagen Cargada
+                </DialogTitle>
                 <DialogContent>
-                    <TextField
-                        variant='standard'
-                        label='Nombre'
-                        fullWidth
-                        margin='normal'
-                        {...register('nombre', {required: 'Nombre requerido'})}
-                    />
-                    <TextField
-                        variant='standard'
-                        label="Descripción"
-                        fullWidth
-                        margin="normal"
-                        {...register("descripcion")}
-                    />
-                    <input
-                        type='file'
-                        accept='image/'
-                        onChange={handleImageChange}
-                        style={{marginTop: 24, marginBottom: 12}}
-                        />
-                    {preview && (
-                        <img
-                            src={preview}
-                            alt="Vista previa"
-                            style={{ width: 120, height: 120, borderRadius: 12, marginTop: 12, objectFit: 'cover' }}
-                        />
-                    )}
+                    <img height={210} src={preview || ''} alt="Especialista Image" style={{ objectFit: 'cover', borderRadius: 8 }}/>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose}>Cancelar</Button>
-                    <Button type='submit' variant='contained' loading={loading}>
-                        {loading ? 'Guardando...' : 'Guardar'}
-                    </Button>
+                    <Button onClick={() => setOpenImagePreviewDialog(false)}>Cerrar</Button>
                 </DialogActions>
-            </form>
-        </Dialog>
+            </Dialog>
+        </>
     )
 }
