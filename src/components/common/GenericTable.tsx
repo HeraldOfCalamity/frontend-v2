@@ -62,15 +62,26 @@ export default function GenericTable<T extends {id: string | number}>({
         [data, page, rowsPerPage]
     );
 
+    const exportableColumns = columns.filter(col => col.field !== 'image' && col.field !== 'imagen');
+
     const exportToExcel = () => {
-        const headers = columns.map(col => col.headerName);
+        const headers = exportableColumns.map(col => col.headerName);
         const exportData = data.map((row, idx) => {
             const rowData: any = {};
             rowData['#'] = data.length - idx;
-            columns.forEach(col => {
-                rowData[col.headerName] = col.render
-                    ? col.render((row as any)[col.field], row)
-                    : (row as any)[col.field];
+            exportableColumns.forEach(col => {
+                const value = (row as any)[col.field];
+
+                if(typeof value === 'boolean'){
+                    rowData[col.headerName] = value ? 'Sí' : 'No';
+                }else if(col.render){
+                    const rendered = col.render(value, row);
+                    rowData[col.headerName] = typeof rendered === 'string' || typeof rendered === 'number'
+                        ? rendered
+                        : String(value);
+                }else{
+                    rowData[col.headerName] = value ?? '';
+                }
             });
             return rowData;
         });
@@ -87,10 +98,10 @@ export default function GenericTable<T extends {id: string | number}>({
     const exportToPDF = () => {
         const doc = new jsPDF();
 
-        const headers = [['#', ...columns.map(col => col.headerName)]];
+        const headers = [['#', ...exportableColumns.map(col => col.headerName)]];
         const body = data.map((row, idx) => [
                 data.length - idx,
-                ...columns.map(col => {
+                ...exportableColumns.map(col => {
                 const value = (row as any)[col.field];
 
                 if(typeof value === 'boolean'){
@@ -115,7 +126,7 @@ export default function GenericTable<T extends {id: string | number}>({
             body: body,
             styles: {fontSize: 9},
             headStyles: {fillColor: [245, 169, 195]},
-            startY: 20
+            startY: 14
         });
 
         doc.save('pdfTable.pdf');
