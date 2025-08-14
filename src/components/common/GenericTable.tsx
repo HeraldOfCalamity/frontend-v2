@@ -1,10 +1,10 @@
-import { Box, Button, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from "@mui/material";
+import { Box, Button, IconButton, InputAdornment, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField } from "@mui/material";
 import { useMemo, useState } from "react";
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { PictureAsPdf, TableBar, TableChart, TextSnippet } from "@mui/icons-material";
+import { PictureAsPdf, Search, TableBar, TableChart, TextSnippet } from "@mui/icons-material";
 
 declare module 'jspdf'{
     interface jsPDF{
@@ -48,6 +48,7 @@ export default function GenericTable<T extends {id: string | number}>({
 }: GenericTableProps<T>) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
+    const [filterText, setFilterText] = useState('');
 
     const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
     const handleChangeRowsPerPage = (
@@ -57,12 +58,27 @@ export default function GenericTable<T extends {id: string | number}>({
         setPage(0);
     };
 
-    const paginatedData = useMemo(
-        () => data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-        [data, page, rowsPerPage]
-    );
-
     const exportableColumns = columns.filter(col => col.field !== 'image' && col.field !== 'imagen');
+    
+    const filteredData = useMemo(() => {
+        if(!filterText.trim()) return data;
+
+        const lowerFilter = filterText.toLocaleLowerCase();
+
+        return data.filter((row) => 
+            exportableColumns.some(col => {
+                const value = (row as any)[col.field];
+                if(typeof value === 'boolean') return value ? 'sí' : 'no';
+                if(value == null) return false;
+                return String(value).toLowerCase().includes(lowerFilter);
+            })
+        );
+    }, [data, filterText, exportableColumns]);
+
+    const paginatedData = useMemo(
+        () => filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        [filteredData, page, rowsPerPage]
+    );
 
     const exportToExcel = () => {
         const headers = exportableColumns.map(col => col.headerName);
@@ -134,13 +150,46 @@ export default function GenericTable<T extends {id: string | number}>({
 
     return (
         <Box>
-            <Stack direction="row" spacing={2} mb={1} justifyContent="flex-end">
-                {canExportExcel && <Button startIcon={<TextSnippet />} onClick={exportToExcel} variant="outlined" size="small" color="warning">
-                    Exportar a Excel
-                </Button>}
-                {canExportPdf && <Button startIcon={<PictureAsPdf />} onClick={exportToPDF} variant="outlined" size="small" color="warning">
-                    Exportar a PDF
-                </Button>}
+            <Stack direction={'row'} spacing={2} mb={1} justifyContent={'space-between'} alignItems={'center'}>
+                <TextField
+                    size="small"
+                    variant="outlined"
+                    label='Buscar...'
+                    value={filterText}
+                    onChange={e => setFilterText(e.target.value)}
+                    slotProps={{input:{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <Search color="primary"/>
+                            </InputAdornment>
+                        )
+                    }}}
+                    sx={{width: 200}}
+                />
+                <Stack direction="row" spacing={1} mb={1}>
+                    {canExportExcel && (
+                        <Button 
+                            startIcon={<TextSnippet />} 
+                            onClick={exportToExcel} 
+                            variant="outlined" 
+                            size="small" 
+                            color="warning"
+                        >
+                            Exportar a Excel
+                        </Button>
+                    )}
+                    {canExportPdf && (
+                        <Button 
+                            startIcon={<PictureAsPdf />} 
+                            onClick={exportToPDF} 
+                            variant="outlined" 
+                            size="small" 
+                            color="warning"
+                        >
+                            Exportar a PDF
+                        </Button>
+                    )}
+                </Stack>
             </Stack>
             <TableContainer component={Paper} sx={{borderRadius: 1}}>
                 <Table stickyHeader>
