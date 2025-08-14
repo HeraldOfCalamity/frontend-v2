@@ -57,9 +57,9 @@ export default function GenericTable<T extends {id: string | number}>({
                             '& th': {
                                 backgroundColor: (theme) => theme.palette.primary.main,
                                 color: (theme) => theme.palette.primary.contrastText,
-                                fontWeight: 800,
-                                fontSize: '1.12rem',
-                                letterSpacing: 0.5,
+                                fontWeight: 600,
+                                // fontSize: '1.12rem',
+                                // letterSpacing: 0.5,
                                 borderBottom: 3,
                                 borderColor: 'primary.dark',
                                 boxShadow: 2,
