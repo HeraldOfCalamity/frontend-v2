@@ -1,8 +1,8 @@
 import { createTheme } from '@mui/material/styles';
 
 // Rosa y acento de Benedetta Bellezza
-const pinkMain = "#E96A97";
-const pinkLight = "#FFB6CE";
+const pinkMain = "#f5a9c3ff";
+const pinkLight = "#f3c4d4ff";
 const darkBg = "#232323";
 
 export const lightTheme = createTheme({
@@ -11,7 +11,7 @@ export const lightTheme = createTheme({
     primary: { main: pinkMain },
     secondary: { main: pinkLight },
     background: {
-      default: "#fff3f9ff",
+      default: "##FFFFFF",
       paper: "#FFFFFF",
     },
     text: {

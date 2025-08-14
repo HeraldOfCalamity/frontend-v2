@@ -1,7 +1,8 @@
-import { AppBar, Box, Button, Menu, MenuItem, Stack, Toolbar, Typography } from "@mui/material"
+import { AppBar, Box, Button, Drawer, IconButton, Menu, MenuItem, Stack, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material"
 import { useNavigate } from 'react-router-dom';
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import MenuIcon from '@mui/icons-material/Menu'
 import { ADMIN_OPTIONS, ESPECIALIST_OPTIONS, PATIENT_OPTIONS, type NavBarButton, type NavBarConfig, type NavBarMenu } from "../../config/navbar.config";
 
 interface NavBarProps{
@@ -11,14 +12,21 @@ interface NavBarProps{
 const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
     const {user, isAuthenticated, logout} = useAuth();
     const [anchorEls, setAnchorEls] = useState<{[key: number]: HTMLElement | null}>({});
+    const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    
 
     const handleMenuOpen = (index: number, event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEls((prev) => ({...prev, [index]: event.currentTarget}));
+        setHoverIndex(index);
     }
 
     const handleMenuClose = (index: number) => {
         setAnchorEls((prev) => ({ ...prev, [index]: null }));
+        setHoverIndex(null);
     };
 
     const handleLogOutClick = () => {
@@ -39,25 +47,29 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
         }
     };
     
-    const renderNavOptions = () => {
+    const renderNavOptions = (vertical: boolean=false) => {
         if(!isAuthenticated) return null;
         const options = getOptions();
 
         return (
-            <Stack direction='row' spacing={2}>
+            <Stack direction={vertical ? 'column' : 'row'} spacing={vertical ? 1 : 2}>
                 {options.map((option, idx) => {
                     if(option.type === 'button'){
                         const btn = option as NavBarButton;
                         return(
                             <Button
                                 key={btn.text}
-                                color="inherit"
-                                onClick={() => navigate(btn.path)}
+                                // color="inherit"
+                                onClick={() => {
+                                    navigate(btn.path);
+                                    if (vertical) setMobileOpen(true);
+                                }}
                                 startIcon={btn.icon ?? null}
                                 sx={{
                                     fontWeight: 500,
-                                    opacity: 0.8,
-                                    letterSpacing: 0.5
+                                    fontSize: '0.85rem',
+                                    textTransform: 'capitalize',
+                                    justifyContent: vertical ? 'flex-start' : 'center',
                                 }}
                             >
                                 {btn.text}
@@ -65,23 +77,32 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                         );
                     }else if(option.type === 'menu'){
                         const menu = option as NavBarMenu;
+                        const isOpen = Boolean(anchorEls[idx]);
+
                         return(
-                            <React.Fragment key={menu.text}>
+                            <Box
+                                key={menu.text}
+                                onMouseEnter={(e) => handleMenuOpen(idx, e as any)}
+                                onMouseLeave={() => handleMenuClose(idx)}
+                            >
                                 <Button
-                                    color="inherit"
+                                    // color="inherit"
                                     onClick={(e) => handleMenuOpen(idx, e)}
                                     sx={{
                                         fontWeight: 500,
-                                        opacity: 0.8,
-                                        letterSpacing: 0.5
+                                        fontSize: '0.85rem',
+                                        textTransform: 'none'
                                     }}
                                 >
                                     {menu.text}
                                 </Button>
                                 <Menu
                                     anchorEl={anchorEls[idx]}
-                                    open={Boolean(anchorEls[idx])}
+                                    open={isOpen}
                                     onClose={() => handleMenuClose(idx)}
+                                    slotProps={{list: {
+                                        onMouseLeave: () => handleMenuClose(idx),
+                                    }}}
                                 >
                                     {menu.options.map((sub) => (
                                         <MenuItem
@@ -89,13 +110,14 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                             onClick={() => {
                                                 navigate(sub.path);
                                                 handleMenuClose(idx);
+                                                setMobileOpen(false);
                                             }}
                                         >
                                             {sub.text}
                                         </MenuItem>
                                     ))}
                                 </Menu>
-                            </React.Fragment>
+                            </Box>
                         );
                     }
                     return null;
@@ -105,66 +127,129 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
     }
 
     return(
-        <AppBar color="transparent" position="static" elevation={2}>
+        <AppBar color="default" position="static" elevation={2}>
             <Toolbar sx={{justifyContent: 'space-between'}}>
-                <Typography variant="h6" component={"div"} sx={{flexGrow: 1}}>
-                    Consultorio Benedetta Bellezza
-                </Typography>
-                <Box display='flex' alignItems='center' gap={2}>
-                    {renderNavOptions()}
-                    {isAuthenticated ? (
-                        <>
-                            <Typography
-                                variant="subtitle1"
-                                component='span'
-                                color="primary"
-                                sx={{
-                                    mr:2, 
-                                    fontWeight: 700,
-                                    fontSize: '1.15rem',
-                                    bgcolor: 'background.paper',
-                                    px: 2,
-                                    py: 0.5,
-                                    borderRadius: 2,
-                                    boxShadow: 1,
-                                    letterSpacing: 0.5
-                                }}
-                            >
-                                {user?.name || user?.email || user?.user_id}
-                            </Typography>
-                            <Button
-                                color="primary"
-                                variant="outlined"
-                                onClick={handleLogOutClick}
-                                size="small"
-                                sx={{ 
-                                    ml: 1,
-                                    fontWeight: 600, 
-                                    borderRadius: 10,
-                                    borderColor: 'primary.light',
-                                    color: 'primary.light',
-                                    background: 'transparent'
-                                }}
-                            >
-                                Cerrar Sesion
-                            </Button>
-                            
-                        </>
-                    ) : (
-                        <Button
-                            color="primary"
-                            variant="contained"
-                            size="small"
-                            onClick={handleOpenLoginModal}
-                            sx={{ fontWeight: 700, borderRadius: 10, px: 3 }}
-                            >
-                            INICIAR SESIÓN
-                        </Button>
-                    )}
+                <Box display={'flex'} alignItems={'center'} gap={2}>
+                    <Box
+                        component={'img'}
+                        src="/benedetta-bellezza-horizontal.png"
+                        alt="Benedetta Bellezza Logo"
+                        sx={{height: 44}}
+                    />
+                    {!isMobile && <Typography
+                        variant="subtitle2"
+                        color="primary"
+                        sx={{
+                            fontWeight: 600,
+                            fontSize: '0.95rem',
+                            bgcolor: 'background.paper',
+                            px: 2,
+                            py: 0.5,
+                            borderRadius: 2,
+                            boxShadow: 1,
+                            textTransform: 'capitalize'
+                        }}
+                    >
+                        {user?.name || user?.email}
+                    </Typography>}
                 </Box>
+                {isMobile ? (
+                    <>
+                        <IconButton edge='end' onClick={() => setMobileOpen(!mobileOpen)}>
+                            <MenuIcon />
+                        </IconButton>
+                        <Drawer
+                            anchor="right"
+                            open={mobileOpen}
+                            onClose={() => setMobileOpen(false)}
+                        >
+                            <Box p={2} width={250}>
+                                <Box mb={2} textAlign="center">
+                                    <Box
+                                        component="img"
+                                        src="/benedetta-bellezza-horizontal.png"
+                                        alt="Logo"
+                                        sx={{ height: 60, margin: "0 auto" }}
+                                    />
+                                    <Typography
+                                        variant="subtitle2"
+                                        color="primary"
+                                        sx={{
+                                            fontWeight: 600,
+                                            fontSize: '0.95rem',
+                                            bgcolor: 'background.paper',
+                                            px: 2,
+                                            py: 0.5,
+                                            borderRadius: 2,
+                                            boxShadow: 1,
+                                            textTransform: 'capitalize'
+                                        }}
+                                    >
+                                        {user?.name || user?.email}
+                                    </Typography>
+                                </Box>
+                                {isAuthenticated && renderNavOptions(true)}
+
+                                <Box mt={2}>
+                                    {isAuthenticated ? (
+                                        <Button
+                                            color="secondary"
+                                            variant="outlined"
+                                            onClick={handleLogOutClick}
+                                            fullWidth
+                                        >
+                                            Cerrar Sesión
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            onClick={() => {
+                                                handleOpenLoginModal();
+                                                setMobileOpen(false);
+                                            }}
+                                            variant="contained"
+                                            color="primary"
+                                            fullWidth
+                                        >
+                                            Iniciar sesión
+                                        </Button>
+                                    )}
+                                </Box>
+                            </Box>
+                        </Drawer>
+                    </>
+                ) : (
+                    <Box display='flex' alignItems='center' gap={2}>
+                        {isAuthenticated && renderNavOptions()}
+                        {isAuthenticated ? (
+                            <>
+                               
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleLogOutClick}
+                                    size="small"
+                                    sx={{ 
+                                        textTransform: 'none'
+                                    }}
+                                >
+                                    Cerrar Sesión
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                
+                                variant="contained"
+                                size="small"
+                                onClick={handleOpenLoginModal}
+                                sx={{ textTransform: 'none' }}
+                                >
+                                Iniciar Sesión
+                            </Button>
+                        )}
+                    </Box>
+                )}
             </Toolbar>
         </AppBar>
-    )
-}
+    );
+};
 
 export default NavBar;
