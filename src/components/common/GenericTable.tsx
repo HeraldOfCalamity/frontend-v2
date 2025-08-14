@@ -67,6 +67,7 @@ export default function GenericTable<T extends {id: string | number}>({
                             }
                         }}
                     >
+                        <TableCell align="center" sx={{ width: 20 }}>N°</TableCell>
                         {columns.map(col => (
                             <TableCell 
                                 key={String(col.field)} 
@@ -86,8 +87,11 @@ export default function GenericTable<T extends {id: string | number}>({
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {paginatedData.map(row => (
+                    {paginatedData.map((row, index) => (
                         <TableRow key={row.id}>
+                            <TableCell align="center">
+                                {data.length - (page * rowsPerPage + index)}
+                            </TableCell>
                             {columns.map(col => (
                                 <TableCell key={String(col.field)} align={col.align || 'left'}>
                                     {col.render
