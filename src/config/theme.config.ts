@@ -55,8 +55,9 @@ export const lightTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          fontSize: "1.1rem",
+          fontSize: "1.021rem",
           fontWeight: 700,
+          textTransform: 'capitalize'
         },
       },
     }

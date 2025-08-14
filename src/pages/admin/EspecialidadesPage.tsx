@@ -129,6 +129,8 @@ export default function EspecialidadesPage(){
                 columns={columns}
                 data={especialidades}
                 actions={actions}
+                canExportExcel
+                canExportPdf
             />
             <EspecialidadForm
                 open={openForm}

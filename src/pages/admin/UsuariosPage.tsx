@@ -319,6 +319,8 @@ export default function UsuariosPage(){
                     columns={columns}
                     data={usuarios}
                     actions={actions}
+                    canExportExcel
+                    canExportPdf
                 />
             </Stack>
             <PacienteForm

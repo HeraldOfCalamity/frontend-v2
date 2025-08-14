@@ -156,6 +156,8 @@ export default function RolesPage(){
                 columns={columns}
                 actions={actions}
                 data={roles}
+                canExportExcel
+                canExportPdf
             />
             <Typography variant="h6" fontWeight={600} mt={5} mb={2}>
                 Permisos del sistema
@@ -164,6 +166,8 @@ export default function RolesPage(){
                 columns={permisosColumns}
                 data={permisos}
                 rowsPerPageOptions={[5, 10, 20]}
+                canExportExcel
+                canExportPdf
             />
             <RoleForm 
                 open={openForm}
