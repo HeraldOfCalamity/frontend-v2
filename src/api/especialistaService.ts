@@ -4,14 +4,10 @@ import type { User } from "./userService";
 
 export interface Especialista{
     id: string;
-    ci: string;
     image?: string;
     especialidad_ids: string[];
     disponibilidades: Disponibilidad[];
     informacion?: string;
-    telefono: string;
-    nombre: string;
-    apellido: string;
 }
 
 export interface Disponibilidad{

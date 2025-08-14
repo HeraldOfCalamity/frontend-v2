@@ -4,12 +4,8 @@ import type { User } from "./userService";
 
 export interface Paciente{
     id: string;
-    ci: string;
-    nombre: string;
-    apellido: string;
     tipo_sangre: string;
     fecha_nacimiento: string;
-    telefono: string;
 }
 
 export interface PacienteWithUser{
@@ -19,12 +15,8 @@ export interface PacienteWithUser{
 
 export interface PacienteAutoCreate {
     user_id: string 
-    nombre: string
-    apellido: string
     fecha_nacimiento: string
     tipo_sangre: string
-    ci: string;
-    telefono: string
 }
 
 export interface FilterPaciente {

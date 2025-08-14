@@ -39,37 +39,37 @@ export default function ({
 
     const defaultValues = initialData
     ? {
-        username: initialData.user?.username || '',
+        // username: initialData.user?.username || '',
         email: initialData.user?.email || '',
         role: initialData.user?.role || 'especialista',
         especialistaId: initialData.especialista?.id || '',
-        nombre: initialData.especialista?.nombre || '',
-        apellido: initialData.especialista?.apellido || '',
-        telefono: initialData.especialista?.telefono || '',
+        name: initialData.user?.name || '',
+        lastname: initialData.user?.lastname || '',
+        phone: initialData.user?.phone || '',
+        ci: initialData.user?.phone || '',
         password: initialData.user?.password || '',
-        ci: initialData.especialista?.ci || '',
         especialidades: initialData.especialista?.especialidad_ids || [],
         isActive: initialData.user?.isActive,
         informacion: initialData.especialista?.informacion || '',
         image: initialData.especialista?.image || '',
-        isVerified: initialData.user?.isVerified || false
+        isVerified: initialData.user?.isVerified || true as boolean
             
     }
     : {
-        username: '',
+        // username: '',
         email: '',
         role: 'especialista',
         especialistaId: '',
-        nombre: '',
-        apellido: '',
-        telefono: '',
-        password: '',
+        name: '',
+        lastname: '',
+        phone: '',
         ci: '',
+        password: '',
         informacion: '',
         image: '',
         especialidades: [],
         isActive: true,
-        isVerified: false
+        isVerified: true as boolean
     };
 
     const {register, handleSubmit, reset, control, formState: {errors}, setValue} = useForm({
@@ -182,7 +182,10 @@ export default function ({
                     // Transform to PacienteWithUser shape
                     const submitData: Partial<EspecialistaWithUser> = {
                         user: {
-                            username: data.username,
+                            name: data.name,
+                            lastname: data.lastname,
+                            ci: data.ci,
+                            phone: data.phone,
                             email: data.email,
                             role: data.role,
                             password: data.password,
@@ -190,15 +193,10 @@ export default function ({
                             isVerified: data.isVerified
                         },
                         especialista: {
-                            nombre: data.nombre,
-                            apellido: data.apellido,
-                            telefono: data.telefono,
                             disponibilidades: disponibilidades,
                             especialidad_ids: data.especialidades,
                             informacion: data.informacion,
-                            ci: data.ci,
-                            image: data.image
-                            
+                            image: data.image   
                         }
                     };
                     onSubmit(submitData);
@@ -207,13 +205,22 @@ export default function ({
                         <Grid container direction={'row'} spacing={2}>
                             <Grid size={{md:5, xs: 12}} spacing={1}>
                                 <TextField
-                                    label='Nombre de Usuario'
+                                    label='Nombres:'
                                     fullWidth
                                     size="small"
                                     margin="normal"
-                                    {...register('username', {required: 'Nombre requerido'})}
-                                    error={!!errors.username}
-                                    helperText={errors.username?.message?.toString()}
+                                    {...register('name', {required: 'Nombre requerido'})}
+                                    error={!!errors.name}
+                                    helperText={errors.name?.message?.toString()}
+                                />
+                                <TextField
+                                    label='Apellidos'
+                                    fullWidth
+                                    size="small"
+                                    margin="normal"
+                                    {...register('lastname', {required: 'Apellido requerido'})}
+                                    error={!!errors.lastname}
+                                    helperText={errors.lastname?.message?.toString()}
                                 />
                                 <TextField
                                     label='Correo'
@@ -237,41 +244,41 @@ export default function ({
                                     />  
                                 ) : null}
                                 <TextField
-                                    label='Nombre'
-                                    fullWidth
-                                    size="small"
-                                    margin="normal"
-                                    {...register('nombre', {required: 'Nombre requerido'})}
-                                    error={!!errors.nombre}
-                                    helperText={errors.nombre?.message?.toString()}
-                                />
-
-                                <TextField
-                                    label='Apellido'
-                                    fullWidth
-                                    size="small"
-                                    margin="normal"
-                                    {...register('apellido', {required: 'Apellido requerido'})}
-                                    error={!!errors.apellido}
-                                    helperText={errors.apellido?.message?.toString()}
-                                />
-                                <TextField
-                                    label='Telefono'
+                                    label='Teléfono'
                                     type="number"
                                     fullWidth
                                     size="small"
                                     margin="normal"
-                                    {...register('telefono', {required: 'Telefono requerido'})}
-                                    error={!!errors.telefono}
-                                    helperText={errors.telefono?.message?.toString()}
+                                    {...register('phone', {
+                                        required: 'Teléfono requerido', 
+                                        validate: (value: string | undefined) => {
+                                            if (value === undefined) return 'El valor no puede ser vacío';
+
+                                            const parsed = parseInt(value);
+                                            if(isNaN(parsed) || parsed.toString() !== value) return 'El valor ingresado debe ser un numero de teléfono';
+                                            return true;
+                                        }}
+                                    )}
+                                    error={!!errors.phone}
+                                    helperText={errors.phone?.message?.toString()}
+                                    
                                 />
                                 <TextField
                                     label='CI'
-                                    type="text"
+                                    type="number"
                                     fullWidth
                                     size="small"
                                     margin="normal"
-                                    {...register('ci', {required: 'CI requerido'})}
+                                    {...register('ci', {
+                                        required: 'CI requerido',
+                                        validate: (value: string | undefined) => {
+                                            if (value === undefined) return 'El valor no puede ser vacío';
+
+                                            const parsed = parseInt(value);
+                                            if(isNaN(parsed) || parsed.toString() !== value) return 'El valor ingresado debe ser un carnet de identidad.';
+                                            return true;
+                                        }
+                                    })}
                                     error={!!errors.ci}
                                     helperText={errors.ci?.message?.toString()}
                                 />
@@ -280,7 +287,7 @@ export default function ({
                                     fullWidth
                                     variant="filled"
                                     multiline
-                                    rows={7}
+                                    rows={4}
                                     size="small"
                                     margin="normal"
                                     {...register('informacion')}
@@ -426,7 +433,11 @@ export default function ({
                                                         value={disp.desde}
                                                         onChange={e => handleChangeDisponibilidad(idx, "desde", e.target.value)}
                                                         fullWidth
-                                                        InputLabelProps={{ shrink: true }}
+                                                        slotProps={{
+                                                            inputLabel:{
+                                                                shrink: true
+                                                            }
+                                                        }}
                                                     />
                                                 </Grid>
                                                 <Grid size={{xs:3}}>
@@ -437,7 +448,11 @@ export default function ({
                                                         value={disp.hasta}
                                                         onChange={e => handleChangeDisponibilidad(idx, "hasta", e.target.value)}
                                                         fullWidth
-                                                        InputLabelProps={{ shrink: true }}
+                                                        slotProps={{
+                                                            inputLabel:{
+                                                                shrink: true
+                                                            }
+                                                        }}
                                                     />
                                                 </Grid>
                                                 <Grid size={{xs:2}}>

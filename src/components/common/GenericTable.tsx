@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, InputAdornment, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
@@ -61,15 +61,30 @@ export default function GenericTable<T extends {id: string | number}>({
     const exportableColumns = columns.filter(col => col.field !== 'image' && col.field !== 'imagen');
     
     const filteredData = useMemo(() => {
-        if(!filterText.trim()) return data;
+        if (!filterText.trim()) return data;
 
-        const lowerFilter = filterText.toLocaleLowerCase();
+        const lowerFilter = filterText.toLowerCase();
 
-        return data.filter((row) => 
+        return data.filter((row) =>
             exportableColumns.some(col => {
                 const value = (row as any)[col.field];
-                if(typeof value === 'boolean') return value ? 'sí' : 'no';
-                if(value == null) return false;
+
+                // Si hay una función de render
+                if (col.render) {
+                    const rendered = col.render(value, row);
+                    if (typeof rendered === 'string' || typeof rendered === 'number') {
+                        return rendered.toString().toLowerCase().includes(lowerFilter);
+                    }
+                    return false;
+                }
+
+                // Si es booleano
+                if (typeof value === 'boolean') {
+                    return (value ? 'sí' : 'no').includes(lowerFilter);
+                }
+
+                if (value == null) return false;
+
                 return String(value).toLowerCase().includes(lowerFilter);
             })
         );
@@ -79,6 +94,8 @@ export default function GenericTable<T extends {id: string | number}>({
         () => filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
         [filteredData, page, rowsPerPage]
     );
+
+    
 
     const exportToExcel = () => {
         const headers = exportableColumns.map(col => col.headerName);
@@ -148,6 +165,9 @@ export default function GenericTable<T extends {id: string | number}>({
         doc.save('pdfTable.pdf');
     }
 
+    useEffect(() => {
+        console.log('filtered data', filteredData)
+    }, [filteredData])
     return (
         <Box>
             <Stack direction={'row'} spacing={2} mb={1} justifyContent={'space-between'} alignItems={'center'}>
@@ -260,7 +280,7 @@ export default function GenericTable<T extends {id: string | number}>({
                         ))}
                         {paginatedData.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={columns.length + (actions.length > 0 ? 1 : 0)} align="center">
+                                <TableCell colSpan={columns.length + (actions.length > 0 ? 1 : 0) + 1} align="center">
                                     No hay datos disponibles.
                                 </TableCell>
                             </TableRow>

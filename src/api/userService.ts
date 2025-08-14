@@ -3,7 +3,10 @@ import { handleError } from "../utils/errorHandler";
 
 export interface User{
     id: string;
-    username: string;
+    name: string;
+    lastname: string;
+    ci: string;
+    phone: string;
     email: string;
     password: string;
     role: string;

@@ -10,6 +10,7 @@ import { createPaciente, createPacientePerfil, deletePaciente, getPacienteByUser
 import { getRoles } from "../../api/roleService";
 import EspecialistaForm from "../../components/admin/EspecialistaForm";
 import { createEspecialistaPerfil, deleteEspecialista, getEspecialistaByUserId, updateEspecialistaPerfil, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
+import dayjs from "dayjs";
 
 export default function UsuariosPage(){
     const [usuarios, setUsuarios] = useState<User[]>([])
@@ -230,7 +231,8 @@ export default function UsuariosPage(){
 
     const columns: Column<User>[] = [
         // {field: 'id', headerName: 'Id Usuario', align: 'center'},
-        {field: 'username', headerName: 'Nombre', align: 'center'},
+        {field: 'name', headerName: 'Nombres', align: 'center'},
+        {field: 'lastname', headerName: 'Apellidos', align: 'center'},
         {field: 'email', headerName: 'Correo', align: 'center'},
         {
             field: 'role', 
@@ -254,11 +256,17 @@ export default function UsuariosPage(){
             render: (v) => 
                 <Circle fontSize="small" color={v ? "success" : "error"} />
         },
+        {
+            field: 'createdAt', 
+            headerName: 'Agregado el', 
+            align: 'center',
+            render: (v) => dayjs(v).format('DD/MM/YYYY')
+        },
     ];
 
     const actions: TableAction<User>[] = [
         {
-            icon: <Edit />,
+            icon: <Edit color="info"/>,
             label: 'Editar',
             onClick: (userRow) => editarUsuario(userRow)
         },
