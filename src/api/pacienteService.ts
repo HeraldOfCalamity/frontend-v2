@@ -98,3 +98,12 @@ export async function filterPacientes(filter: FilterPaciente){
         handleError(err, 'Error al filtrar pacientes');
     }
 }
+
+export async function getPacientesWithUser(){
+    try{
+        const res = await api.get(`${PACIENTES_ROUTE}with-user`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Ocurrio un error al obtener pacientes con usuario')
+    }
+}

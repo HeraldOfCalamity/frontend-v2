@@ -76,17 +76,15 @@ export default function EspecialistasPage(){
                     "success"
                 );
             }
-        }catch(err: any){
             setEditData(null);
             setOpenEspecialistaForm(false);
+        }catch(err: any){
             Swal.fire(
                 "Error", 
                 `${err}`, 
                 "error"
             );
         }finally{
-            setEditData(null);
-            setOpenEspecialistaForm(false);
             setLoading(false);
         }
     }

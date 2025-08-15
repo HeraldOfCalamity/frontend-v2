@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, Grid, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, Switch, TextField } from "@mui/material";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { PacienteWithUser } from "../../api/pacienteService";
@@ -24,34 +24,34 @@ export default function ({
 }: PacienteFormProps){
      const defaultValues = initialData
         ? {
-            username: initialData.user?.username || '',
+            name: initialData.user?.name || '',
             email: initialData.user?.email || '',
             role: initialData.user?.role || 'paciente',
             pacienteId: initialData.paciente?.id || '',
-            nombre: initialData.paciente?.nombre || '',
-            apellido: initialData.paciente?.apellido || '',
+            lastname: initialData.user?.lastname || '',
             tipo_sangre: initialData.paciente?.tipo_sangre || '',
             fecha_nacimiento: initialData.paciente?.fecha_nacimiento ? new Date(initialData.paciente.fecha_nacimiento).toISOString().substring(0, 10)
                 : '',
-            telefono: initialData.paciente?.telefono || '',
+            phone: initialData.user?.phone || '',
             password: initialData.user?.password || '',
             isActive: initialData.user?.isActive,
-            ci: initialData.paciente?.ci || ''
+            isVerified: initialData.user?.isVerified,
+            ci: initialData.user?.ci || ''
                 
         }
         : {
-            username: '',
             email: '',
             role: 'paciente',
             pacienteId: '',
-            nombre: '',
-            apellido: '',
+            name: '',
+            lastname: '',
             tipo_sangre: '',
-            telefono: '',
+            phone: '',
             password: '',
             ci: '',
             fecha_nacimiento: '',
-            isActive: true
+            isActive: true,
+            isVerified: true,
         };
     const {register, handleSubmit, reset, control, formState: {errors}} = useForm({
         defaultValues
@@ -77,19 +77,18 @@ export default function ({
                 // Transform to PacienteWithUser shape
                 const submitData: Partial<PacienteWithUser> = {
                     user: {
-                        username: data.username,
+                        name: data.name,
+                        lastname: data.lastname,
                         email: data.email,
                         role: data.role,
                         password: data.password,
+                        ci: data.ci,
+                        phone: data.phone,
                         isActive: data.isActive                        
                     },
                     paciente: {
-                        nombre: data.nombre,
-                        apellido: data.apellido,
                         tipo_sangre: data.tipo_sangre,
                         fecha_nacimiento: data.fecha_nacimiento,
-                        telefono: data.telefono,
-                        ci: data.ci
                     }
                 };
                 onSubmit(submitData);
@@ -97,14 +96,23 @@ export default function ({
                 <DialogContent>
                     <Grid>
                         <TextField
-                            label='Nombre de Usuario'
+                            label='Nombres'
                             fullWidth
                             size="small"
                             margin="normal"
-                            {...register('username', {required: 'Nombre requerido'})}
-                            error={!!errors.username}
-                            helperText={errors.username?.message?.toString()}
+                            {...register('name', {required: 'Nombre requerido'})}
+                            error={!!errors.name}
+                            helperText={errors.name?.message?.toString()}
                         />
+                        <TextField
+                                label='Apellidos'
+                                fullWidth
+                                size="small"
+                                margin="normal"
+                                {...register('lastname', {required: 'Apellido requerido'})}
+                                error={!!errors.lastname}
+                                helperText={errors.lastname?.message?.toString()}
+                            />
                         <TextField
                             label='Correo'
                             type="email"
@@ -121,20 +129,11 @@ export default function ({
                                 fullWidth
                                 size="small"
                                 margin="normal"
-                                {...register('password', initialData ? {} : {required: 'Apellido requerido'})}
-                                error={!!errors.apellido}
-                                helperText={errors.apellido?.message?.toString()}
+                                {...register('password', initialData ? {} : {required: 'Contraseña requerida'})}
+                                error={!!errors.password}
+                                helperText={errors.password?.message?.toString()}
                             />  
                         ) : null}
-                        <TextField
-                            label='Nombre'
-                            fullWidth
-                            size="small"
-                            margin="normal"
-                            {...register('nombre', {required: 'Nombre requerido'})}
-                            error={!!errors.nombre}
-                            helperText={errors.nombre?.message?.toString()}
-                        />
                         <FormControl fullWidth margin="normal" error={!!errors.tipo_sangre}>
                             <InputLabel id="rol-label">Tipo de Sangre</InputLabel>
                             <Controller
@@ -157,15 +156,6 @@ export default function ({
                             />
                         </FormControl>
                         <TextField
-                            label='Apellido'
-                            fullWidth
-                            size="small"
-                            margin="normal"
-                            {...register('apellido', {required: 'Apellido requerido'})}
-                            error={!!errors.apellido}
-                            helperText={errors.apellido?.message?.toString()}
-                        />
-                        <TextField
                             label='Fecha de nacimiento'
                             type="date"
                             fullWidth
@@ -182,9 +172,18 @@ export default function ({
                             fullWidth
                             size="small"
                             margin="normal"
-                            {...register('telefono', {required: 'Telefono requerido'})}
-                            error={!!errors.telefono}
-                            helperText={errors.telefono?.message?.toString()}
+                            {...register('phone', {
+                                required: 'Telefono requerido',
+                                validate: (value: string | undefined) => {
+                                    if (value === undefined) return 'El valor no puede ser vacío';
+
+                                    const parsed = parseInt(value);
+                                    if(isNaN(parsed) || parsed.toString() !== value) return 'El valor ingresado debe ser un numero de teléfono';
+                                    return true;
+                                }}
+                            )}
+                            error={!!errors.phone}
+                            helperText={errors.phone?.message?.toString()}
                         />
                         <TextField
                             label='CI'
@@ -192,9 +191,33 @@ export default function ({
                             fullWidth
                             size="small"
                             margin="normal"
-                            {...register('ci', {required: 'CI requerido'})}
+                            {...register('ci', {
+                                required: 'CI requerido',
+                                validate: (value: string | undefined) => {
+                                    if (value === undefined) return 'El valor no puede ser vacío';
+
+                                    const parsed = parseInt(value);
+                                    if(isNaN(parsed) || parsed.toString() !== value) return 'El valor ingresado debe ser un carnet de identidad.';
+                                    return true;
+                                }}
+                            )}
                             error={!!errors.ci}
                             helperText={errors.ci?.message?.toString()}
+                        />
+                        <Controller
+                            name="isActive"
+                            control={control}
+                            render={({ field }) => (
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={field.value}
+                                            onChange={(e) => field.onChange(e.target.checked)}
+                                        />
+                                    }
+                                    label="Activo"
+                                />
+                            )}
                         />
                     </Grid>
                 </DialogContent>
