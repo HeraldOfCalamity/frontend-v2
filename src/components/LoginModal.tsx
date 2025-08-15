@@ -2,7 +2,6 @@ import { Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogCont
 import { Email, Key, Person4, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
 import { loginApi } from "../api/authService";
-import Swal from "sweetalert2";
 import UserForm from "./UserForm";
 import { createUsuario, type User } from "../api/userService";
 

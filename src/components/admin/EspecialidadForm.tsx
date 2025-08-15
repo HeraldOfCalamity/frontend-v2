@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import {useForm} from 'react-hook-form'
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, InputLabel, Link, Stack, TextField } from '@mui/material';
-import Modal from '../common/Modal';
-import CustomInput from '../common/CustomInput';
 import InputFileUpload from '../InputFileUpload';
 
 interface EspecialidadFormProps {

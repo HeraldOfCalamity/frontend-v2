@@ -1,8 +1,8 @@
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Grid, IconButton, Input, InputLabel, Link, MenuItem, Select, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, Grid, IconButton, InputLabel, Link, MenuItem, Select, Stack, Switch, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Swal from "sweetalert2";
-import { AddCircleOutline, CloudUploadOutlined, Delete, DoneAll } from "@mui/icons-material";
+import { AddCircleOutline, Delete } from "@mui/icons-material";
 import type { Disponibilidad, EspecialistaWithUser } from "../../api/especialistaService";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
 import InputFileUpload from "../InputFileUpload";
@@ -281,6 +281,21 @@ export default function ({
                                     })}
                                     error={!!errors.ci}
                                     helperText={errors.ci?.message?.toString()}
+                                />
+                                <Controller
+                                    name="isActive"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    checked={field.value}
+                                                    onChange={(e) => field.onChange(e.target.checked)}
+                                                />
+                                            }
+                                            label="Activo"
+                                        />
+                                    )}
                                 />
                                 <TextField
                                     label='Informacion Laboral'

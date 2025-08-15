@@ -86,3 +86,12 @@ export async function getEspecialistasByEspecialidadId(especialidad_id: string){
         handleError(err, 'Ocurrio un error al obtener especialistas por especialidad.')
     }
 }
+
+export async function getEspecialistasWithUser(){
+    try{
+        const res = await api.get(`${ESPECIALISTA_ROUTE}with-user`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Ocurrio un error al obtener especialistas con usuario')
+    }
+}
