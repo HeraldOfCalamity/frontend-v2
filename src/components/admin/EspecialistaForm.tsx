@@ -86,6 +86,7 @@ export default function ({
                 // Aquí puedes guardarlo en el estado, o mandarlo directo en el submit:
                 // setPreview(base64String);
                 setValue("image", base64String);
+                setPreview(base64String)
             };
             reader.readAsDataURL(file);
         }

@@ -5,6 +5,7 @@ import { saveAs } from 'file-saver'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { PictureAsPdf, Search, TextSnippet } from "@mui/icons-material";
+import { quitarTildes } from "../../utils/textUtils";
 
 declare module 'jspdf'{
     interface jsPDF{
@@ -63,7 +64,9 @@ export default function GenericTable<T extends {id: string | number}>({
     const filteredData = useMemo(() => {
         if (!filterText.trim()) return data;
 
-        const lowerFilter = filterText.toLowerCase();
+        const filterTextWithoutTildes = quitarTildes(filterText);
+
+        const lowerFilter = filterTextWithoutTildes.toLowerCase();
 
         return data.filter((row) =>
             exportableColumns.some(col => {
@@ -73,16 +76,16 @@ export default function GenericTable<T extends {id: string | number}>({
                     // console.log('col.reder value', value)
                     const rendered = col.render(value, row);
                     if (typeof rendered === 'string' || typeof rendered === 'number') {
-                        return rendered.toString().toLowerCase().includes(lowerFilter);
+                        return quitarTildes(rendered.toString()).toString().toLowerCase().includes(lowerFilter);
                     }
 
                     if (Array.isArray(value)) {
                         if(col.field === 'disponibilidades') console.log('disponibilidades', value);
                         return value.some(item =>{
                             if(typeof item === 'object'){
-                                return Object.values(item).join().toLowerCase().includes(lowerFilter);
+                                return quitarTildes(Object.values(item).join().toLowerCase()).includes(lowerFilter);
                             }
-                            return String(item).toLowerCase().includes(lowerFilter)
+                            return quitarTildes(String(item).toLowerCase()).includes(lowerFilter)
                         });
                     }
                     // return false;
@@ -92,21 +95,21 @@ export default function GenericTable<T extends {id: string | number}>({
                 if (Array.isArray(value)) {
                     // console.log('value',value)
                     return value.some(item =>
-                        String(item).toLowerCase().includes(lowerFilter)
+                        quitarTildes(String(item).toLowerCase()).includes(lowerFilter)
                     );
                 }
 
                 
                 // Booleanos
                 if (typeof value === 'boolean') {
-                    return (value ? 'sí' : 'no').includes(lowerFilter);
+                    return quitarTildes((value ? 'sí' : 'no')).includes(lowerFilter);
                 }
                 
                 // Null o undefined
                 if (value == null) return false;
                 
                 // Strings, números, etc.
-                return String(value).toLowerCase().includes(lowerFilter);
+                return quitarTildes(String(value).toLowerCase()).includes(lowerFilter);
             })
         );
     }, [data, filterText, exportableColumns]);
