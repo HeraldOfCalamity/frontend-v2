@@ -1,5 +1,5 @@
 import { CloudUpload } from "@mui/icons-material";
-import { Button, styled } from "@mui/material";
+import { Button, styled, type ButtonPropsColorOverrides } from "@mui/material";
 import type { ChangeEvent } from "react";
 
 const VisuallyHiddenInput = styled('input')({
@@ -19,13 +19,17 @@ interface InputFileUploadProps {
     accept?: string;
     variant?: 'text' | 'contained' | 'outlined';
     disabled?: boolean;
+    fullWidth?: boolean;
+    color?: "inherit" | "error" | "primary" | "secondary" | "success" | "info" | "warning";
 }
 export default function InputFileUpload({
     handleChange,
     label,
     accept,
     variant,
-    disabled
+    disabled,
+    fullWidth,
+    color
 }: InputFileUploadProps) {
   return (
     <Button
@@ -33,7 +37,9 @@ export default function InputFileUpload({
       role={undefined}
       variant={variant}
       tabIndex={-1}
+      color={color}
       disabled={disabled}
+      fullWidth={fullWidth}
       startIcon={<CloudUpload />}
     >
       {label}

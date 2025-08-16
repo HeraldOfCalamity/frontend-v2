@@ -3,19 +3,31 @@
 }
 
 /* .rbc-today {
+  background-color:  !important;
+  border:  !important;
+} */
+
+/* .rbc-time-header-content > .rbc-row {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  padding: 6px 8px;
+  font-weight: 500;
+} */
+
+/* .rbc-today {
   background-color: #e07d9e !important; 
   color: #ffffff !important;
   opacity: 0.9 !important;           
 } */
-
+/* 
 .rbc-time-header .rbc-today {
   background-color: #e07d9e !important; 
   color: #ffffff !important;
-}
+} */
 
-.rbc-day-bg.rbc-today {
+/* .rbc-day-bg.rbc-today {
   background-color: inherit !important;
-}
+} */
 
 /* .rbc-event {
   margin-bottom: 10px !important;

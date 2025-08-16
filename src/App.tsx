@@ -15,10 +15,11 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import MisCitasPaciente from './pages/paciente/MisCitasPaciente';
 import { UserProfileProvider } from './context/userProfileContext';
-import InicioEspecialista from './pages/InicioEspecialista';
+import InicioEspecialista from './pages/especialista/InicioEspecialista';
 import PacientesPage from './pages/admin/PacientesPage';
 import EspecialistasPage from './pages/admin/EspecialistasPage';
 import PerfilPaciente from './pages/paciente/PerfilPaciente';
+import PerfilEspecialista from './pages/especialista/PerfilEspecialista';
 
 
 
@@ -51,6 +52,7 @@ function App() {
 
                   <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
                     <Route path='/especialista/inicio' element={<InicioEspecialista />} />
+                    <Route path='/especialista/perfil' element={<PerfilEspecialista />} />
                   </Route>
 
                   <Route element={<ProtectedRoute roles={['admin']} />}>

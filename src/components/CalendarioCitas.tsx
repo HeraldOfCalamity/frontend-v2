@@ -77,7 +77,10 @@ export default function CalendarioCitas({
         const isToday = dayjs(date).date() === dayjs().date();
         if(isToday){
             return {style: {
-                backgroundColor: theme.palette.background.default,
+                // backgroundColor: theme.palette.background.default,
+                backgroundColor: '#e0f7fa',
+                border: `2px solid #00acc1`,
+                // border: `2px solid ${theme.palette.secondary.main}`,
             }}
         }
         return {};
