@@ -1,5 +1,5 @@
 import { AddCircleOutline, CalendarMonth, Circle, Delete, Edit } from "@mui/icons-material";
-import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography, useTheme } from "@mui/material";
 import EspecialistaForm, { type EspecialistaFormField } from "../../components/admin/EspecialistaForm";
 import { useEffect, useMemo, useState } from "react";
 import { createEspecialistaPerfil, deleteEspecialista, getEspecialistasWithUser, updateEspecialistaPerfil, type Disponibilidad, type EspecialistaWithUser } from "../../api/especialistaService";
@@ -9,6 +9,9 @@ import dayjs from "dayjs";
 import GenericTable from "../../components/common/GenericTable";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import EditCalendarOutlinedIcon from '@mui/icons-material/EditCalendarOutlined';
+import { getCitasByEspecialista, type Cita } from "../../api/citaService";
+import CalendarioCitas from "../../components/CalendarioCitas";
 
 
 const DIAS_SEMANA = [
@@ -25,6 +28,9 @@ const DIAS_SEMANA = [
 export default function EspecialistasPage(){
     const [openEspecialistaForm, setOpenEspecialistaForm] = useState(false);
     const [editData, setEditData] = useState<EspecialistaWithUser | null>(null);
+    const [selectedEspecialista, setSelectedEspecialista] = useState<EspecialistaWithUser | null>(null);
+    const [citasEspecialista, setCitasEspecialista] = useState<Cita[]>([]);
+    const [openCitasEspecialistaDialog ,setOpenCitasEspecialistaDialog] = useState(false);
     const [loading, setLoading] = useState(false);
     const [especialsitas, setEspecialsitas] = useState<EspecialistaWithUser[]>([])
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
@@ -181,11 +187,25 @@ export default function EspecialistasPage(){
         setOpenEspecialistaForm(true);
     }
 
+    const handleShowCitasEspecialista = async (row: any) => {
+            
+        const esp = especialsitas.find(p => p.especialista.id === row.id);
+        setSelectedEspecialista(esp!);
+        await obtenerCitasEspecialista(row.id)
+        setOpenCitasEspecialistaDialog(true);
+    
+    }
+
     const actions: TableAction<any>[] = [
         {
             icon: <VisibilityOutlinedIcon color="success"/>,
             label: 'Editar',
             onClick: (userRow) => handleShowEspecialista(userRow)
+        },
+        {
+            icon: <EditCalendarOutlinedIcon color="primary"/>,
+            label: 'Citas Asignadas',
+            onClick: (userRow) => handleShowCitasEspecialista(userRow)
         },
         {
             icon: <Edit color="info"/>,
@@ -204,6 +224,19 @@ export default function EspecialistasPage(){
         try{
             const data = await getEspecialistasWithUser();
             setEspecialsitas(data);
+        }catch(err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
+        }
+    }
+
+    const obtenerCitasEspecialista = async (especialistaId: string) => {
+        try{
+            const citas = await getCitasByEspecialista(especialistaId);
+            setCitasEspecialista(citas);
         }catch(err: any){
             Swal.fire(
                 'Error',
@@ -233,7 +266,7 @@ export default function EspecialistasPage(){
     return(
         <Box>
             <Typography variant="h5" fontWeight={700} mb={3}>
-                    Gestion de Usuarios
+                    Gestion de Usuarios / Especialistas
                 </Typography>
                 <Stack direction='row' justifyContent='flex-end' mb={2}>
                     <Button 
@@ -254,6 +287,45 @@ export default function EspecialistasPage(){
                         canExportPdf
                     />
                 </Stack>
+                <Dialog
+                    maxWidth={"lg"}
+                    fullWidth
+                    open={openCitasEspecialistaDialog}
+                    onClose={() => {
+                        setSelectedEspecialista(null);
+                        setOpenCitasEspecialistaDialog(false);
+                    }}
+                >
+                    <DialogTitle>
+                            Registro de citas del especialista
+                    </DialogTitle>
+                    <DialogContent>
+    
+                        {/* <Stack direction={'row'} justifyContent={'end'} mb={1}>
+                            <Button
+                                variant="contained" 
+                                color="primary" 
+                                startIcon={<AddCircleOutline />}
+                                onClick={handleNewCitaClick}
+                            >Reservar Cita</Button>
+                        </Stack> */}
+                        <CalendarioCitas 
+                            defaultView="agenda"
+                            citas={citasEspecialista}
+                            onCancelCita={
+                                async () => await obtenerCitasEspecialista(selectedEspecialista?.especialista.id || '')
+                            }
+                            onConfirmCita={
+                                async () => await obtenerCitasEspecialista(selectedEspecialista?.especialista.id || '')
+                            }
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="contained" onClick={() => setOpenCitasEspecialistaDialog(false)} color="error">
+                            Cerrar
+                        </Button>
+                    </DialogActions>
+                </Dialog>
                 <EspecialistaForm
                     open={openEspecialistaForm}
                     onClose={() => {

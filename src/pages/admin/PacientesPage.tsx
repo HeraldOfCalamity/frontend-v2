@@ -237,7 +237,7 @@ export default function PacientesPage(){
     return(
         <Box>
             <Typography variant="h5" fontWeight={700} mb={3}>
-                    Gestión de pacientes
+                    Gestión de usuarios / Pacientes
                 </Typography>
                 <Stack direction='row' justifyContent='flex-end' mb={2}>
                     <Button 
