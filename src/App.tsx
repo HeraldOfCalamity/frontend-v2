@@ -2,7 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import { ThemeProvider } from '@mui/material';
 import { lightTheme } from './config/theme.config';
-import InicioPaciente from './pages/InicioPaciente';
+import InicioPaciente from './pages/paciente/InicioPaciente';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import EspecialidadesPage from './pages/admin/EspecialidadesPage';
@@ -13,11 +13,12 @@ import ConfiguracionPage from './pages/admin/ConfiguracionPage';
 import { ParamsProvider } from './context/ParameterContext';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import MisCitasPaciente from './pages/MisCitasPaciente';
+import MisCitasPaciente from './pages/paciente/MisCitasPaciente';
 import { UserProfileProvider } from './context/userProfileContext';
 import InicioEspecialista from './pages/InicioEspecialista';
 import PacientesPage from './pages/admin/PacientesPage';
 import EspecialistasPage from './pages/admin/EspecialistasPage';
+import PerfilPaciente from './pages/paciente/PerfilPaciente';
 
 
 
@@ -43,6 +44,7 @@ function App() {
 
                   <Route element={<ProtectedRoute roles={['admin', 'paciente']} />}>
                     <Route path='/paciente/inicio' element={<InicioPaciente />} />
+                    <Route path='/paciente/perfil' element={<PerfilPaciente />} />
                     <Route path='/paciente/citas' element={<MisCitasPaciente />} />
 
                   </Route>

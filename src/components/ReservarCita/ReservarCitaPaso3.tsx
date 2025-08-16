@@ -19,30 +19,35 @@ export default function ReservarCitaPaso3({
     motivo,
     setMotivo
 }: ReservarCitaPaso3Props){
-    useEffect(() => {
-        if(motivo === ''){
-            Swal.fire({
-                title: 'Confirmacion de la cita',
-                text: 'Por favor, verifique los datos de la cita y escriba el motivo',
-                icon: 'info',
+    // useEffect(() => {
+    //     if(motivo === ''){
+    //         Swal.fire({
+    //             title: 'Confirmacion de la cita',
+    //             text: 'Por favor, verifique los datos de la cita y escriba el motivo',
+    //             icon: 'info',
                 
-            }) 
-        }
-    }, [])
+    //         }) 
+    //     }
+    // }, [])
+
     return(
         <Box>
             <Typography variant="h5" fontWeight={500} mb={2}>
-                Confiramcion y motivo de la cita
+                Confirmación y motivo de la cita
             </Typography>
+            
             <Card >
                 <CardContent>
                     <Typography variant="h6">
                         Datos de la Cita
                     </Typography>
+                    <Typography variant="body1" mb={1}>
+                        Para completar la reserva de cita, por favor verifique los datos y describa brevemente el motivo de la cita.
+                    </Typography>
                     {Object.entries(cita).map(([key, value]) => (
     
                         <Stack direction={'row'} key={key}>
-                            <Typography mr={2} variant="button">
+                            <Typography mr={2} variant="button" >
                                 {`${key}:`}
                             </Typography>
                             <Typography>
@@ -57,6 +62,7 @@ export default function ReservarCitaPaso3({
                         onChange={(e) => setMotivo(e.target.value)}
                         label="Describa brevemente el motivo de la cita"
                         fullWidth
+                        required
                         multiline
                         rows={3}
                         sx={{

@@ -100,12 +100,12 @@ export default function CalendarioCitas({
         setSelectedSlot({start, end});
         setOpenDialog(true);
     }
-//region cambiar
+
     const getEventTitleFromCita = (cita: Cita) => {
-        const title = `${cita.especialidad?.nombre}: ${cita.especialista?.id} ${cita.especialista?.id}`; 
+        const title = `${cita.especialidad?.nombre}: ${cita.especialista}`; 
         return title;
     }
-//endregion
+
 
 
     const handleCancelCitaClick = async (cita: Cita) => {
@@ -254,7 +254,7 @@ export default function CalendarioCitas({
                             <p><b>Inicio:</b> {dayjs(selectedEvent.fecha_inicio).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Fin:</b> {dayjs(selectedEvent.fecha_fin).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Estado:</b> {selectedEvent.estado.nombre}</p>
-                            <p><b>Paciente:</b> {selectedEvent.paciente.id} {selectedEvent.paciente.id}</p>
+                            <p><b>Paciente:</b> {selectedEvent.paciente}</p>
                         </>
                     )}
                 </DialogContent>

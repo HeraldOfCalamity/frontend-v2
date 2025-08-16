@@ -6,6 +6,7 @@ interface AuthUser {
     role: string;
     tenant_id: string;
     name: string;
+    lastname: string;
     isVerified: boolean;
     [key: string]: any;
 }
@@ -30,6 +31,7 @@ const getUserFromToken = (token: string): AuthUser | null => {
             tenant_id: decoded.tenant_id,
             isVerified: decoded.isVerified,
             name: decoded.name,
+            lastname: decoded.lastname,
             ...decoded,
         };
     }catch{

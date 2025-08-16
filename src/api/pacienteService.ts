@@ -63,9 +63,9 @@ export async function deletePaciente(user_id: string){
     }
 }
 
-export async function updatePacientePerfil(user_id: string, data: Partial<PacienteWithUser>){
+export async function updatePacientePerfil(pacienteId: string, data: Partial<PacienteWithUser>){
     try{
-        const res = await api.put(`${PACIENTES_ROUTE}perfil/${user_id}`, data);
+        const res = await api.put(`${PACIENTES_ROUTE}perfil/${pacienteId}`, data);
         return res.data;
     }catch(err: any){
         handleError(err, 'Error al actualizar perfil')
@@ -80,7 +80,14 @@ export async function getPacienteProfile(){
         handleError(err, 'Error al obtener perfil')
     }
 }
-
+export async function getPacienteProfileById(pacienteId: string){
+    try{
+        const res = await api.get(`${PACIENTES_ROUTE}perfil/${pacienteId}`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Ocurrio un error al obtener perfil de paciente.')
+    }
+}
 export async function updatePaciente(paciente_id: string, data: Partial<Paciente>){
     try{
         const res = await api.put(`${PACIENTES_ROUTE}${paciente_id}`, data);

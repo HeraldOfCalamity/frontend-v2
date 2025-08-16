@@ -10,14 +10,14 @@ export const lightTheme = createTheme({
     mode: 'light',
     primary: { main: pinkMain },
     secondary: { main: pinkLight },
-    background: {
-      default: "#FFFFFF",
-      paper: "#FFFFFF",
-    },
-    text: {
-      primary: "#232323",
-      secondary: "#7A7A7A",
-    },
+    // background: {
+    //   default: "#FFFFFF",
+    //   paper: "#FFFFFF",
+    // },
+    // text: {
+    //   primary: "#232323",
+    //   secondary: "#7A7A7A",
+    // },
   },
   typography: {
     fontFamily: "'Montserrat', 'Roboto', 'Arial', sans-serif",

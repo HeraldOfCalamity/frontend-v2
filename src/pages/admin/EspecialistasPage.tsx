@@ -330,6 +330,7 @@ export default function EspecialistasPage(){
                     open={openEspecialistaForm}
                     onClose={() => {
                         setEditData(null);
+                        setDisabledFields([]);
                         setOpenEspecialistaForm(false);
                     }}
                     disabledFields={disabledFields}

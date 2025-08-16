@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { getCitasByPaciente, type Cita } from "../api/citaService";
+import { useAuth } from "../../context/AuthContext";
+import { getCitasByPaciente, type Cita } from "../../api/citaService";
 import Swal from "sweetalert2";
-import type { Paciente } from "../api/pacienteService";
+import type { Paciente, PacienteWithUser } from "../../api/pacienteService";
 import dayjs from "dayjs";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography, useTheme } from "@mui/material";
-import { useUserProfile } from "../context/userProfileContext";
+import { useUserProfile } from "../../context/userProfileContext";
 import { ReplayOutlined } from "@mui/icons-material";
 
 interface MisCitasPacienteProps{
@@ -15,7 +15,7 @@ interface MisCitasPacienteProps{
 export default function MisCitasPaciente({
     
 }:MisCitasPacienteProps) {
-    const {profile: paciente} = useUserProfile();
+    const {profile} = useUserProfile();
     const [citas, setCitas] = useState<Cita[]>([]);
     const [loading, setLoading] = useState(false);
     const theme = useTheme();
@@ -23,7 +23,9 @@ export default function MisCitasPaciente({
     const obtenerCitasPaciente = async () => {
         setLoading(true);
         try{
-            const citas = await getCitasByPaciente(paciente!.id) as Cita[];
+
+            const paciente = profile as PacienteWithUser;
+            const citas = await getCitasByPaciente(paciente.paciente.id || '') as Cita[];
             console.log('citas', citas);
             setCitas(citas.sort((a, b) => dayjs(b.fecha_inicio).valueOf() - dayjs(a.fecha_inicio).valueOf()));
         }catch(err: any){
@@ -40,11 +42,11 @@ export default function MisCitasPaciente({
         await obtenerCitasPaciente();
     }
     useEffect(() => {
-        console.log('perfilpaciente',paciente)
-        if(paciente && paciente.id){
+        const paciente = profile as PacienteWithUser;
+        if(paciente && paciente.paciente.id){
             obtenerCitasPaciente()
         }
-    }, [paciente])
+    }, [profile])
 
     const puedeCancelar = (cita: Cita) => {
         if(!cita || cita.estado.nombre === 'cancelada') return false;
@@ -105,7 +107,7 @@ export default function MisCitasPaciente({
                                                 Especialidad: {cita.especialidad?.nombre || "-"}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Especialista: {cita.especialista?.nombre} {cita.especialista?.apellido}
+                                                Especialista: {cita.especialista}
                                             </Typography>
                                             {cita.motivo && (
                                                 <Typography variant="body2" color="text.secondary">

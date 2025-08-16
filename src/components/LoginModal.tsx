@@ -92,11 +92,16 @@ const LoginModal: React.FC<LoginModalProps> = ({
                 </DialogTitle>
                 <form>
                     <DialogContent>
-                        <Stack direction={'row'} alignItems={'center'}>
-                            <Person4 sx={{fontSize: 70}}/>
-                            <Typography variant="body1" color="textPrimary">
+                        <Stack direction={'column'} alignItems={'center'}>
+                            <Box
+                                component={'img'}
+                                src="/benedetta-bellezza.png"
+                                alt="Benedetta Bellezza Logo"
+                                sx={{height: 240}}
+                            />
+                            {/* <Typography variant="body1" color="textPrimary">
                                 Ingresa tus credenciales para continuar
-                            </Typography>
+                            </Typography> */}
                         </Stack>
                         <Stack my={2} spacing={2}>
                             <TextField 
@@ -104,6 +109,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                 value={credentials.email}
                                 label="Correo"
                                 required
+                                size="small"
                                 slotProps={{
                                     input: {
                                         startAdornment:(
@@ -122,6 +128,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                 label="Contraseña"
                                 required
                                 fullWidth
+                                size="small"
                                 slotProps={{
                                     input: {
                                         startAdornment:(
@@ -141,7 +148,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                             />
                         </Stack>
                         {loginMessage.message !== '' && (
-                            <Alert severity={loginMessage.severity} sx={{mt: 1}}>
+                            <Alert severity={loginMessage.severity} sx={{height:50, mt: 1}}>
                                 {loginMessage.message}
                             </Alert>
                         )}
@@ -151,7 +158,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                     variant="contained"
                                     color="secondary"
                                     fullWidth
-                                    size="large"
+                                    size="small"
                                     sx={{borderRadius: 2, fontWeight:700, fontSize:'1.1rem',pt:1.2}}
                                     onClick={() => setOpenRegisterForm(v => !v)}
                                     loading={loading}
@@ -163,7 +170,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                     color="primary"
                                     fullWidth
                                     type="submit"
-                                    size="large"
+                                    size="small"
                                     sx={{borderRadius: 2, fontWeight:700, fontSize:'1.1rem',pt:1.2}}
                                     disabled={!credentials.email || !credentials.password || loading}
                                     onClick={handleLoginSubmit}

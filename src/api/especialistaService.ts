@@ -78,6 +78,15 @@ export async function getEspecialistaProfile(){
     }
 }
 
+export async function getEspecialistaProfileById(especialistaId: string){
+    try{
+        const res = await api.get(`${ESPECIALISTA_ROUTE}perfil/${especialistaId}`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Ocurrio un error al obtener perfil de especialista.')
+    }
+}
+
 export async function getEspecialistasByEspecialidadId(especialidad_id: string){
     try{
         const res = await api.get(`${ESPECIALISTA_ROUTE}by/especialidad/${especialidad_id}`);

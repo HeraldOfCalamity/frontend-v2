@@ -145,7 +145,7 @@ export default function PacientesPage(){
         setDisabledFields([
             "ci", "email", "fecha_nacimiento", "isActive", "lastname", "name","password", "phone", "tipo_sangre", "save"
         ])
-        setSelectedPaciente(pac!);
+        setEditData(pac!);
         setOpenPacienteForm(true);
     }
 
@@ -298,6 +298,7 @@ export default function PacientesPage(){
                     open={openPacienteForm}
                     onClose={() => {
                         setEditData(null);
+                        setDisabledFields([]);
                         setOpenPacienteForm(false);
                     }}
                     disabledFields={disabledFields}

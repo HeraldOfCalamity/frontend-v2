@@ -51,19 +51,19 @@ export default function ReservaCita({
     
     
     const handleEspecialistaClick = async (especialista: EspecialistaWithUser) => {
-        const alert = await Swal.fire({
-            title: 'Seleccionando Especialista',
-            text: `Esta seleccionando al especialista ${especialista.user.name} ${especialista.user.lastname}, desea continuar?`,
-            showCancelButton: true,
-            confirmButtonText: 'Si',
-            cancelButtonText: 'No',
-            icon: 'info',
-        })
+        // const alert = await Swal.fire({
+        //     title: 'Seleccionando Especialista',
+        //     text: `Esta seleccionando al especialista ${especialista.user.name} ${especialista.user.lastname}, desea continuar?`,
+        //     showCancelButton: true,
+        //     confirmButtonText: 'Si',
+        //     cancelButtonText: 'No',
+        //     icon: 'info',
+        // })
 
-        if(alert.isConfirmed){
+        // if(alert.isConfirmed){
             setEspecialista(especialista);
             handleComplete()
-        }
+        // }
     }
 
     const handlePaso2Complete = async (fecha: string, hora: string) => {
@@ -114,6 +114,14 @@ export default function ReservaCita({
 
     const crearCita = async () => {
         try{
+            if(motivoCita === '' && allStepsCompleted() && isLastStep()){
+                Swal.fire(
+                    'Atención',
+                    `Por favor, requerimos que describa el motivo de la cita`,
+                    'warning'
+                )
+                return;
+            }
             const result = await Swal.fire({
                 title: 'Reservando Cita',
                 text: 'Esta seguro de reservar la cita?',

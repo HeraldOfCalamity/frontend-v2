@@ -22,7 +22,10 @@ export default function UserForm({
         defaultValues: initialData || {
             email: '',
             password: '',
-            username: ''
+            name: '',
+            lastname: '',
+            phone: '',
+            ci: '',
         }
     })
 
@@ -30,7 +33,10 @@ export default function UserForm({
         reset(initialData || {
             email: '',
             password: '',
-            username: ''
+            name: '',
+            lastname: '',
+            phone: '',
+            ci: '',
         });
         setConfirmPassword('')
     }, [initialData, reset, open]);
@@ -44,10 +50,16 @@ export default function UserForm({
                 <DialogContent>
                     <Stack spacing={2}>
                         <TextField
-                            label="Nombre de Usuario"
+                            label="Nombres"
                             fullWidth
                             margin="normal"
-                            {...register('username', {required: 'Nombre de usuario requerido'})}
+                            {...register('name', {required: 'Nombre requerido'})}
+                        />
+                        <TextField
+                            label="Apellidos"
+                            fullWidth
+                            margin="normal"
+                            {...register('lastname', {required: 'Apellido requerido'})}
                         />
                         <TextField
                             label="Correo"
@@ -81,7 +93,35 @@ export default function UserForm({
                             margin="normal"
                             value={confirmPassword}
                             onChange={e => setConfirmPassword(e.target.value)}
-                            />
+                        />
+                        <TextField
+                            label="Teléfono"
+                            fullWidth
+                            margin="normal"
+                            {...register('phone', {
+                                required: 'Teléfono requerido',
+                                validate: (value: string | undefined) => {
+                                    if (value === undefined) return 'El valor no puede ser vacío';
+
+                                    const parsed = parseInt(value);
+                                    if(isNaN(parsed) || parsed.toString() !== value) return 'El valor ingresado debe ser un teléfono.';
+                                            
+                            }})}
+                        />
+                        <TextField
+                            label="CI"
+                            fullWidth
+                            margin="normal"
+                            {...register('ci', {
+                                required: 'Carnet requerido',
+                                validate: (value: string | undefined) => {
+                                    if (value === undefined) return 'El valor no puede ser vacío';
+
+                                    const parsed = parseInt(value);
+                                    if(isNaN(parsed) || parsed.toString() !== value) return 'El valor ingresado debe ser un carnet de indentidad.';
+                                            
+                            }})}
+                        />
                     </Stack>
                 </DialogContent>
                 <DialogActions>

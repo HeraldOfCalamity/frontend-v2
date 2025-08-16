@@ -1,12 +1,12 @@
 // src/context/UserProfileContext.tsx
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { getPacienteByUserId, getPacienteProfile, type Paciente } from "../api/pacienteService";
-import { getEspecialistaByUserId, getEspecialistaProfile, type Especialista } from "../api/especialistaService";
+import { getPacienteByUserId, getPacienteProfile, getPacienteProfileById, type Paciente, type PacienteWithUser } from "../api/pacienteService";
+import { getEspecialistaByUserId, getEspecialistaProfile, getEspecialistaProfileById, type Especialista, type EspecialistaWithUser } from "../api/especialistaService";
 
 export type ProfileType = "paciente" | "especialista" | "otro";
 export interface UserProfileContextValue {
-    profile: Paciente | Especialista | null;
+    profile: PacienteWithUser | EspecialistaWithUser | null;
     loading: boolean;
     error: string | null;
     reloadProfile: () => void;
@@ -23,7 +23,7 @@ export const useUserProfile = () => useContext(UserProfileContext)
 
 export function UserProfileProvider({ children }: { children: React.ReactNode }) {
     const { user } = useAuth();
-    const [profile, setProfile] = useState(null);
+    const [profile, setProfile] = useState<PacienteWithUser | EspecialistaWithUser | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -34,9 +34,11 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
         try {
             let data = null;
             if (user.role === "paciente") {
-                data = await getPacienteByUserId(user.user_id);
+                const paciente = await getPacienteByUserId(user.user_id);
+                data = await getPacienteProfileById(paciente.id);
             } else if (user.role === "especialista") {
-                data = await getEspecialistaByUserId(user.user_id);
+                const especialista = await getEspecialistaByUserId(user.user_id);
+                data = await getEspecialistaProfileById(especialista.id)
             }
             // Puedes agregar más roles aquí
             setProfile(data);

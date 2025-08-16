@@ -6,8 +6,8 @@ import type { Paciente } from "./pacienteService";
 
 export interface Cita {
     id: string;
-    paciente: Paciente;
-    especialista: Especialista;
+    paciente: string;
+    especialista: string;
     especialidad: Especialidad;
     fecha_inicio: string | Date;
     fecha_fin: string | Date;

@@ -1,14 +1,14 @@
 import { Box, Button, Card, CardActionArea, CardContent, CardMedia, CircularProgress, Grid, Skeleton, Stack, Typography } from "@mui/material";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import PacienteForm from "../components/admin/PacienteForm";
-import { createPaciente, getPacienteByUserId, getPacienteProfile, updatePaciente, type Paciente, type PacienteWithUser } from "../api/pacienteService";
+import PacienteForm from "../../components/admin/PacienteForm";
+import { createPaciente, getPacienteByUserId, getPacienteProfile, updatePaciente, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
 import { LocalDiningOutlined } from "@mui/icons-material";
-import { updateUsuario } from "../api/userService";
-import { getEspecialidades, type Especialidad } from "../api/especialidadService";
-import ReservaCita from "../components/ReservarCita/ReservaCita";
-import { useLocalStorage } from "../hooks/useLocalStorage";
+import { updateUsuario } from "../../api/userService";
+import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
+import ReservaCita from "../../components/ReservarCita/ReservaCita";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 interface InicioPacienteProps{
 
@@ -147,7 +147,7 @@ const InicioPaciente: React.FC<InicioPacienteProps> = ({
     return(
         <Box display={'flex'} flexDirection={'column'} flexGrow={1}>
             <Typography variant="h4" fontWeight={600} color="primary" mb={7} textAlign='center'>
-                Bienvenid@, paciente: {user?.name}
+                Bienvenid@ de nuevo: {user?.name}  {user?.lastname}
             </Typography>
             <Box display={'flex'} flexDirection={'column'} flexGrow={1} justifyContent={'center'}>
                 {/* {(loading || isLoading) && } */}
@@ -202,12 +202,13 @@ const InicioPaciente: React.FC<InicioPacienteProps> = ({
                 onClose={handlePacienteFormClose}
                 onSubmit={handlePacienteFormSubmit}
                 loading={loading}
+                invisibleFields={['isActive']}
             />
             <ReservaCita
                 open={openReservaCitaModal}
                 onClose={handleReservaCitaModalClose}
                 especialidad={selectedEspecialidad || {}}
-                paciente={profile?.paciente || {}}
+                paciente={profile || {}}
             />
         </Box>
     );

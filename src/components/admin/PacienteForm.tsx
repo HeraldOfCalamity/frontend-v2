@@ -22,7 +22,8 @@ interface PacienteFormProps{
     onSubmit: (data: Partial<PacienteWithUser>) => void;
     initialData?: PacienteWithUser;
     loading?: boolean;
-    disabledFields?: PacienteFormField[]
+    disabledFields?: PacienteFormField[];
+    invisibleFields?: PacienteFormField[];
 }
 
 const TIPOS_SANGRE = [
@@ -35,7 +36,8 @@ export default function ({
     open,
     initialData,
     loading,
-    disabledFields
+    disabledFields,
+    invisibleFields
 }: PacienteFormProps){
      const defaultValues = initialData
         ? {
@@ -75,6 +77,9 @@ export default function ({
     const isDisabled = (field: PacienteFormField) => 
         disabledFields?.includes(field);
 
+    const isInvisible = (field: PacienteFormField) =>
+        invisibleFields?.includes(field) ? 'none' : '';
+
 
     useEffect(() => {
         reset({
@@ -86,7 +91,7 @@ export default function ({
     }, [initialData, reset, open])
 
     return(
-        <Dialog open={open} onClose={onClose} >
+        <Dialog open={open} onClose={onClose}>
             <DialogTitle>{initialData ? 'Editar Usuario' : 'Nuevo Usuario'}</DialogTitle>
             <form onSubmit={handleSubmit((data) => {
                 // Convert fechaNacimiento to Date if it's a string
@@ -103,7 +108,7 @@ export default function ({
                         ci: data.ci,
                         phone: data.phone,
                         isActive: data.isActive,
-                        isVerified: data.isVerified                      
+                        isVerified: true                     
                     },
                     paciente: {
                         tipo_sangre: data.tipo_sangre,
@@ -121,18 +126,32 @@ export default function ({
                             margin="normal"
                             {...register('name', {required: 'Nombre requerido'})}
                             error={!!errors.name}
-                            disabled={isDisabled('name')}
+                            slotProps={{
+                                input:{
+                                    readOnly: isDisabled('name')
+                                }
+                            }} 
                             helperText={errors.name?.message?.toString()}
+                            sx={{
+                                display: isInvisible('name')
+                            }}
                         />
                         <TextField
                                 label='Apellidos'
                                 fullWidth
                                 size="small"
                                 margin="normal"
-                                disabled={isDisabled('lastname')}
+                                slotProps={{
+                                    input:{
+                                        readOnly: isDisabled('lastname')
+                                    }
+                                }} 
                                 {...register('lastname', {required: 'Apellido requerido'})}
                                 error={!!errors.lastname}
                                 helperText={errors.lastname?.message?.toString()}
+                                sx={{
+                                    display: isInvisible('lastname')
+                                }}
                             />
                         <TextField
                             label='Correo'
@@ -142,8 +161,15 @@ export default function ({
                             margin="normal"
                             {...register('email', {required: 'Correo requerido'})}
                             error={!!errors.email}
-                            disabled={isDisabled('email')}
+                            slotProps={{
+                                input:{
+                                    readOnly: isDisabled('email')
+                                }
+                            }} 
                             helperText={errors.email?.message?.toString()}
+                            sx={{
+                                display: isInvisible('email')
+                            }}
                         />
                         {!initialData ? (
                             <TextField
@@ -151,10 +177,17 @@ export default function ({
                                 fullWidth
                                 size="small"
                                 margin="normal"
-                                disabled={isDisabled('password')}
+                                slotProps={{
+                                    input:{
+                                        readOnly: isDisabled('password')
+                                    }
+                                }} 
                                 {...register('password', initialData ? {} : {required: 'Contraseña requerida'})}
                                 error={!!errors.password}
                                 helperText={errors.password?.message?.toString()}
+                                sx={{
+                                    display: isInvisible('password')
+                                }}
                             />  
                         ) : null}
                         <FormControl fullWidth margin="normal" error={!!errors.tipo_sangre}>
@@ -169,7 +202,14 @@ export default function ({
                                         labelId="tipo-sangre-label"
                                         label="Tipo Sangre"                                        
                                         {...field}
-                                        disabled={isDisabled('tipo_sangre')}
+                                        slotProps={{
+                                            input:{
+                                                readOnly: isDisabled('tipo_sangre')
+                                            }
+                                        }} 
+                                        sx={{
+                                            display: isInvisible('tipo_sangre')
+                                        }}
                                         >
                                         {TIPOS_SANGRE.map(r => (
                                             <MenuItem value={r} key={r}>{r}</MenuItem>
@@ -184,15 +224,21 @@ export default function ({
                             fullWidth
                             size="small"
                             margin="normal"
-                            disabled={isDisabled('fecha_nacimiento')}
                             slotProps={{
                                 inputLabel:{
-                                    shrink: true
+                                    shrink: true,
+                                    
+                                },
+                                input:{
+                                    readOnly: isDisabled('fecha_nacimiento')
                                 }
                             }}
                             {...register('fecha_nacimiento', {required: 'Fecha requerida'})}
                             error={!!errors.fecha_nacimiento}
                             helperText={errors.fecha_nacimiento?.message?.toString()}
+                            sx={{
+                                display: isInvisible('fecha_nacimiento')
+                            }}
                         />
                         <TextField
                             label='Telefono'
@@ -211,8 +257,15 @@ export default function ({
                                 }}
                             )}
                             error={!!errors.phone}
-                            disabled={isDisabled('phone')}
+                            slotProps={{
+                                input:{
+                                    readOnly: isDisabled('phone')
+                                }
+                            }} 
                             helperText={errors.phone?.message?.toString()}
+                            sx={{
+                                display: isInvisible('phone')
+                            }}
                         />
                         <TextField
                             label='CI'
@@ -220,7 +273,11 @@ export default function ({
                             fullWidth
                             size="small"
                             margin="normal"
-                            disabled={isDisabled('ci')}
+                            slotProps={{
+                                input:{
+                                    readOnly: isDisabled('ci')
+                                }
+                            }} 
                             {...register('ci', {
                                 required: 'CI requerido',
                                 validate: (value: string | undefined) => {
@@ -233,16 +290,28 @@ export default function ({
                             )}
                             error={!!errors.ci}
                             helperText={errors.ci?.message?.toString()}
+                            sx={{
+                                display: isInvisible('ci')
+                            }}
                         />
                         <Controller
                             name="isActive"
                             control={control}
-                            
                             render={({ field }) => (
-                                <FormControlLabel  
+                                <FormControlLabel 
+                                    sx={{
+                                        display: isInvisible('isActive')
+                                    }} 
                                     control={
                                         <Switch
-                                            disabled={isDisabled('isActive')}
+                                            slotProps={{
+                                                input:{
+                                                    readOnly: isDisabled('phone')
+                                                }
+                                            }} 
+                                            sx={{
+                                                display: isInvisible('isActive')
+                                            }}
                                             checked={field.value}
                                             onChange={(e) => field.onChange(e.target.checked)}
                                         />
@@ -255,7 +324,14 @@ export default function ({
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose}>Cancelar</Button>
-                    <Button type="submit" variant="contained" disabled={loading || isDisabled('save')}>
+                    <Button 
+                        type="submit" 
+                        variant="contained" 
+                        disabled={loading || isDisabled('save')} 
+                        sx={{
+                            display: isInvisible('save')
+                        }}
+                    >
                         {loading ? "Guardando..." : "Guardar"}
                     </Button>
                 </DialogActions>

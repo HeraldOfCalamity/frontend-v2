@@ -210,7 +210,7 @@ export default function ({
                             role: data.role,
                             password: data.password,
                             isActive: data.isActive,
-                            isVerified: data.isVerified
+                            isVerified: true
                         },
                         especialista: {
                             disponibilidades: disponibilidades,
