@@ -7,7 +7,7 @@ import { Box, Card, CardActionArea, CardContent, CardMedia, Divider, Grid, Skele
 interface ReservarCitaPaso1Props {
     especialidad: Partial<Especialidad>
     // especialista: Partial<Especialista>
-    handleEspecialistaClick: (especialista: Especialista) => void
+    handleEspecialistaClick: (especialista: EspecialistaWithUser) => void
 }
 
 export default function ReservarCitaPaso1({
@@ -33,6 +33,11 @@ export default function ReservarCitaPaso1({
         }
     }, [especialidad])
 
+    useEffect(() => {
+        console.log('espcialidad', especialidad)
+        console.log('especialistas', especialistas)
+    }, [especialidad, especialistas])
+
     return (
         <Box sx={{overflowY: 'scroll'}}>
             <Grid justifyContent={'space-around'} container spacing={1}>
@@ -42,7 +47,7 @@ export default function ReservarCitaPaso1({
                                 bgcolor: theme.palette.secondary.main, 
                                 color: theme.palette.secondary.contrastText
                             }}>
-                            <CardActionArea onClick={() => handleEspecialistaClick(esp.especialista as Especialista)}>
+                            <CardActionArea onClick={() => handleEspecialistaClick(esp)}>
                                 <CardContent>
                                     <Typography variant="h6">
                                         {`${esp.user.name} ${esp.user.lastname}`}

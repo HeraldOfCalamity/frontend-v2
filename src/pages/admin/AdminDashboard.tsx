@@ -86,35 +86,33 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                 Bienvenido, {user?.name || user?.email || "Administrador"}
             </Typography>
             <Stack mb={2}>
-                <Button
-                    variant="contained" 
-                    color="primary" 
-                    startIcon={<AddCircleOutline />}
-                    onClick={handleNewCitaClick}
-                >Reservar Cita</Button>
             </Stack>
             <CalendarioCitas 
-                // citas={citas} 
-                // handleCancelClick={handleCancelCitaClick}
-                // handleConfirmClick={handleConfirmCitaClick}
+                citas={citas} 
+                onCancelCita={
+                    async () => await getCitas()
+                }
+                onConfirmCita={
+                    async () => await getCitas()
+                }
             />
-            <BuscarPaciente 
+            {/* <BuscarPaciente 
                 open={openSearchPaciente} 
                 onClose={handleSearchPacienteClose}
                 onSelectPaciente={handleSelectPaciente} 
-            />
-            <BuscarEspecialidad
+            /> */}
+            {/* <BuscarEspecialidad
                 open={openSearchEspecialidad}
                 onClose={handleSearchEspecialidadClose}
                 onSelectEspecialidad={handleSelectEspecialidad}
-            />
+            /> */}
 
-            <ReservaCita
+            {/* <ReservaCita
                 open={openReservaCita}
                 especialidad={selectedEspecialidad || {}}
                 onClose={handleReservarCitaClose}
                 paciente={selectedPaciente || {}}
-            />
+            /> */}
 
         </Box>
     )

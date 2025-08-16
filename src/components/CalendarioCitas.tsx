@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { cancelCita, confirmCita, getCitas, getCitasByEspecialista, type Cita } from "../api/citaService";
+import { cancelCita, confirmCita, getCitas, getCitasByEspecialista, getCitasByPaciente, type Cita } from "../api/citaService";
 import dayjs from "dayjs";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, useTheme } from "@mui/material";
 import { Calendar, Views, type View } from "react-big-calendar";
@@ -8,27 +8,34 @@ import Swal from "sweetalert2";
 import { useAuth } from "../context/AuthContext";
 import { useUserProfile } from "../context/userProfileContext";
 import type { Especialista } from "../api/especialistaService";
-import { ReplayOutlined } from "@mui/icons-material";
+import { AddCircleOutline, ReplayOutlined } from "@mui/icons-material";
+import type { Paciente, PacienteWithUser } from "../api/pacienteService";
+import BuscarEspecialidad from "./admin/BuscarEspecialidad";
+import type { Especialidad } from "../api/especialidadService";
+import ReservaCita from "./ReservarCita/ReservaCita";
 
 interface CalendarioCitaProps {
-    // citas: Cita[],
-    // handleCancelClick: (cita: Cita) => void;
-    // handleConfirmClick: (cita: Cita) => void;
+    defaultView?: View;
+    citas: Cita[],
+    onCancelCita: (cita: Cita) => Promise<void>;
+    onConfirmCita: (cita: Cita) => Promise<void>;
 }
 
 
 export default function CalendarioCitas({
-    // handleCancelClick,
-    // handleConfirmClick
+    defaultView = 'month',
+    citas,
+    onCancelCita,
+    onConfirmCita
 }: CalendarioCitaProps) {
     const {user} = useAuth();
-    const {profile, loading:loadingProfile} = useUserProfile();
-    const [eventos, setEventos] = useState<Cita[]>([]);
+    // const {profile, loading:loadingProfile} = useUserProfile();
+    // const [eventos, setEventos] = useState<Cita[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{start: Date, end: Date} | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<Cita | null>(null);
     const [date, setDate] = useState(new Date());
-    const [view, setView] = useState('month');
+    const [view, setView] = useState(defaultView);
     const [loading, setLoading] = useState(false);
     const hasRun = useRef(false);
     const theme = useTheme()
@@ -93,36 +100,13 @@ export default function CalendarioCitas({
         setSelectedSlot({start, end});
         setOpenDialog(true);
     }
-
+//region cambiar
     const getEventTitleFromCita = (cita: Cita) => {
-        const title = `${cita.especialidad?.nombre}: ${cita.especialista?.nombre} ${cita.especialista?.nombre}`;
+        const title = `${cita.especialidad?.nombre}: ${cita.especialista?.id} ${cita.especialista?.id}`; 
         return title;
     }
+//endregion
 
-    const getEvents = async () => {
-        setLoading(true);
-        let citas: Cita[] = [];
-        try{
-            if (user?.role === 'admin'){
-                citas = await getCitas();
-            }else if(user?.role === 'especialista'){
-                if(profile){
-                    const especialista = profile as Especialista;
-                    console.log('especialista profile', profile)
-                    citas = await getCitasByEspecialista(especialista.id);
-                }
-            }
-            setEventos(citas);
-        }catch (err : any){
-            Swal.fire(
-                'Error',
-                `${err}`,
-                'error'
-            )
-        }finally{
-            setLoading(false);
-        }
-    }
 
     const handleCancelCitaClick = async (cita: Cita) => {
         try{
@@ -138,7 +122,8 @@ export default function CalendarioCitas({
 
             if(isConfirmed.isConfirmed){
                 const canceled = await cancelCita(cita.id);
-                await getEvents();
+                await onCancelCita(cita);
+                // await getEvents();
                 Swal.fire(
                     'Operacion Exitosa',
                     'Cita cancelada con exito, en un momento recibira un correo de confirmación.',
@@ -169,7 +154,8 @@ export default function CalendarioCitas({
 
             if(isConfirmed.isConfirmed){
                 const confirmed = await confirmCita(cita.id);
-                await getEvents();
+                await onConfirmCita(cita)
+                // await getEvents();
                 Swal.fire(
                     'Operacion Exitosa',
                     'Cita confirmada con exito, en un momento recibira un correo de verificacion.',
@@ -186,15 +172,14 @@ export default function CalendarioCitas({
             )
         }
     }
-    const handleCitasRefresh = async () => {
-        await getEvents();
-    }
-    useEffect(() => {
-        if(!hasRun.current){
-            hasRun.current = true;
-            getEvents();
-        }
-    }, [])
+
+    // useEffect(() => {
+    //     if(!hasRun.current){
+    //         hasRun.current = true;
+    //         getEvents();
+    //     }
+        
+    // }, [])
     
     return(
         <>
@@ -207,13 +192,18 @@ export default function CalendarioCitas({
                     p: 2, 
                     borderRadius: 1,
                     // border: `1px solid ${theme.palette.primary.main}`,
-                    
+                    overflowY: 'auto',
                     fontSize: '1.2em'
                 }}>
-                <Stack direction={'row'} justifyContent={'end'} mb={1}>
-                    <Button loading={loading} variant="contained" onClick={handleCitasRefresh} startIcon={<ReplayOutlined />}>
-                        Refrescar
-                    </Button>
+                <Stack direction={'row'} mb={1}>
+                    {/* {addCitaForPaciente && <Button 
+                        variant="contained" 
+                        color="primary" 
+                        startIcon={<AddCircleOutline />}
+                        onClick={() => setOpenSearchEspecialidad(true)}
+                    >
+                        Reservar Cita
+                    </Button>} */}
                 </Stack>
                 <Calendar
                     localizer={localizer}
@@ -221,12 +211,12 @@ export default function CalendarioCitas({
                     onNavigate={setDate}
                     view={view as View}
                     onView={setView}
-                    events={eventos}
+                    events={citas}
                     startAccessor={cita => new Date(cita.fecha_inicio)}
                     endAccessor={cita => new Date(cita.fecha_fin)}
                     titleAccessor={getEventTitleFromCita}
-                    defaultView={'month'}
-                    views={['month', 'week', 'day', 'agenda']}
+                    defaultView={defaultView}
+                    views={['agenda', 'month', 'week', 'day']}
                     step={15}
                     timeslots={2}
                     selectable
@@ -249,7 +239,7 @@ export default function CalendarioCitas({
                         date: 'Fecha',
                         time: 'Hora',
                         event: 'Evento',
-                        noEventsInRange: 'No hay eventos en este rango.',
+                        noEventsInRange: 'No se tienen citas en el rango de tiempo seleccionado.',
                         showMore: (total) => `+${total} más`,
                     }}
                     
@@ -264,7 +254,7 @@ export default function CalendarioCitas({
                             <p><b>Inicio:</b> {dayjs(selectedEvent.fecha_inicio).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Fin:</b> {dayjs(selectedEvent.fecha_fin).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Estado:</b> {selectedEvent.estado.nombre}</p>
-                            <p><b>Paciente:</b> {selectedEvent.paciente.nombre} {selectedEvent.paciente.apellido}</p>
+                            <p><b>Paciente:</b> {selectedEvent.paciente.id} {selectedEvent.paciente.id}</p>
                         </>
                     )}
                 </DialogContent>
@@ -309,6 +299,26 @@ export default function CalendarioCitas({
                     </Button>
                 </DialogActions>
             </Dialog>
+            {/* <BuscarEspecialidad
+                open={openSearchEspecialidad}
+                onClose={() => {
+                    setSelectedEspecialidad(null);
+                    setOpenSearchEspecialidad(false);
+                }}
+                onSelectEspecialidad={(especialidad) =>{
+                    setSelectedEspecialidad(especialidad)
+                    setOpenReservaCitaDialog(true);
+                }}
+            /> */}
+            {/* <ReservaCita
+                open={openReservaCitaDialog}
+                especialidad={selectedEspecialidad || {}}
+                paciente={addCitaForPaciente || {}}
+                onClose={async () => {
+                    await getEvents();
+                    setOpenReservaCitaDialog(false);
+                }}
+            /> */}
         </>
     )
   

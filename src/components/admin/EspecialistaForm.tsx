@@ -7,11 +7,26 @@ import type { Disponibilidad, EspecialistaWithUser } from "../../api/especialist
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
 import InputFileUpload from "../InputFileUpload";
 
+export type EspecialistaFormField = "name"
+ | "lastname"
+ | "email"
+ | "phone"
+ | "ci"
+ | "isActive"
+ | "informacion"
+ | "especialidades"
+ | "disponibilidades"
+ | "image"
+ | "save"
+ | "password"
+ 
+
 interface EspecialistaFormProps{
     open: boolean;
     onClose: () => void;
     onSubmit: (data: Partial<EspecialistaWithUser>) => void;
     initialData?: EspecialistaWithUser;
+    disabledFields?: EspecialistaFormField[];
     loading?: boolean;
 }
 
@@ -30,7 +45,8 @@ export default function ({
     onSubmit,
     open,
     initialData,
-    loading
+    loading,
+    disabledFields
 }: EspecialistaFormProps){
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
     const [disponibilidades, setDisponibilidades] = useState<Disponibilidad[]>(initialData?.especialista?.disponibilidades || []);
@@ -75,6 +91,9 @@ export default function ({
     const {register, handleSubmit, reset, control, formState: {errors}, setValue} = useForm({
         defaultValues
     })
+
+    const isDisabled = (field: EspecialistaFormField) => 
+        disabledFields?.includes(field);
 
     const [preview, setPreview] = useState<string | null>(defaultValues.image || null);
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -210,6 +229,7 @@ export default function ({
                                     fullWidth
                                     size="small"
                                     margin="normal"
+                                    disabled={isDisabled('name')}
                                     {...register('name', {required: 'Nombre requerido'})}
                                     error={!!errors.name}
                                     helperText={errors.name?.message?.toString()}
@@ -219,6 +239,7 @@ export default function ({
                                     fullWidth
                                     size="small"
                                     margin="normal"
+                                    disabled={isDisabled('lastname')}
                                     {...register('lastname', {required: 'Apellido requerido'})}
                                     error={!!errors.lastname}
                                     helperText={errors.lastname?.message?.toString()}
@@ -229,6 +250,7 @@ export default function ({
                                     size="small"
                                     fullWidth
                                     margin="normal"
+                                    disabled={isDisabled('email')}
                                     {...register('email', {required: 'Correo requerido'})}
                                     error={!!errors.email}
                                     helperText={errors.email?.message?.toString()}
@@ -239,6 +261,7 @@ export default function ({
                                         fullWidth
                                         size="small"
                                         margin="normal"
+                                        disabled={isDisabled('password')}
                                         {...register('password', initialData ? {} : {required: 'Contraseña requerido'})}
                                         error={!!errors.password}
                                         helperText={errors.password?.message?.toString()}
@@ -250,6 +273,7 @@ export default function ({
                                     fullWidth
                                     size="small"
                                     margin="normal"
+                                    disabled={isDisabled('phone')}
                                     {...register('phone', {
                                         required: 'Teléfono requerido', 
                                         validate: (value: string | undefined) => {
@@ -270,6 +294,7 @@ export default function ({
                                     fullWidth
                                     size="small"
                                     margin="normal"
+                                    disabled={isDisabled('ci')}
                                     {...register('ci', {
                                         required: 'CI requerido',
                                         validate: (value: string | undefined) => {
@@ -290,6 +315,7 @@ export default function ({
                                         <FormControlLabel
                                             control={
                                                 <Switch
+                                                    disabled={isDisabled('isActive')}
                                                     checked={field.value}
                                                     onChange={(e) => field.onChange(e.target.checked)}
                                                 />
@@ -306,6 +332,7 @@ export default function ({
                                     rows={4}
                                     size="small"
                                     margin="normal"
+                                    disabled={isDisabled('informacion')}
                                     {...register('informacion')}
                                     error={!!errors.informacion}
                                     helperText={errors.informacion?.message?.toString()}
@@ -346,6 +373,7 @@ export default function ({
                                                             control={
                                                                 <Checkbox
                                                                     checked={field.value?.includes(esp.id)}
+                                                                    disabled={isDisabled('especialidades')}
                                                                     onChange={(_, checked) => {
                                                                         const newValue = checked
                                                                             ? [...field.value ?? [], esp.id]
@@ -368,6 +396,7 @@ export default function ({
                                         label="Subir Fotografia" 
                                         handleChange={handleImageChange} 
                                         accept="image/"
+                                        disabled={isDisabled('image')}
                                         variant={'outlined'}
                                     />
                                     {preview && <Link 
@@ -385,6 +414,7 @@ export default function ({
                                             loading={loading}
                                             onClick={handleAddDisponibilidad}
                                             variant="outlined"
+                                            disabled={isDisabled('disponibilidades')}
                                             endIcon={<AddCircleOutline />}
                                         >
                                             Agregar
@@ -433,6 +463,7 @@ export default function ({
                                                             value={disp.dia}
                                                             label="Dia"
                                                             size="small"
+                                                            disabled={isDisabled('disponibilidades')}
                                                             onChange={e => handleChangeDisponibilidad(idx, 'dia', e.target.value)}
                                                         >
                                                             {DIAS_SEMANA.map(d => (
@@ -446,6 +477,7 @@ export default function ({
                                                         label="Desde"
                                                         type="time"
                                                         size="small"
+                                                        disabled={isDisabled('disponibilidades')}
                                                         value={disp.desde}
                                                         onChange={e => handleChangeDisponibilidad(idx, "desde", e.target.value)}
                                                         fullWidth
@@ -461,6 +493,7 @@ export default function ({
                                                         label="Hasta"
                                                         type="time"
                                                         size='small'
+                                                        disabled={isDisabled('disponibilidades')}
                                                         value={disp.hasta}
                                                         onChange={e => handleChangeDisponibilidad(idx, "hasta", e.target.value)}
                                                         fullWidth
@@ -472,7 +505,11 @@ export default function ({
                                                     />
                                                 </Grid>
                                                 <Grid size={{xs:2}}>
-                                                    <IconButton color="error" onClick={() => handleRemoveDisponibilidad(idx)} disabled={loading}>
+                                                    <IconButton 
+                                                        color="error" 
+                                                        onClick={() => handleRemoveDisponibilidad(idx)} 
+                                                        disabled={isDisabled('disponibilidades')}
+                                                    >
                                                         <Delete />
                                                     </IconButton>
                                                 </Grid>
@@ -485,7 +522,7 @@ export default function ({
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={onClose}>Cancelar</Button>
-                        <Button type="submit" variant="contained" loading={loading}>
+                        <Button type="submit" variant="contained" loading={loading} disabled={isDisabled('save')}>
                             {loading ? "Guardando..." : "Guardar"}
                         </Button>
                     </DialogActions>

@@ -18,12 +18,14 @@ interface InputFileUploadProps {
     label: string;
     accept?: string;
     variant?: 'text' | 'contained' | 'outlined';
+    disabled?: boolean;
 }
 export default function InputFileUpload({
     handleChange,
     label,
     accept,
-    variant
+    variant,
+    disabled
 }: InputFileUploadProps) {
   return (
     <Button
@@ -31,12 +33,14 @@ export default function InputFileUpload({
       role={undefined}
       variant={variant}
       tabIndex={-1}
+      disabled={disabled}
       startIcon={<CloudUpload />}
     >
       {label}
       <VisuallyHiddenInput
         type="file"
         accept={accept}
+        disabled={disabled}
         onChange={handleChange}
         multiple
       />

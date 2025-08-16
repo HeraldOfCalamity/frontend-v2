@@ -1,6 +1,6 @@
 import { AddCircleOutline, CalendarMonth, Circle, Delete, Edit } from "@mui/icons-material";
 import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
-import EspecialistaForm from "../../components/admin/EspecialistaForm";
+import EspecialistaForm, { type EspecialistaFormField } from "../../components/admin/EspecialistaForm";
 import { useEffect, useMemo, useState } from "react";
 import { createEspecialistaPerfil, deleteEspecialista, getEspecialistasWithUser, updateEspecialistaPerfil, type Disponibilidad, type EspecialistaWithUser } from "../../api/especialistaService";
 import Swal from "sweetalert2";
@@ -8,6 +8,7 @@ import type { Column, TableAction } from "../../components/common/GenericTable";
 import dayjs from "dayjs";
 import GenericTable from "../../components/common/GenericTable";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 
 const DIAS_SEMANA = [
@@ -27,6 +28,7 @@ export default function EspecialistasPage(){
     const [loading, setLoading] = useState(false);
     const [especialsitas, setEspecialsitas] = useState<EspecialistaWithUser[]>([])
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
+    const [disabledFields, setDisabledFields] = useState<EspecialistaFormField[]>([]);
     const theme = useTheme();
 
     const adaptedData = useMemo(() => especialsitas.map(e => ({
@@ -170,7 +172,21 @@ export default function EspecialistasPage(){
         }
     }
 
+    const handleShowEspecialista = (row: any) => {
+        const esp = especialsitas.find(e => e.especialista.id === row.id);
+        setDisabledFields([
+            "ci", "disponibilidades", "email", "especialidades", "image", "informacion","isActive", "lastname", "name","password", "phone", "save"
+        ])
+        setEditData(esp || null);
+        setOpenEspecialistaForm(true);
+    }
+
     const actions: TableAction<any>[] = [
+        {
+            icon: <VisibilityOutlinedIcon color="success"/>,
+            label: 'Editar',
+            onClick: (userRow) => handleShowEspecialista(userRow)
+        },
         {
             icon: <Edit color="info"/>,
             label: 'Editar',
@@ -244,6 +260,7 @@ export default function EspecialistasPage(){
                         setEditData(null);
                         setOpenEspecialistaForm(false);
                     }}
+                    disabledFields={disabledFields}
                     onSubmit={handleEspecialistaFormSubmit}
                     initialData={editData as EspecialistaWithUser || undefined}
                     loading={loading}

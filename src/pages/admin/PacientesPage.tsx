@@ -1,19 +1,35 @@
 import { AddCircleOutline, Circle, Delete, Edit } from "@mui/icons-material";
-import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography, useTheme } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import type { Column, TableAction } from "../../components/common/GenericTable";
 import dayjs from "dayjs";
 import GenericTable from "../../components/common/GenericTable";
-import { createPacientePerfil, deletePaciente, getPacientesWithUser, updatePacientePerfil, type PacienteWithUser } from "../../api/pacienteService";
-import PacienteForm from "../../components/admin/PacienteForm";
+import { createPacientePerfil, deletePaciente, getPacientesWithUser, updatePacientePerfil, type Paciente, type PacienteWithUser } from "../../api/pacienteService";
+import PacienteForm, { type PacienteFormField } from "../../components/admin/PacienteForm";
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import EditCalendarOutlinedIcon from '@mui/icons-material/EditCalendarOutlined';
+import { getCitasByPaciente, type Cita } from "../../api/citaService";
+import ReservaCita from "../../components/ReservarCita/ReservaCita";
+import BuscarEspecialidad from "../../components/admin/BuscarEspecialidad";
+import type { Especialidad } from "../../api/especialidadService";
+import type { Especialista } from "../../api/especialistaService";
+import CalendarioCitas from "../../components/CalendarioCitas";
 
 
 export default function PacientesPage(){
     const [openPacienteForm, setOpenPacienteForm] = useState(false);
+    const [openCitasPacienteDialog, setOpenCitasPacienteDialog] = useState(false);
+    const [openReservaCitaDialog, setOpenReservaCitaDialog] = useState(false);
+    const [openBuscarEspecialidadDialog, setOpenBuscarEspecialidadDialog] = useState(false);
+    const [selectedEspecialidad, setSelectedEspecialidad] = useState<Especialidad | null>(null);
+    const [selectedPaciente, setSelectedPaciente] = useState<PacienteWithUser | null>(null);
     const [editData, setEditData] = useState<PacienteWithUser | null>(null);
     const [loading, setLoading] = useState(false);
-    const [pacientes, setPacientes] = useState<PacienteWithUser[]>([])
+    const [pacientes, setPacientes] = useState<PacienteWithUser[]>([]);
+    const [disabledFields, setDisabledFields] = useState<PacienteFormField[]>([]);
+    const [citasPaciente, setCitasPaciente] = useState<Cita[]>([])
+    const [refetchCalendar, setRefetchCalendar] = useState(false);
     const theme = useTheme();
 
     const adaptedData = useMemo(() => pacientes.map(p => ({
@@ -124,7 +140,37 @@ export default function PacientesPage(){
         }
     }
 
+    const handleShowPaciente = (row: any) => {
+        const pac = pacientes.find(p => p.paciente.id === row.id);
+        setDisabledFields([
+            "ci", "email", "fecha_nacimiento", "isActive", "lastname", "name","password", "phone", "tipo_sangre", "save"
+        ])
+        setSelectedPaciente(pac!);
+        setOpenPacienteForm(true);
+    }
+
+    const handleShowCitasPaciente = async (row: any) => {
+        const pac = pacientes.find(p => p.paciente.id === row.id);
+        setSelectedPaciente(pac!);
+        await obtenerCitasPaciente(row.id)
+        setOpenCitasPacienteDialog(true);
+    }
+
+    useEffect(() => {
+        console.log('selected paciente', selectedPaciente)
+    }, [selectedPaciente])
+
     const actions: TableAction<any>[] = [
+        {
+            icon: <VisibilityOutlinedIcon color="success"/>,
+            label: 'Ver',
+            onClick: (userRow) => handleShowPaciente(userRow)
+        },
+        {
+            icon: <EditCalendarOutlinedIcon color="primary"/>,
+            label: 'Citas Reservadas',
+            onClick: (userRow) => handleShowCitasPaciente(userRow)
+        },
         {
             icon: <Edit color="info"/>,
             label: 'Editar',
@@ -151,9 +197,42 @@ export default function PacientesPage(){
         }
     }
 
+    const obtenerCitasPaciente = async (pacienteId: string) => {
+        console.log('paciente id', pacienteId)
+        setLoading(true);
+        try{
+            const citas = await getCitasByPaciente(pacienteId)
+            setCitasPaciente(citas);
+        }catch(err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
+        }finally{
+            setLoading(false)
+        }
+    }
+
+    const handleNewCitaClick = () => {
+        if(!selectedPaciente) return;
+
+        setOpenBuscarEspecialidadDialog(true);
+    }
+
+
+    const handleCloseCitasPaciente = () => {
+        setSelectedPaciente(null);
+        setOpenBuscarEspecialidadDialog(false);
+    }
+
+
+
     useEffect(() => {
         obtenerPacientes();
     }, [])
+
+
 
     return(
         <Box>
@@ -179,15 +258,75 @@ export default function PacientesPage(){
                         canExportPdf
                     />
                 </Stack>
+                <Dialog
+                    maxWidth={"lg"}
+                    fullWidth
+                    open={openCitasPacienteDialog}
+                    onClose={handleCloseCitasPaciente}
+                >
+                    <DialogTitle>
+                            Registro de citas del paciente
+                    </DialogTitle>
+                    <DialogContent>
+    
+                        <Stack direction={'row'} justifyContent={'end'} mb={1}>
+                            <Button
+                                variant="contained" 
+                                color="primary" 
+                                startIcon={<AddCircleOutline />}
+                                onClick={handleNewCitaClick}
+                            >Reservar Cita</Button>
+                        </Stack>
+                        <CalendarioCitas 
+                            defaultView="agenda"
+                            citas={citasPaciente}
+                            onCancelCita={
+                                async () => await obtenerCitasPaciente(selectedPaciente?.paciente.id || '')
+                            }
+                            onConfirmCita={
+                                async () => await obtenerCitasPaciente(selectedPaciente?.paciente.id || '')
+                            }
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="contained" onClick={() => setOpenCitasPacienteDialog(false)} color="error">
+                            Cerrar
+                        </Button>
+                    </DialogActions>
+                </Dialog>
                 <PacienteForm
                     open={openPacienteForm}
                     onClose={() => {
                         setEditData(null);
                         setOpenPacienteForm(false);
                     }}
+                    disabledFields={disabledFields}
                     onSubmit={handlePacienteFormSubmit}
                     initialData={editData as PacienteWithUser || undefined}
                     loading={loading}
+                />
+                <BuscarEspecialidad
+                    open={openBuscarEspecialidadDialog}
+                    onClose={() => {
+                        setSelectedEspecialidad(null);
+                        setOpenBuscarEspecialidadDialog(false);
+                    }}
+                    onSelectEspecialidad={(especialidad) => {
+                        setSelectedEspecialidad(especialidad);
+                        setOpenReservaCitaDialog(true)
+                    }}
+                />
+
+                <ReservaCita
+                    open={openReservaCitaDialog}
+                    especialidad={selectedEspecialidad || {}}
+                    onClose={async () => {
+                        setSelectedEspecialidad(null);
+                        await obtenerCitasPaciente(selectedPaciente?.paciente.id || '')
+                        setOpenReservaCitaDialog(false);
+
+                    }}
+                    paciente={selectedPaciente || {}}
                 />
         </Box>
     )

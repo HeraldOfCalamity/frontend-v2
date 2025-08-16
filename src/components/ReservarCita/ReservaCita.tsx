@@ -3,17 +3,17 @@ import type { TransitionProps } from "@mui/material/transitions";
 import React, { useEffect, useState } from "react";
 import ReservarCitaPaso1 from "./ReservarCitaPaso1";
 import type { Especialidad } from "../../api/especialidadService";
-import type { Especialista } from "../../api/especialistaService";
+import type { Especialista, EspecialistaWithUser } from "../../api/especialistaService";
 import ReservarCitaPaso2 from "./ReservarCitaPaso2";
 import Swal from "sweetalert2";
-import type { Paciente } from "../../api/pacienteService";
+import type { Paciente, PacienteWithUser } from "../../api/pacienteService";
 import { reservarCita, type CreateCita } from "../../api/citaService";
 import ReservarCitaPaso3 from "./ReservarCitaPaso3";
 
 interface ReservaCitaProps {
     open: boolean;
     especialidad: Partial<Especialidad>
-    paciente: Partial<Paciente>
+    paciente: Partial<PacienteWithUser>
     onClose: () => void;
 }
 
@@ -35,11 +35,11 @@ export default function ReservaCita({
     const [activeStep, setActiveStep] = React.useState(0);
     const [shouldGoNext, setShouldGoNext] = useState(false);
 
-    const [especialista, setEspecialista] = useState<Especialista | null>(null)
+    const [especialista, setEspecialista] = useState<EspecialistaWithUser | null>(null)
     const [fechaCita, setFechaCita] = useState('');
     const [motivoCita, setMotivoCita] = useState('');
     const [createCita, setCreateCita] = useState<CreateCita>({
-        paciente_id: paciente.id || '',
+        paciente_id: paciente?.paciente?.id || '',
         especialidad_id: especialidad.id || '',
         especialista_id: '',
         fecha_inicio: '',
@@ -50,10 +50,10 @@ export default function ReservaCita({
     }>({});
     
     
-    const handleEspecialistaClick = async (especialista: Especialista) => {
+    const handleEspecialistaClick = async (especialista: EspecialistaWithUser) => {
         const alert = await Swal.fire({
             title: 'Seleccionando Especialista',
-            text: `Esta seleccionando al especialista ${especialista.nombre} ${especialista.apellido}, desea continuar?`,
+            text: `Esta seleccionando al especialista ${especialista.user.name} ${especialista.user.lastname}, desea continuar?`,
             showCancelButton: true,
             confirmButtonText: 'Si',
             cancelButtonText: 'No',
@@ -93,7 +93,7 @@ export default function ReservaCita({
         {
             title:'Seleccion de fecha y hora', 
             component: <ReservarCitaPaso2 
-                especialista={especialista || {}}
+                especialista={especialista?.especialista || {}}
                 onSelect={handlePaso2Complete}
             />
         },
@@ -102,8 +102,8 @@ export default function ReservaCita({
             component: <ReservarCitaPaso3
                 cita={{
                     especialidad: especialidad.nombre || '',
-                    especialista: especialista?.nombre || '',
-                    paciente: paciente.nombre || '',
+                    especialista: especialista?.user?.name || '',
+                    paciente: paciente?.user?.name || '',
                     fecha: fechaCita
                 }}
                 motivo={motivoCita}
@@ -208,8 +208,8 @@ export default function ReservaCita({
         });
         setCreateCita(prev => ({
             especialidad_id: especialidad?.id || prev.especialidad_id,
-            especialista_id: especialista?.id || prev.especialista_id,
-            paciente_id: paciente?.id || prev.paciente_id,
+            especialista_id: especialista?.especialista?.id || prev.especialista_id,
+            paciente_id: paciente?.paciente?.id || prev.paciente_id,
             fecha_inicio: fechaCita || prev.fecha_inicio,
             motivo: motivoCita || prev.motivo
         }))
@@ -223,14 +223,14 @@ export default function ReservaCita({
         }
     }, [completed, shouldGoNext]);
 
-    // useEffect(() => {
-    //     console.log('createCita', createCita);
-    // }, [createCita])
+    useEffect(() => {
+        console.log('createCita paciente', paciente);
+    }, [paciente])
 
     const handleReset = () => {
         setShouldGoNext(false);
         setCreateCita({
-            paciente_id: paciente.id || '',
+            paciente_id: paciente?.paciente?.id || '',
             especialidad_id: especialidad.id || '',
             especialista_id: '',
             fecha_inicio: '',

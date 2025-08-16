@@ -3,6 +3,8 @@ import {useForm} from 'react-hook-form'
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, InputLabel, Link, Stack, TextField } from '@mui/material';
 import InputFileUpload from '../InputFileUpload';
 
+type EspecialidadFormField = 'nombre' | 'descripcion' | 'image';
+
 interface EspecialidadFormProps {
     open: boolean;
     onClose: () => void;
