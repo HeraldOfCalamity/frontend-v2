@@ -124,7 +124,7 @@ export default function EspecialistasPage(){
                     <Box display={'flex'} flexDirection={'column'}>
                         {disp.map(dis => 
                             <Box display={'flex'} textAlign={'left'} mb={1} alignItems={'center'}>
-                                <CalendarMonth color="primary" sx={{mr: 1}} /> {dis.dia}: {dis.desde} - {dis.hasta}
+                                <CalendarMonth color="action" sx={{mr: 1}} /> {dis.dia}: {dis.desde} - {dis.hasta}
                             </Box>
                         )}
                     </Box>
@@ -198,12 +198,12 @@ export default function EspecialistasPage(){
 
     const actions: TableAction<any>[] = [
         {
-            icon: <VisibilityOutlinedIcon color="success"/>,
+            icon: <VisibilityOutlinedIcon color="primary"/>,
             label: 'Editar',
             onClick: (userRow) => handleShowEspecialista(userRow)
         },
         {
-            icon: <EditCalendarOutlinedIcon color="primary"/>,
+            icon: <EditCalendarOutlinedIcon color="secondary"/>,
             label: 'Citas Asignadas',
             onClick: (userRow) => handleShowCitasEspecialista(userRow)
         },

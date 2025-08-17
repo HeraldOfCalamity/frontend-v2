@@ -48,7 +48,7 @@ export default function EspecialidadForm({
 
     return(
         <>
-            <Dialog open={open} onClose={onClose}>
+            <Dialog open={open} onClose={onClose} maxWidth={'sm'} fullWidth>
                 <DialogTitle>{initialData ? "Editar Especialidad" : "Nueva Especialidad"}</DialogTitle>
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogContent>
@@ -86,10 +86,10 @@ export default function EspecialidadForm({
                         </Stack>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={onClose}>Cancelar</Button>
                         <Button type='submit' variant='contained' loading={loading}>
                             {loading ? 'Guardando...' : 'Guardar'}
                         </Button>
+                        <Button onClick={onClose} variant='contained' color='error'>Cancelar</Button>
                     </DialogActions>
                 </form>
             </Dialog>

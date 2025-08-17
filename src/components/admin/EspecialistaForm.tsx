@@ -374,6 +374,7 @@ export default function ({
                                                                 <Checkbox
                                                                     checked={field.value?.includes(esp.id)}
                                                                     disabled={isDisabled('especialidades')}
+                                                                    color="secondary"
                                                                     onChange={(_, checked) => {
                                                                         const newValue = checked
                                                                             ? [...field.value ?? [], esp.id]
@@ -396,12 +397,14 @@ export default function ({
                                         label="Subir Fotografia" 
                                         handleChange={handleImageChange} 
                                         accept="image/"
+                                        color="secondary"
                                         disabled={isDisabled('image')}
                                         variant={'outlined'}
                                     />
                                     {preview && <Link 
                                         component={'button'} 
                                         type="button"
+                                        color="secondary"
                                         textAlign={'center'} 
                                         onClick={() => setOpenImagePreviewDialog(true)}>
                                         Ver imagen cargada
@@ -414,6 +417,7 @@ export default function ({
                                             loading={loading}
                                             onClick={handleAddDisponibilidad}
                                             variant="outlined"
+                                            color="secondary"
                                             disabled={isDisabled('disponibilidades')}
                                             endIcon={<AddCircleOutline />}
                                         >
@@ -521,10 +525,10 @@ export default function ({
                         </Grid>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={onClose}>Cancelar</Button>
                         <Button type="submit" variant="contained" loading={loading} disabled={isDisabled('save')}>
                             {loading ? "Guardando..." : "Guardar"}
                         </Button>
+                        <Button variant="contained" color="error" onClick={onClose}>Cancelar</Button>
                     </DialogActions>
                 </form>
             </Dialog>
@@ -539,7 +543,7 @@ export default function ({
                     <img height={210} src={preview || ''} alt="Especialista Image"/>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setOpenImagePreviewDialog(false)}>Cerrar</Button>
+                    <Button color="error" variant="contained" onClick={() => setOpenImagePreviewDialog(false)}>Cerrar</Button>
                 </DialogActions>
             </Dialog>
         </>

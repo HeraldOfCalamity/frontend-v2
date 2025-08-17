@@ -162,12 +162,12 @@ export default function PacientesPage(){
 
     const actions: TableAction<any>[] = [
         {
-            icon: <VisibilityOutlinedIcon color="success"/>,
+            icon: <VisibilityOutlinedIcon color="primary"/>,
             label: 'Ver',
             onClick: (userRow) => handleShowPaciente(userRow)
         },
         {
-            icon: <EditCalendarOutlinedIcon color="primary"/>,
+            icon: <EditCalendarOutlinedIcon color="secondary"/>,
             label: 'Citas Reservadas',
             onClick: (userRow) => handleShowCitasPaciente(userRow)
         },

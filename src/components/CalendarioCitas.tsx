@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cancelCita, confirmCita, getCitas, getCitasByEspecialista, getCitasByPaciente, type Cita } from "../api/citaService";
 import dayjs from "dayjs";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, useTheme } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Typography, useTheme } from "@mui/material";
 import { Calendar, Views, type View } from "react-big-calendar";
 import { localizer } from "../utils/calendarLocalazer";
 import Swal from "sweetalert2";
@@ -186,15 +186,14 @@ export default function CalendarioCitas({
     
     return(
         <>
-            <Box 
-                boxShadow={14}
+            <Paper 
+                variant="outlined"
                 sx={{
-                    height: '70vh', 
-                    // bgcolor: "#fdcae3ff", 
-                    // color: theme.palette.text.primary, 
+
+                    bgcolor: theme => theme.palette.background.paper, 
                     p: 2, 
-                    borderRadius: 1,
-                    // border: `1px solid ${theme.palette.primary.main}`,
+                    borderRadius: 2,
+                    border: `1px solid ${theme.palette.divider}`,
                     overflowY: 'auto',
                     fontSize: '1.2em'
                 }}>
@@ -207,47 +206,59 @@ export default function CalendarioCitas({
                     >
                         Reservar Cita
                     </Button>} */}
+                    <Typography variant="h4">
+                        Citas del consultorio
+                    </Typography>
                 </Stack>
-                <Calendar
-                    localizer={localizer}
-                    date={date}
-                    onNavigate={setDate}
-                    view={view as View}
-                    onView={setView}
-                    events={citas}
-                    startAccessor={cita => new Date(cita.fecha_inicio)}
-                    endAccessor={cita => new Date(cita.fecha_fin)}
-                    titleAccessor={getEventTitleFromCita}
-                    defaultView={defaultView}
-                    views={['agenda', 'month', 'week', 'day']}
-                    step={15}
-                    timeslots={2}
-                    selectable
-                    // onSelecting={onSelecting}
-                    onSelectEvent={handleSelectEvent}
-                    onSelectSlot={handleSelectSlot}
-                    dayPropGetter={dayPropGetter}
-                    eventPropGetter={eventPropGetter}
-                    min={min}
-                    max={max}
-                    culture="es"
-                    messages={{
-                        next: 'Sig.',
-                        previous: 'Ant.',
-                        today: 'Hoy',
-                        month: 'Mes',
-                        week: 'Semana',
-                        day: 'Día',
-                        agenda: 'Agenda',
-                        date: 'Fecha',
-                        time: 'Hora',
-                        event: 'Evento',
-                        noEventsInRange: 'No se tienen citas en el rango de tiempo seleccionado.',
-                        showMore: (total) => `+${total} más`,
-                    }}
-                    
-                />
-            </Box>
+                <Box
+                    sx={{
+                        height: '70vh', 
+                        bgcolor: theme.palette.background.paper, 
+                        p: 2
+                    }}  
+                >
+
+                    <Calendar
+                        localizer={localizer}
+                        date={date}
+                        onNavigate={setDate}
+                        view={view as View}
+                        onView={setView}
+                        events={citas}
+                        startAccessor={cita => new Date(cita.fecha_inicio)}
+                        endAccessor={cita => new Date(cita.fecha_fin)}
+                        titleAccessor={getEventTitleFromCita}
+                        defaultView={defaultView}
+                        views={['month', 'week', 'day', 'agenda']}
+                        step={15}
+                        timeslots={2}
+                        selectable
+                        // onSelecting={onSelecting}
+                        onSelectEvent={handleSelectEvent}
+                        onSelectSlot={handleSelectSlot}
+                        dayPropGetter={dayPropGetter}
+                        eventPropGetter={eventPropGetter}
+                        min={min}
+                        max={max}
+                        culture="es"
+                        messages={{
+                            next: 'Sig.',
+                            previous: 'Ant.',
+                            today: 'Hoy',
+                            month: 'Mes',
+                            week: 'Semana',
+                            day: 'Día',
+                            agenda: 'Agenda',
+                            date: 'Fecha',
+                            time: 'Hora',
+                            event: 'Evento',
+                            noEventsInRange: 'No se tienen citas en el rango de tiempo seleccionado.',
+                            showMore: (total) => `+${total} más`,
+                        }}
+                        
+                    />
+                </Box>
+            </Paper>
             <Dialog open={openDialog && !!selectedEvent} onClose={() => {setOpenDialog(false); setSelectedSlot(null); setSelectedEvent(null)}} maxWidth={"sm"} fullWidth>
                 <DialogTitle>Detalle</DialogTitle>
                 <DialogContent>

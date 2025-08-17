@@ -91,7 +91,7 @@ export default function RolesPage(){
 
     const actions: TableAction<Role>[] = [
         {
-            icon: <Edit />,
+            icon: <Edit color="info"/>,
             label: 'Editar',
             onClick: (row) => {
                 setEditData(row);

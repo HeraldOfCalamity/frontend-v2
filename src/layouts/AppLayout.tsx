@@ -30,32 +30,67 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
     }
 
     return(
-        <Box sx={{
-            minHeight: '100vh', 
-            bgcolor:'background.default', 
-            color:'text.primary',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
-            <NavBar handleOpenLoginModal={handleOpenLoginModalClick}/>
-            <Container 
-                maxWidth="lg" 
+        <>
+            <Box
                 sx={{
-                    pt:4,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column'
+                    minHeight: "100vh",
+                    bgcolor: "background.default",
+                    color: "text.primary",
+                    display: "flex",
+                    flexDirection: "column",
+                    position: "relative",
+                    overflow: "hidden",
+                    pb: 10
                 }}
             >
+                {/* Fondo con imagen y degradado */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 0,
+                        background: `
+                        linear-gradient(150deg, rgba(205, 160, 160, 0.2) 0%,  rgba(242, 204, 208,0.77) 50%, rgba(205, 160, 160, 0) 100%)
+                        `,
+                        "::after": {
+                            content: '""',
+                            position: "absolute",
+                            bottom: 0,
+                            right: 40,
+                            width: 300,
+                            height: 300,
+                            backgroundImage: 'url("/benedetta-bellezza-logo-only.svg")',
+                            backgroundRepeat: "no-repeat",
+                            backgroundSize: "contain",
+                            opacity: 0.7,
+                        },
+                        pointerEvents: "none",
+                    }}
+                />
+
+                {/* Contenido principal */}
+                <Box sx={{ zIndex: 1 }}>
+                    <NavBar handleOpenLoginModal={handleOpenLoginModalClick} />
+                </Box>
+
+                <Container
+                    maxWidth="lg"
+                    sx={{ pt: 4, flex: 1, display: "flex", flexDirection: "column", zIndex: 1 }}
+                >
                 {children}
-            </Container>
-            <Footer />
-            <LoginModal 
-                openLoginModal={openLoginModal} 
-                handleLoginModalClose={handleCloseLoginModalClick} 
+                </Container>
+
+                
+
+                
+            </Box>
+            <LoginModal
+                openLoginModal={openLoginModal}
+                handleLoginModalClose={handleCloseLoginModalClick}
                 handleLoginSuccess={handleLoginSuccess}
             />
-        </Box>
+            <Footer />
+        </>
     );
 };
 

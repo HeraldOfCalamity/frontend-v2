@@ -1,4 +1,4 @@
-import { Box, Grid, IconButton, Stack, TextField, Typography } from "@mui/material";
+import { Box, Container, Grid, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { getOfficeConfig, type OfficeConfiguration } from "../../api/configService";
@@ -66,27 +66,35 @@ export default function ConfiguracionPage() {
     }, [])
     return (
         <Box>
-            <Typography variant="h5" fontWeight={700} mb={3}>
-                Configuracion
-            </Typography>
-            <Grid container spacing={2}>
-                {config.map(config => (
-                    <Grid key={config.id} size={6}>
-                        <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
-                            <TextField 
-                                label={config.name} 
-                                value={config.value}
-                            />
-                            <IconButton
-                                sx={{ml: 2}}
-                                onClick={() => handleOpenOfficeConfigForm(config)}
-                            >
-                                <Edit />
-                            </IconButton>
-                        </Box>
+            <Paper variant="outlined" sx={{
+                py:4,
+                minHeight: '77vh'
+            }}>
+                <Container>
+                    <Typography variant="h5" fontWeight={700} mb={3}>
+                        Configuracion
+                    </Typography>
+                    
+                    <Grid container spacing={2}>
+                        {config.map(config => (
+                            <Grid key={config.id} size={{xs: 6, md:4}}>
+                                <Box display={"flex"} justifyContent={'center'} alignItems={'center'}>
+                                    <TextField 
+                                        label={config.name} 
+                                        value={config.value}
+                                    />
+                                    <IconButton
+                                        sx={{ml: 2}}
+                                        onClick={() => handleOpenOfficeConfigForm(config)}
+                                    >
+                                        <Edit color="info"/>
+                                    </IconButton>
+                                </Box>
+                            </Grid>
+                        ))}
                     </Grid>
-                ))}
-            </Grid>
+                </Container>
+            </Paper>
             <OfficeConfigForm
                 open={openOfficeConfigForm}
                 initialData={editData || {}}

@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import { ThemeProvider } from '@mui/material';
-import { lightTheme } from './config/theme.config';
+import { lightTheme, theme2 } from './config/theme.config';
 import InicioPaciente from './pages/paciente/InicioPaciente';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -34,7 +34,7 @@ function App() {
   // }, [prefersDarkMode]);
 
   return (
-    <ThemeProvider theme={lightTheme}>
+    <ThemeProvider theme={theme2}>
       <ParamsProvider>
         <BrowserRouter>
           <LocalizationProvider dateAdapter={AdapterDayjs}>

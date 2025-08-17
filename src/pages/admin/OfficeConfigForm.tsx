@@ -97,10 +97,10 @@ export default function OfficeConfigForm({
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose} color="secondary">Cancelar</Button>
                     <Button type="submit" variant="contained" color="primary" loading={loading}>
                         Guardar
                     </Button>
+                    <Button onClick={onClose} variant="contained" color="error">Cancelar</Button>
                 </DialogActions>
             </form>
         </Dialog>

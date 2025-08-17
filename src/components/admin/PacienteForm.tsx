@@ -323,7 +323,6 @@ export default function ({
                     </Grid>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose}>Cancelar</Button>
                     <Button 
                         type="submit" 
                         variant="contained" 
@@ -334,6 +333,7 @@ export default function ({
                     >
                         {loading ? "Guardando..." : "Guardar"}
                     </Button>
+                    <Button variant="contained" color="error" onClick={onClose}>Cancelar</Button>
                 </DialogActions>
             </form>
         </Dialog>

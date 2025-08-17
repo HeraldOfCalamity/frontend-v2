@@ -87,6 +87,7 @@ export default function RoleForm({
                                                     control={
                                                         <Checkbox
                                                             checked={field.value?.includes(permiso.id)}
+                                                            color="secondary"
                                                             onChange={(_, checked) => {
                                                                 const newValue = checked
                                                                     ? [...field.value ?? [], permiso.id]
@@ -106,10 +107,10 @@ export default function RoleForm({
                     </Stack>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onClose} color="secondary">Cancelar</Button>
                     <Button type="submit" variant="contained" color="primary" loading={loading}>
                         {initialData ? 'Actualizar' : 'Crear'}
                     </Button>
+                    <Button onClick={onClose} variant="contained" color="error">Cancelar</Button>
                 </DialogActions>
             </form>
         </Dialog>

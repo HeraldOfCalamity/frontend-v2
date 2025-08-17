@@ -82,13 +82,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
 
     return(
         <Box my='auto'>
-            <Typography variant="h4" fontWeight={700} color="primary" mb={7} textAlign='center'>
+            <Typography variant="h4" fontWeight={700} mb={7} textAlign='center'>
                 Bienvenido, {user?.name || user?.email || "Administrador"}
             </Typography>
             <Stack mb={2}>
             </Stack>
             <CalendarioCitas 
                 citas={citas} 
+                defaultView="agenda"
                 onCancelCita={
                     async () => await getCitas()
                 }

@@ -198,25 +198,25 @@ export default function GenericTable<T extends {id: string | number}>({
             <Stack direction={'row'} spacing={2} mb={1} justifyContent={'space-between'} alignItems={'center'}>
                 <TextField
                     size="small"
-                    variant="outlined"
+                    variant="standard"
                     label='Buscar...'
                     value={filterText}
                     onChange={e => setFilterText(e.target.value)}
                     slotProps={{input:{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <Search color="primary"/>
+                                <Search/>
                             </InputAdornment>
                         )
                     }}}
-                    sx={{width: 200}}
+                    sx={{width: 200, bgcolor: theme => theme.palette.grey[300], p:1, borderRadius:2}}
                 />
                 <Stack direction="row" spacing={1} mb={1}>
                     {canExportExcel && (
                         <Button 
                             startIcon={<TextSnippet />} 
                             onClick={exportToExcel} 
-                            variant="outlined" 
+                            variant="contained" 
                             size="small" 
                             color="warning"
                         >
@@ -227,7 +227,7 @@ export default function GenericTable<T extends {id: string | number}>({
                         <Button 
                             startIcon={<PictureAsPdf />} 
                             onClick={exportToPDF} 
-                            variant="outlined" 
+                            variant="contained" 
                             size="small" 
                             color="warning"
                         >

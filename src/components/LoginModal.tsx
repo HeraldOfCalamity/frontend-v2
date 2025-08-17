@@ -87,7 +87,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
     return(
         <>
             <Dialog open={openLoginModal} onClose={handleLoginModalClose} maxWidth='xs' fullWidth>
-                <DialogTitle variant="h5" fontWeight={600} color="primary">
+                <DialogTitle variant="h5" fontWeight={600} >
                     Iniciar Sesion
                 </DialogTitle>
                 <form>
@@ -114,7 +114,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                     input: {
                                         startAdornment:(
                                             <InputAdornment position="start">
-                                                <Email color="primary"/>
+                                                <Email />
                                             </InputAdornment>
                                         )
                                     }
@@ -133,11 +133,11 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                     input: {
                                         startAdornment:(
                                             <InputAdornment position="start">
-                                                <Key color="primary"/>
+                                                <Key />
                                             </InputAdornment>
                                         ),
                                         endAdornment:(
-                                            <IconButton color="primary" onClick={() => setShowPass(v => !v)}>
+                                            <IconButton  onClick={() => setShowPass(v => !v)}>
                                                 {showPass ? <Visibility /> : <VisibilityOff />}
                                             </IconButton>
                                         )
@@ -167,14 +167,13 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                 </Button>
                                 <Button
                                     variant="contained"
-                                    color="primary"
                                     fullWidth
                                     type="submit"
                                     size="small"
                                     sx={{borderRadius: 2, fontWeight:700, fontSize:'1.1rem',pt:1.2}}
                                     disabled={!credentials.email || !credentials.password || loading}
                                     onClick={handleLoginSubmit}
-                                    endIcon={loading ? <CircularProgress size={24} color="inherit" /> : null}
+                                    loading={loading}
                                 >
                                     {loading ? "Ingresando..." : "Ingresar"}
                                 </Button>

@@ -7,10 +7,9 @@ const Footer: React.FC = () => {
         <Box component="footer" 
             sx={{ 
                 width: '100%', 
-                py: 3, 
-                textAlign: 'center', 
-                mt: 8, 
-                bgcolor: theme => theme.palette.mode === 'light' ? theme.palette.secondary.main : theme.palette.background.paper
+                p: 3,  
+                zIndex: 2,
+                bgcolor: theme => theme.palette.grey[600]
             }}>
             <Typography variant="body2">
                  © 2025 Consultorio Benedetta Bellezza. Todos los derechos reservados.

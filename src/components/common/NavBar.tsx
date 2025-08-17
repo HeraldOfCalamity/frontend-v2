@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import MenuIcon from '@mui/icons-material/Menu'
 import { ADMIN_OPTIONS, ESPECIALIST_OPTIONS, PATIENT_OPTIONS, type NavBarButton, type NavBarConfig, type NavBarMenu } from "../../config/navbar.config";
+import PowerSettingsNewOutlinedIcon from '@mui/icons-material/PowerSettingsNewOutlined';
 
 interface NavBarProps{
     handleOpenLoginModal: () => void;
@@ -59,7 +60,8 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                         return(
                             <Button
                                 key={btn.text}
-                                // color="inherit"
+                                color="inherit"
+                                size="large"
                                 onClick={() => {
                                     navigate(btn.path);
                                     if (vertical) setMobileOpen(true);
@@ -67,7 +69,7 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                 startIcon={btn.icon ?? null}
                                 sx={{
                                     fontWeight: 500,
-                                    fontSize: '0.85rem',
+                                    // fontSize: '0.85rem',
                                     textTransform: 'capitalize',
                                     justifyContent: vertical ? 'flex-start' : 'center',
                                 }}
@@ -86,11 +88,12 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                 onMouseLeave={() => handleMenuClose(idx)}
                             >
                                 <Button
-                                    // color="inherit"
+                                    color="inherit"
                                     onClick={(e) => handleMenuOpen(idx, e)}
+                                    size="large"
                                     sx={{
                                         fontWeight: 500,
-                                        fontSize: '0.85rem',
+                                        // fontSize: '0.85rem',
                                         textTransform: 'none'
                                     }}
                                 >
@@ -127,21 +130,20 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
     }
 
     return(
-        <AppBar color="default" position="static" elevation={2}>
+        <AppBar color="transparent" position="static" elevation={0} sx={{zIndex:3, pt:2}}>
             <Toolbar sx={{justifyContent: 'space-between'}}>
                 <Box display={'flex'} alignItems={'center'} gap={2}>
                     <Box
                         component={'img'}
-                        src="/benedetta-bellezza-horizontal.png"
+                        src="/benedetta-bellezza-horizontal.svg"
                         alt="Benedetta Bellezza Logo"
-                        sx={{height: 44}}
+                        sx={{height: 70}}
                     />
                     {(!isMobile && isAuthenticated) && <Typography
                         variant="subtitle2"
-                        color="primary"
                         sx={{
                             fontWeight: 600,
-                            fontSize: '0.95rem',
+                            // fontSize: '0.95rem',
                             bgcolor: 'background.paper',
                             px: 2,
                             py: 0.5,
@@ -163,20 +165,21 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                             open={mobileOpen}
                             onClose={() => setMobileOpen(false)}
                         >
+                            
                             <Box p={2} width={250}>
                                 <Box mb={2} textAlign="center">
                                     <Box
                                         component="img"
-                                        src="/benedetta-bellezza-horizontal.png"
+                                        src="/benedetta-bellezza-horizontal.svg"
                                         alt="Logo"
                                         sx={{ height: 60, margin: "0 auto" }}
                                     />
                                     <Typography
                                         variant="subtitle2"
-                                        color="primary"
+                                        // color="primary"
                                         sx={{
                                             fontWeight: 600,
-                                            fontSize: '0.95rem',
+                                            // fontSize: '0.95rem',
                                             bgcolor: 'background.paper',
                                             px: 2,
                                             py: 0.5,
@@ -193,10 +196,12 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                 <Box mt={2}>
                                     {isAuthenticated ? (
                                         <Button
-                                            color="secondary"
+                                            color="error"
                                             variant="outlined"
+                                            size="large"
                                             onClick={handleLogOutClick}
                                             fullWidth
+                                            startIcon={<PowerSettingsNewOutlinedIcon />}
                                         >
                                             Cerrar Sesión
                                         </Button>
@@ -206,6 +211,7 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                                 handleOpenLoginModal();
                                                 setMobileOpen(false);
                                             }}
+                                            size="large"
                                             variant="contained"
                                             color="primary"
                                             fullWidth
@@ -225,8 +231,10 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                
                                 <Button
                                     variant="outlined"
+                                    color="error"
                                     onClick={handleLogOutClick}
-                                    size="small"
+                                    size="large"
+                                    startIcon={<PowerSettingsNewOutlinedIcon />}
                                     sx={{ 
                                         textTransform: 'none'
                                     }}
@@ -238,7 +246,7 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                             <Button
                                 
                                 variant="contained"
-                                size="small"
+                                size="large"
                                 onClick={handleOpenLoginModal}
                                 sx={{ textTransform: 'none' }}
                                 >
