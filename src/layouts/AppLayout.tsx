@@ -34,8 +34,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
             <Box
                 sx={{
                     minHeight: "100vh",
-                    bgcolor: "background.default",
-                    color: "text.primary",
+                    // bgcolor: "background.default",
+                    // color: "text.primary",
                     display: "flex",
                     flexDirection: "column",
                     position: "relative",
@@ -55,14 +55,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({children}) => {
                         "::after": {
                             content: '""',
                             position: "absolute",
-                            bottom: 0,
+                            bottom: -70,
                             right: 40,
                             width: 300,
                             height: 300,
                             backgroundImage: 'url("/benedetta-bellezza-logo-only.svg")',
                             backgroundRepeat: "no-repeat",
                             backgroundSize: "contain",
-                            opacity: 0.7,
+                            opacity: 0.56,
                         },
                         pointerEvents: "none",
                     }}
