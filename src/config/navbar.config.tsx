@@ -1,4 +1,5 @@
 export type NavBarConfig = Array<NavBarButton | NavBarMenu>;
+import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
 
 export interface NavBarButton {
     type: 'button';
@@ -11,6 +12,7 @@ export interface NavBarButton {
 export interface NavBarMenu {
     type: 'menu';
     text: string;
+    icon?: React.ReactNode;
     options: NavBarButton[];
 }
 
@@ -19,6 +21,7 @@ export const ADMIN_OPTIONS: NavBarConfig = [
     {
         type: 'menu', 
         text: 'Gestion Usuarios', 
+        icon: <KeyboardArrowDownOutlinedIcon />, 
         options: [
             {type: 'button', text: 'Usuarios', path: '/admin/usuarios'},
             {type: 'button', text: 'Pacientes', path: '/admin/pacientes'},
@@ -26,11 +29,20 @@ export const ADMIN_OPTIONS: NavBarConfig = [
         ]
     },
     {
+        type: 'menu', 
+        text: 'Especialidades y Tratamientos', 
+        icon: <KeyboardArrowDownOutlinedIcon />, 
+        options: [
+            {type: 'button', text: 'Especialidades', path: '/admin/especialidades'},
+            {type: 'button', text: 'Tratamientos', path: '/admin/tratamientos'},
+        ]
+    },
+    {
         type: 'menu',
         text: 'Gestion Administrativa',
+        icon: <KeyboardArrowDownOutlinedIcon />, 
         options: [
             {type: 'button', text: 'Roles y Permisos', path: '/admin/roles'},
-            {type: 'button', text: 'Especialidades', path: '/admin/especialidades'},
             {type: 'button', text: 'Configuracion', path: '/admin/configuracion'},
         ]
     }

@@ -6,24 +6,30 @@ import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
 import GenericTable from "../../components/common/GenericTable";
 import EspecialidadForm from "../../components/admin/EspecialidadForm";
 import Swal from "sweetalert2";
+import { getTratamientos, type Tratamiento } from "../../api/tratamientoService";
+import MedicalInformationOutlinedIcon from '@mui/icons-material/MedicalInformationOutlined';
 
 export default function EspecialidadesPage(){
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
     const [openForm, setOpenForm] = useState(false);
     const [editData, setEditData] = useState<Especialidad | null>(null);
+    const [tratamientos, setTratamientos] = useState<Tratamiento[]>([])
     const [loading, setLoading] = useState(false);
     const theme = useTheme()
 
     const obtenerEspecialidades = async () => {
+        setLoading(true)
         try{
             const especialidades = await getEspecialidades();
             setEspecialidades(especialidades);
-        }catch{
-            Swal.fire("Error", "Ocurrio un error al obtener las especialidades", 'error');
+        }catch(err: any){
+            Swal.fire("Error", `${err}`, 'error');
+        }finally{
+            setLoading(false)
         }
     }
 
-    const handleEspecialidadFormSubmit = async (data: {nombre: string; descripcion: string, image?: string}) => {
+    const handleEspecialidadFormSubmit = async (data: Partial<Especialidad>) => {
         setLoading(true);
         try{
             if(editData){ // Editar
@@ -35,30 +41,66 @@ export default function EspecialidadesPage(){
                 await obtenerEspecialidades()
                 Swal.fire("Operacion Exitosa!", "Especialidad creada con exito", "success");
             } 
-        }catch(err: any){
             setEditData(null);
             setOpenForm(false);
+        }catch(err: any){
             Swal.fire("Error", `${err}`, "error");
         }finally{
-            setEditData(null);
-            setOpenForm(false);
             setLoading(false);
         }
     }
 
-    useEffect(() => {
+    const obtenerTratamientos = async () => {
         try{
-            setLoading(true);
-            obtenerEspecialidades()
-            setLoading(false);
-        }catch(err){
-            throw err;
+            const res = await getTratamientos();
+            setTratamientos(res);
+        }catch(err: any){
+            Swal.fire('Error', `${err}`, 'error')
         }
+    }
+    
+    useEffect(() => {
+        obtenerTratamientos();
+        obtenerEspecialidades();
     }, []);
 
     const columns: Column<Especialidad>[] = [
         {field: 'nombre', headerName: 'Nombre', align: 'center'},
-        {field: 'descripcion', headerName: 'Descripcion', align: 'center'},
+        {
+            field: 'descripcion',
+            headerName: 'Descripción',
+            align: 'center',
+            render: (v: string) => (
+                <Box
+                    sx={{
+                        maxWidth: { xs: 150, sm: 250, md: 350 },
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap',
+                        mx: 'auto',
+                        textAlign: 'left',
+                    }}
+                >
+                    {v}
+                </Box>
+            ),
+        },
+        {
+            field: 'tratamientos', 
+            headerName: 'Tratamientos', 
+            align: 'center',
+            render: (v: string[]) => {
+                const trat = tratamientos.filter(t => v.includes(t.id));
+                return (
+                    <Box display={'flex'} flexDirection={'column'}>
+                        {trat.map(t => 
+                            <Box display={'flex'} textAlign={'left'} mb={1} alignItems={'center'}>
+                                <MedicalInformationOutlinedIcon color="action" sx={{mr: 1}} /> {t.nombre}
+                            </Box>
+                        )}
+                    </Box>
+                )
+            }
+},
         {field: 'image', headerName: 'Imagen', align: 'center', render: (image) => {
             return image 
                 ? <img src={image} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
@@ -68,7 +110,7 @@ export default function EspecialidadesPage(){
 
     const actions: TableAction<Especialidad>[] = [
         {
-            icon: <Edit />,
+            icon: <Edit color="info"/>,
             label: 'Editar',
             onClick: (row) => {
                 setEditData(row);

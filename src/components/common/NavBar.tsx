@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import MenuIcon from '@mui/icons-material/Menu'
-import { ADMIN_OPTIONS, ESPECIALIST_OPTIONS, PATIENT_OPTIONS, type NavBarButton, type NavBarConfig, type NavBarMenu } from "../../config/navbar.config";
+import { ADMIN_OPTIONS, ESPECIALIST_OPTIONS, PATIENT_OPTIONS, type NavBarButton, type NavBarConfig, type NavBarMenu } from "../../config/navbar.config.tsx";
 import PowerSettingsNewOutlinedIcon from '@mui/icons-material/PowerSettingsNewOutlined';
 
 interface NavBarProps{
@@ -96,6 +96,9 @@ const NavBar: React.FC<NavBarProps> = ({handleOpenLoginModal}) => {
                                         // fontSize: '0.85rem',
                                         textTransform: 'none'
                                     }}
+                                    endIcon={
+                                        option.icon
+                                    }
                                 >
                                     {menu.text}
                                 </Button>

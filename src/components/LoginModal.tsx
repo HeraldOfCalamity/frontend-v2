@@ -109,7 +109,6 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                 value={credentials.email}
                                 label="Correo"
                                 required
-                                size="small"
                                 slotProps={{
                                     input: {
                                         startAdornment:(
@@ -128,7 +127,6 @@ const LoginModal: React.FC<LoginModalProps> = ({
                                 label="Contraseña"
                                 required
                                 fullWidth
-                                size="small"
                                 slotProps={{
                                     input: {
                                         startAdornment:(

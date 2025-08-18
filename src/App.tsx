@@ -20,6 +20,7 @@ import PacientesPage from './pages/admin/PacientesPage';
 import EspecialistasPage from './pages/admin/EspecialistasPage';
 import PerfilPaciente from './pages/paciente/PerfilPaciente';
 import PerfilEspecialista from './pages/especialista/PerfilEspecialista';
+import TratamientosPage from './pages/admin/TratamientosPage';
 
 
 
@@ -58,6 +59,7 @@ function App() {
                   <Route element={<ProtectedRoute roles={['admin']} />}>
                     <Route path='/admin' element={<AdminDashboard />} />
                     <Route path='/admin/especialidades' element={<EspecialidadesPage />} />
+                    <Route path='/admin/tratamientos' element={<TratamientosPage />} />
                     <Route path='/admin/usuarios' element={<UsuariosPage />} />
                     <Route path='/admin/pacientes' element={<PacientesPage />} />
                     <Route path='/admin/especialistas' element={<EspecialistasPage />} />

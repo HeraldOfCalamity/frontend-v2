@@ -4,6 +4,7 @@ const ESPECIALIDAD_ROUTE = 'especialidades/';
 export interface Especialidad{
     id: string;
     nombre: string;
+    tratamientos: string[];
     descripcion: string;
     image?: string;
 }
@@ -33,7 +34,7 @@ export async function getEspecialidades(): Promise<Especialidad[]> {
     }
 }
 
-export async function createEspecialidad(data: {nombre: string, descripcion:string, image?: string}) {
+export async function createEspecialidad(data: Partial<Especialidad>) {
     try{
         const res = await BENEDETTA_API.post(ESPECIALIDAD_ROUTE, data);
         return res.data;
@@ -47,7 +48,7 @@ export async function createEspecialidad(data: {nombre: string, descripcion:stri
     }
 }
 
-export async function updateEspecialidad(id: string, data: {nombre: string; descripcion: string, image?: string}){
+export async function updateEspecialidad(id: string, data: Partial<Especialidad>){
     try{
         const res = await BENEDETTA_API.put(`${ESPECIALIDAD_ROUTE}${id}`, data);
         return res.data;
