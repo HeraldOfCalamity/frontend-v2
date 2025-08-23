@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getCitasByPaciente, type Cita } from "../../api/citaService";
+import { cancelCita, confirmCita, getCitasByPaciente, type Cita } from "../../api/citaService";
 import Swal from "sweetalert2";
 import type { Paciente, PacienteWithUser } from "../../api/pacienteService";
 import dayjs from "dayjs";
@@ -49,10 +49,21 @@ export default function MisCitasPaciente({
     }, [profile])
 
     const puedeCancelar = (cita: Cita) => {
-        if(!cita || cita.estado.nombre === 'cancelada') return false;
+        if(
+            !cita 
+            || cita.estado.nombre === 'cancelada'
+            || cita.estado.nombre === 'confirmada'
+        ) return false;
         const ahora = dayjs();
         const fechaCita = dayjs(cita.fecha_inicio);
         return fechaCita.diff(ahora, 'hour') >= 24;
+    }
+
+    const puedeConfirmar = (cita: Cita) => {
+
+        console.log('cita',cita)
+        console.log('conditional', cita.estado?.nombre === 'pendiente')
+        return cita.estado?.nombre === 'pendiente';
     }
 
     const handleCancelar = async (cita: Cita) => {
@@ -67,9 +78,32 @@ export default function MisCitasPaciente({
 
         if(!confirm.isConfirmed) return;
         try{
-            // await cancelCita(cita.id);
-            // obtenerCitasPaciente()
+            await cancelCita(cita.id);
+            await obtenerCitasPaciente()
             Swal.fire("Cita cancelada", "La cita fue cancelada exitosamente.", "success");
+        }catch(err: any){
+            Swal.fire('Error', `${err}`, 'error');
+        }
+    };
+    const handleConfirmar = async (cita: Cita) => {
+        const confirm = await Swal.fire({
+            title: "¿Confirmar cita?",
+            text: "Solo puedes confirmar con 1 día antes de tu consulta.",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: "Sí, confirmar",
+            cancelButtonText: "No",  
+        });
+
+        if(!confirm.isConfirmed) return;
+        try{
+            await confirmCita(cita.id);
+            await obtenerCitasPaciente()
+            Swal.fire(
+                "Cita confirmada", 
+                "La cita fue confirmada exitosamente. En un momento recibirá un correo de confirmación", 
+                "success"
+            );
         }catch(err: any){
             Swal.fire('Error', `${err}`, 'error');
         }
@@ -134,6 +168,16 @@ export default function MisCitasPaciente({
                                                 onClick={() => handleCancelar(cita)}
                                             >
                                                 {puedeCancelar(cita) ? 'Cancelar' : 'No se puede cancelar'}
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="success"
+                                                onClick={() => handleConfirmar(cita)}
+                                                sx={{
+                                                    display: !puedeConfirmar(cita) ? 'none' : ''
+                                                }}
+                                            >
+                                                Confirmar
                                             </Button>
                                         </Stack>
                                     </Stack>

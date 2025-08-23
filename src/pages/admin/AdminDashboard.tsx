@@ -91,10 +91,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
                 citas={citas} 
                 defaultView="agenda"
                 onCancelCita={
-                    async () => await getCitas()
+                    getCitas
                 }
                 onConfirmCita={
-                    async () => await getCitas()
+                    getCitas
                 }
             />
             {/* <BuscarPaciente 

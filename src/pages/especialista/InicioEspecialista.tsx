@@ -62,7 +62,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
             <Typography variant="h5" fontWeight={600} color="primary" mb={7} textAlign='center'>
                     Bienvenid@, especialista: {user?.name}
             </Typography>
-                {!profile?.user?.isVerified && !loading ? (
+                {/* {!profile?.user?.isVerified  ? (
                     <Stack display={'flex'} alignItems={'center'}>
                         <Typography textAlign={'center'} variant="h5">
                             Es necesario verificar tus datos personales!
@@ -77,7 +77,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
                             Verificar Datos
                         </Button>
                     </Stack>
-                ) : (
+                ) : ( */}
                     <>
                         <CalendarioCitas
                             citas={citas}
@@ -86,7 +86,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
                             onConfirmCita={() => obtenerCitasEspecialista()}
                         />
                     </>
-                )}
+                {/* )} */}
     
              {/* <EspecialistaForm
                 open={openEspecialistaForm}

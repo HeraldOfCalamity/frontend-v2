@@ -2,6 +2,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl,
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { PacienteWithUser } from "../../api/pacienteService";
+import dayjs from "dayjs";
 
 
 export type PacienteFormField =
@@ -233,7 +234,18 @@ export default function ({
                                     readOnly: isDisabled('fecha_nacimiento')
                                 }
                             }}
-                            {...register('fecha_nacimiento', {required: 'Fecha requerida'})}
+                            {...register('fecha_nacimiento', {
+                                required: 'Fecha requerida',
+                                validate: (v) => {
+                                    const now = dayjs();
+                                    const lowerBound = now.subtract(140, 'year');
+                                    const date = dayjs(v);
+                                    console.log(date)
+
+                                    if(date.isAfter(now)) return "La fecha de nacimiento no puede ser posterior al dia de hoy";
+                                    if(date.isBefore(lowerBound)) return "La fecha de nacimiento no puede ser anterior a los 140 años";
+                                }
+                            })}
                             error={!!errors.fecha_nacimiento}
                             helperText={errors.fecha_nacimiento?.message?.toString()}
                             sx={{

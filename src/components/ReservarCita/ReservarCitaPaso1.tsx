@@ -44,8 +44,8 @@ export default function ReservarCitaPaso1({
                 {especialistas.map(esp => (
                     <Grid size={{lg: 4, md: 6, xs: 12}} key={esp.especialista.id}>
                         <Card variant="outlined" sx={{
-                                bgcolor: theme.palette.secondary.main, 
-                                color: theme.palette.secondary.contrastText
+                                bgcolor: theme.palette.primary.main, 
+                                color: theme.palette.primary.contrastText
                             }}>
                             <CardActionArea onClick={() => handleEspecialistaClick(esp)}>
                                 <CardContent>
