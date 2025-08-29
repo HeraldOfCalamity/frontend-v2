@@ -9,6 +9,7 @@ import { updateUsuario } from "../../api/userService";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
 import ReservaCita from "../../components/ReservarCita/ReservaCita";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { BASE_URL } from "../../config/benedetta.api.config";
 
 interface InicioPacienteProps{
 
@@ -146,7 +147,7 @@ const InicioPaciente: React.FC<InicioPacienteProps> = ({
 
     return(
         <Box display={'flex'} flexDirection={'column'} flexGrow={1}>
-            <Typography variant="h4" fontWeight={600} color="primary" mb={7} textAlign='center'>
+            <Typography variant="h4" fontWeight={600} mb={7} textAlign='center'>
                 Bienvenid@ de nuevo: {user?.name}  {user?.lastname}
             </Typography>
             <Box display={'flex'} flexDirection={'column'} flexGrow={1} justifyContent={'center'}>
@@ -178,7 +179,7 @@ const InicioPaciente: React.FC<InicioPacienteProps> = ({
                                         <CardActionArea onClick={() => handleReservarCita(esp)}>
                                             <CardMedia
                                                 sx={{height:140}}
-                                                image={esp.image}
+                                                image={`${BASE_URL}${esp.image}`}
                                             >
                                                 {!esp.image && <Skeleton variant="rectangular" height={140} sx={{pb: 2}}/>}
                                             </CardMedia>

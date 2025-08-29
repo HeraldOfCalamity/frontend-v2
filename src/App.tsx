@@ -54,6 +54,7 @@ function App() {
                   <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
                     <Route path='/especialista/inicio' element={<InicioEspecialista />} />
                     <Route path='/especialista/perfil' element={<PerfilEspecialista />} />
+                    <Route path='/especialista/pacientes' element={<PerfilEspecialista />} />
                   </Route>
 
                   <Route element={<ProtectedRoute roles={['admin']} />}>

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { updateEspecialistaPerfil, type EspecialistaWithUser } from "../../api/especialistaService";
 import InputFileUpload from "../../components/InputFileUpload";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
+import { BASE_URL } from "../../config/benedetta.api.config";
 
 const DIAS_SEMANA = [
     { value: 1, label: "Lunes" },
@@ -105,6 +106,7 @@ export default function PerfilEspecialista(){
             }
         }
         obtenerEspecialidades()
+        console.log('imageurl:',`${BASE_URL}${preview}`)
     }, [])
     return(
         <Box display={'flex'} flexDirection={'column'} flexGrow={1} justifyContent={'center'}>
@@ -126,9 +128,9 @@ export default function PerfilEspecialista(){
                         <Grid size={12} display={'flex'} flexDirection={'column'} alignItems={'center'} flexGrow={1} justifyContent={'center'}> 
                             <Box
                                 component={'img'}
-                                src={preview}
+                                src={`${BASE_URL}${preview}`}
                                 alt={`Imagen Perfil ${especialista.user.name} ${especialista.user.lastname}`}
-                                sx={{width: '80%', borderRadius: 2, border:1}}
+                                sx={{maxHeight:'50vh', borderRadius: 2, border:1}}
                             />
                             <InputLabel>Fotografia Personal</InputLabel>
                             <InputFileUpload 

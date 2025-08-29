@@ -3,6 +3,8 @@ import { getEspecialistasByEspecialidadId, type Especialista, type EspecialistaW
 import type { Especialidad } from "../../api/especialidadService";
 import Swal from "sweetalert2";
 import { Box, Card, CardActionArea, CardContent, CardMedia, Divider, Grid, Skeleton, Stack, Typography, useTheme } from "@mui/material";
+import { BASE_URL } from "../../config/benedetta.api.config";
+import { benedettaPink } from "../../config/theme.config";
 
 interface ReservarCitaPaso1Props {
     especialidad: Partial<Especialidad>
@@ -43,21 +45,23 @@ export default function ReservarCitaPaso1({
             <Grid justifyContent={'space-around'} container spacing={1}>
                 {especialistas.map(esp => (
                     <Grid size={{lg: 4, md: 6, xs: 12}} key={esp.especialista.id}>
-                        <Card variant="outlined" sx={{
-                                bgcolor: theme.palette.primary.main, 
-                                color: theme.palette.primary.contrastText
+                        <Card sx={{
+                                m:1,
+                                bgcolor: benedettaPink
+                                // bgcolor: theme.palette.secondary.main, 
+                                // color: theme.palette.secondary.contrastText
                             }}>
                             <CardActionArea onClick={() => handleEspecialistaClick(esp)}>
                                 <CardContent>
                                     <Typography variant="h6">
                                         {`${esp.user.name} ${esp.user.lastname}`}
                                     </Typography>
-                                    <Divider />
+                                    <Divider sx={{color: theme => theme.palette.primary.main}} />
                                     <Stack spacing={2} direction={'row'} width={'100%'} mt={1} maxHeight={'350px'} sx={{overflowY:'auto', overflowX: 'hidden'}}>
-                                        <Box minWidth={'40%'} height={'200px'}>
+                                        <Box minWidth={'40%'} height={'200px'} border={1} borderColor={theme => theme.palette.grey[500]} borderRadius={1} bgcolor={theme => theme.palette.common.white}>
                                             <CardMedia  
-                                                sx={{ height: '100%', display: esp.especialista.image ? "block" : "none" }}
-                                                image={esp.especialista.image}
+                                                sx={{ height: '100%', display: esp.especialista.image ? "block" : "none", opacity:1 }}
+                                                image={`${BASE_URL}${esp.especialista.image}`}
                                                 title={`Imagen ${esp.user.name}`}
                                             />
                                             {!esp.especialista.image && <Skeleton variant="rounded" width={'100%'} height={'100%'}  />}
@@ -75,7 +79,7 @@ export default function ReservarCitaPaso1({
                                                     <Skeleton width={'40%'}/>
                                                 </>
                                             }
-                                            <Typography>
+                                            <Typography variant="body2" textAlign={"center"}>
                                                 {esp.especialista.informacion}
                                             </Typography>
                                         </Box>

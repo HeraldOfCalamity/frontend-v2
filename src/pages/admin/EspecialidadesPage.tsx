@@ -8,6 +8,7 @@ import EspecialidadForm from "../../components/admin/EspecialidadForm";
 import Swal from "sweetalert2";
 import { getTratamientos, type Tratamiento } from "../../api/tratamientoService";
 import MedicalInformationOutlinedIcon from '@mui/icons-material/MedicalInformationOutlined';
+import { BASE_URL } from "../../config/benedetta.api.config";
 
 export default function EspecialidadesPage(){
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
@@ -103,7 +104,7 @@ export default function EspecialidadesPage(){
 },
         {field: 'image', headerName: 'Imagen', align: 'center', render: (image) => {
             return image 
-                ? <img src={image} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
+                ? <img src={`${BASE_URL}${image}`} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
                 : 'Sin Imagen'
         }},
     ];

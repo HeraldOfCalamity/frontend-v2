@@ -4,6 +4,7 @@ import { createTheme } from '@mui/material/styles';
 const pinkMain = "#f5a9c3ff";
 const pinkLight = "#f3c4d4ff";
 const darkBg = "#232323";
+export const benedettaPink = '#f2ccd0c4'
 
 export const lightTheme = createTheme({
   palette: {
@@ -40,7 +41,7 @@ export const lightTheme = createTheme({
     },
     success: {
       main: '#AAC8A7',
-    }
+    },
   },
   typography: {
     fontFamily: ['"Roboto"', '"Helvetica"', '"Arial"', 'sans-serif'].join(','),
@@ -72,11 +73,11 @@ export const theme2 = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#9fbbb5ff', // verde pastel
+      main: '#9fbbb5ff', 
       contrastText: '#fff',
     },
     secondary: {
-      main: '#C1A3E0', // 💜 lavanda pastel (nuevo)
+      main: '#C1A3E0',
       contrastText: '#fff',
     },
     success: {
@@ -84,7 +85,7 @@ export const theme2 = createTheme({
       contrastText: '#fff',
     },
     info: {
-      main: '#9ed3fcff', // ✅ nuevo
+      main: '#9ed3fcff',
       contrastText: '#000',
     },
     warning: {

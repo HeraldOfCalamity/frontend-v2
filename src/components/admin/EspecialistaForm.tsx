@@ -6,6 +6,7 @@ import { AddCircleOutline, Delete } from "@mui/icons-material";
 import type { Disponibilidad, EspecialistaWithUser } from "../../api/especialistaService";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
 import InputFileUpload from "../InputFileUpload";
+import { BASE_URL } from "../../config/benedetta.api.config";
 
 export type EspecialistaFormField = "name"
  | "lastname"
@@ -540,7 +541,7 @@ export default function ({
                     Imagen Cargada
                 </DialogTitle>
                 <DialogContent>
-                    <img height={210} src={preview || ''} alt="Especialista Image"/>
+                    <img height={210} src={initialData ? `${BASE_URL}${preview}` : preview || ''} alt="Especialista Image"/>
                 </DialogContent>
                 <DialogActions>
                     <Button color="error" variant="contained" onClick={() => setOpenImagePreviewDialog(false)}>Cerrar</Button>
