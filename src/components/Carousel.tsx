@@ -1,10 +1,11 @@
 import Slider from "react-slick";
-import { Typography, Box, IconButton, Snackbar } from "@mui/material";
+import { Typography, Box, IconButton, Slide } from "@mui/material";
 import { ArrowCircleLeft, ArrowCircleRightRounded } from "@mui/icons-material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getEspecialidades, type Especialidad } from "../api/especialidadService";
 import EspecialidadSkeleton from "./Skeletons/EspecialidadSkeleton";
 import EspecialidadCard from "./EspecialidadCard";
+import Swal from "sweetalert2";
 
 
 
@@ -57,19 +58,19 @@ interface FetchError{
 export default function EspecialidadesCarousel() {
   const [isloading, setIsLoading] = useState(true);
   const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
-  const [fetchError, setFetchError] = useState<FetchError>({error: false, errorMessage: '', duration: 0});
 
   const obtenerEspecialidades = async () => {
     try{
       const response = await getEspecialidades();
-      setIsLoading(false);
       setEspecialidades(response);
-    }catch(e){
-      setFetchError({
-        error: true,
-        duration: 4200,
-        errorMessage: "There was an error fetching especialidades" + e
-      })
+    }catch(err: any){
+      Swal.fire(
+        'Error',
+        `${err}`,
+        'error'
+      )
+    }finally{
+      setIsLoading(false);
     }
 
   }
@@ -79,12 +80,41 @@ export default function EspecialidadesCarousel() {
     obtenerEspecialidades();
   }, [])
 
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [isTitleVisible, setIsTitleVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if(!titleRef.current) return;
+      const rect = titleRef.current.getBoundingClientRect();
+
+      const visible = rect.top <= window.innerHeight && rect.bottom >= 0;
+      setIsTitleVisible(visible);
+    };
+
+    window.addEventListener('scroll', handleScroll, {passive: true});
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [])
 
   return (
     <Box sx={{ maxWidth: 1100, mx: "auto", my: 4 }}>
-      <Typography variant="h4" color="primary" align="center" fontWeight={700} gutterBottom>
-        Nuestras Especialidades
-      </Typography>
+      <Slide 
+        direction="left" 
+        in={isTitleVisible} 
+        {...(isTitleVisible ? { timeout: 1000 } : {})}
+      >
+        <Typography 
+          component={'div'} 
+          variant="h4" 
+          align="left" 
+          fontWeight={700} 
+          gutterBottom 
+          ref={titleRef} 
+        >
+          Nuestras Especialidades
+        </Typography>
+      </Slide>
         <Slider 
             centerMode
             dots
@@ -111,11 +141,6 @@ export default function EspecialidadesCarousel() {
               <EspecialidadSkeleton key={n} />
             ))}
         </Slider>
-        <Snackbar
-          open={fetchError.error}
-          autoHideDuration={fetchError.duration}
-          message={fetchError.errorMessage}
-          />
     </Box>
   );
 }

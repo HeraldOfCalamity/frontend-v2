@@ -1,36 +1,35 @@
-import { Box, Button, Stack, Typography } from "@mui/material"
+import { Box, CircularProgress, Typography } from "@mui/material"
 import { useAuth } from "../../context/AuthContext"
-import { useEffect, useRef, useState } from "react";
-import { getEspecialistaProfile, updateEspecialista, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
-import EspecialistaForm from "../../components/admin/EspecialistaForm";
+import { useEffect, useState } from "react";
+import { type EspecialistaWithUser } from "../../api/especialistaService";
 import Swal from "sweetalert2";
-import { updateUsuario } from "../../api/userService";
-import { getCitasByEspecialista, getMisCitas, type Cita } from "../../api/citaService";
+import { getCitasByEspecialista, type Cita } from "../../api/citaService";
 import CalendarioCitas from "../../components/CalendarioCitas";
-import { ReplayOutlined } from "@mui/icons-material";
 import dayjs from "dayjs";
 import { useUserProfile } from "../../context/userProfileContext";
+import HistorialDialog from "./HistorialDialog";
 
 interface InicioEspecialistaProps{
 
 }
 
 const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
-    const {user} = useAuth();
-    const {profile, error: profileError} = useUserProfile() as {profile: EspecialistaWithUser, error: string | null};
-    const [openEspecialistaForm, setOpenEspecialistaForm] = useState(false)
+    const {profile, reloadProfile, loading: loadingProfile} = useUserProfile();
+    const espProfile = profile as EspecialistaWithUser;
     const [loading, setLoading] = useState(false);
-    // const [profile, setProfile] = useState<EspecialistaWithUser>();
     const [citas, setCitas] = useState<Cita[]>([]);
-    const hasRun = useRef(false);
+    const [openAtencion, setOpenAtencion] = useState(false);
     
 
     const obtenerCitasEspecialista = async () => {
         setLoading(true);
         try{
-            if(!profile || !profile.especialista || !profile.especialista.id) return;
-            const citas = await getCitasByEspecialista(profile.especialista.id || 'adwa') as Cita[];
-            setCitas(citas.sort((a, b) => dayjs(b.fecha_inicio).valueOf() - dayjs(a.fecha_inicio).valueOf()));
+            const citas = await getCitasByEspecialista(espProfile?.especialista.id || '') as Cita[];
+            setCitas(citas.sort((a, b) => 
+                dayjs(b.fecha_inicio).valueOf() - dayjs(a.fecha_inicio).valueOf()
+            ));
+            console.log('citas', citas);
+            
         }catch(err: any){
             Swal.fire({
                 title: 'Error',
@@ -43,59 +42,34 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
     }
 
     useEffect(() => {
-        if(!hasRun.current){
-            hasRun.current = true;
-            if(profileError){
-                Swal.fire(
-                    'Error',
-                    `${profileError}`,
-                    'error'
-                )
-                // return;
-            }
+        if(!loadingProfile && espProfile?.especialista){
             obtenerCitasEspecialista();
         }
-    }, [])
-    return (
-        <Box>
+    }, [loadingProfile,espProfile])
 
-            <Typography variant="h5" fontWeight={600} color="primary" mb={7} textAlign='center'>
-                    Bienvenid@, especialista: {user?.name}
-            </Typography>
-                {/* {!profile?.user?.isVerified  ? (
-                    <Stack display={'flex'} alignItems={'center'}>
-                        <Typography textAlign={'center'} variant="h5">
-                            Es necesario verificar tus datos personales!
-                        </Typography>
-                        <Button 
-                            sx={{maxWidth: '50%', mt: 2}} 
-                            variant="contained" 
-                            color="primary" 
-                            size="large"
-                            onClick={() => setOpenEspecialistaForm(true)}
-                        >
-                            Verificar Datos
-                        </Button>
-                    </Stack>
-                ) : ( */}
-                    <>
-                        <CalendarioCitas
-                            citas={citas}
-                            defaultView="day"
-                            onCancelCita={async () => await obtenerCitasEspecialista()}
-                            onConfirmCita={() => obtenerCitasEspecialista()}
-                        />
-                    </>
-                {/* )} */}
-    
-             {/* <EspecialistaForm
-                open={openEspecialistaForm}
-                initialData={profile}
-                onClose={handleEspecialistaFormClose}
-                onSubmit={handleEspecialistaFormSubmit}
-                loading={loading}
-            /> */}
-        </Box>
+    return (
+        loading || loadingProfile ? (
+            <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flexGrow={1}>
+                <CircularProgress color="secondary"/>
+            </Box>
+        ) : (
+            <Box>
+
+                <Typography variant="h4" fontWeight={600}  mb={7} textAlign='center'>
+                        Bienvenid@, especialista: {espProfile?.user.name} {espProfile?.user.lastname}
+                </Typography>
+
+                <CalendarioCitas
+                    citas={citas}
+                    defaultView="day"
+                    onAtenderCita={() => setOpenAtencion(true)}
+                />
+                <HistorialDialog
+                    onClose={() => setOpenAtencion(false)}
+                    open={openAtencion}
+                />
+            </Box>
+        )
     )
 }
 

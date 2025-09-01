@@ -17,8 +17,9 @@ import ReservaCita from "./ReservarCita/ReservaCita";
 interface CalendarioCitaProps {
     defaultView?: View;
     citas: Cita[],
-    onCancelCita: (cita: Cita) => Promise<void>;
-    onConfirmCita: (cita: Cita) => Promise<void>;
+    onCancelCita?: (cita?: Cita) => Promise<void> | void;
+    onConfirmCita?: (cita?: Cita) => Promise<void>| void;
+    onAtenderCita?: (cita?: Cita) => Promise<void>| void;
 }
 
 
@@ -26,7 +27,8 @@ export default function CalendarioCitas({
     defaultView = 'month',
     citas,
     onCancelCita,
-    onConfirmCita
+    onConfirmCita,
+    onAtenderCita
 }: CalendarioCitaProps) {
     const {user} = useAuth();
     // const {profile, loading:loadingProfile} = useUserProfile();
@@ -125,7 +127,9 @@ export default function CalendarioCitas({
 
             if(isConfirmed.isConfirmed){
                 const canceled = await cancelCita(cita.id);
-                await onCancelCita(cita);
+                if(onCancelCita){
+                    await onCancelCita(cita);
+                }
                 // await getEvents();
                 Swal.fire(
                     'Operacion Exitosa',
@@ -157,7 +161,9 @@ export default function CalendarioCitas({
 
             if(isConfirmed.isConfirmed){
                 const confirmed = await confirmCita(cita.id);
-                await onConfirmCita(cita)
+                if(onConfirmCita){
+                    await onConfirmCita(cita)
+                }
                 // await getEvents();
                 Swal.fire(
                     'Operacion Exitosa',
@@ -176,13 +182,24 @@ export default function CalendarioCitas({
         }
     }
 
-    // useEffect(() => {
-    //     if(!hasRun.current){
-    //         hasRun.current = true;
-    //         getEvents();
-    //     }
-        
-    // }, [])
+    const handleAtenderCitaClick = async (cita: Cita) => {
+        try{
+            if(onAtenderCita){
+                onAtenderCita(cita);
+            }
+            console.log('atendiendo cita', cita)
+            
+        }catch(err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
+        }finally{
+
+        }
+    }
+
     
     return(
         <>
@@ -277,7 +294,7 @@ export default function CalendarioCitas({
                         <Button
                             variant="outlined"
                             color="error"
-                            onClick={() => handleCancelCitaClick(selectedEvent)}
+                            onClick={async () => await handleCancelCitaClick(selectedEvent)}
                         >
                             Cancelar Cita
                         </Button>
@@ -286,16 +303,16 @@ export default function CalendarioCitas({
                         <Button
                             variant="contained"
                             color="primary"
-                            onClick={() => handleConfirmCitaClick(selectedEvent)}
+                            onClick={async () => await handleConfirmCitaClick(selectedEvent)}
                         >
                             Confirmar Cita
                         </Button>
                     )}
-                    {user?.role==='especialista' && (
+                    {selectedEvent?.estado.nombre === 'confirmada' && user?.role==='especialista' && (
                         <Button
                             variant="contained"
                             color="primary"
-                            onClick={() => console.log('atenderCita')}
+                            onClick={async () => await handleAtenderCitaClick(selectedEvent)}
                         >
                             Comenzar Atencion
                         </Button>

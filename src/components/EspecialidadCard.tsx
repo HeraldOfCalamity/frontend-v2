@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, CardMedia, Skeleton, Typography } from "@mui/material";
+import { BASE_URL } from "../config/benedetta.api.config";
 
 interface EspecialidadCardProps{
     name: string;
@@ -12,7 +13,7 @@ const EspecialidadCard: React.FC<EspecialidadCardProps> = ({description, name, i
             <Card elevation={7} sx={{height: 350}}>
                 <CardMedia
                     sx={{ height: 140, display: image ? "block" : "none" }}
-                    image={image}
+                    image={`${BASE_URL}${image}`}
                     title={`Imagen ${name}`}
                 />
                 {!image && <Skeleton variant="rectangular" height={140} />}

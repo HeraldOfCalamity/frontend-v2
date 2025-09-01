@@ -1,8 +1,7 @@
-import { Box, Container, Grid, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Box, Container, Grid, IconButton, Paper, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { getOfficeConfig, type OfficeConfiguration } from "../../api/configService";
-import { Button } from "@mui/material";
 import { updateOfficeConfig } from "../../api/configService";
 import { Edit } from "@mui/icons-material";
 import OfficeConfigForm from "./OfficeConfigForm";
@@ -61,9 +60,11 @@ export default function ConfiguracionPage() {
             )
         }
     }
+
     useEffect(() => {
         obtenerParametros();
     }, [])
+
     return (
         <Box>
             <Paper variant="outlined" sx={{
@@ -71,8 +72,12 @@ export default function ConfiguracionPage() {
                 minHeight: '77vh'
             }}>
                 <Container>
-                    <Typography variant="h5" fontWeight={700} mb={3}>
-                        Configuracion
+                    <Typography 
+                        variant="h5" 
+                        fontWeight={700} 
+                        mb={3}
+                    >
+                        Configuración
                     </Typography>
                     
                     <Grid container spacing={2}>
