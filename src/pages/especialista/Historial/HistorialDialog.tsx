@@ -249,11 +249,10 @@ export default function HistorialDialog({
                                 )}
                             </Stack>
                             <Box border={4} borderRadius={2} borderColor={theme => 
-                                    listening 
-                                        ?  dictationEnabled 
-                                            ? theme.palette.success.main 
-                                            : theme.palette.error.main 
-                                        : 'transparent'
+                                    listening && dictationEnabled 
+                                        ?  theme.palette.success.main 
+                                        : theme.palette.error.main 
+                                        
                                 }>
 
                                 <Box border={2} flexGrow={1} p={2} borderRadius={2}>

@@ -1,4 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState
+} from 'react'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 
 export type SpeechCommand = {
@@ -8,53 +10,42 @@ export type SpeechCommand = {
   fuzzyMatchingThreshold?: number
   bestMatchOnly?: boolean
   matchInterim?: boolean
-  hideFromTranscript?: boolean
 }
 
 type Registry = Map<string, SpeechCommand[]>
 
 type SpeechCtx = {
+  transcript: string
+  interimTranscript: string
+
   visibleTranscript: string
   visibleInterimTranscript: string
+
   listening: boolean
   dictationEnabled: boolean
+
   start: (opts?: Partial<Parameters<typeof SpeechRecognition.startListening>[0]>) => void
   stop: () => void
+  resetTranscript: () => void
+
   enableDictation: () => void
   disableDictation: () => void
   toggleDictation: () => void
+
   resetVisibleTranscript: () => void
+  resetVisibleTranscriptAndSyncPointer: () => void
+  resetAllTranscripts: () => void
+
   setLanguage: (lang: string) => void
+
   browserSupportsSpeechRecognition: boolean
   isMicrophoneAvailable: boolean
+
   registerCommands: (id: string, cmds: SpeechCommand[]) => void
   unregisterCommands: (id: string) => void
 }
 
 const Ctx = createContext<SpeechCtx | null>(null)
-
-const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-function stringToHideRegex(cmd: string): RegExp {
-  const parts = cmd.split('*').map(p => escapeRegex(p.trim()))
-  if (parts.length === 1) return new RegExp(`\\b${parts[0]}\\b`, 'gi')
-  const joined = parts.join('[^.,;!?]*?')
-  return new RegExp(`\\b${joined}\\b?[^.,;!?]*?`, 'gi')
-}
-
-function buildHideRegexes(registry: Registry): RegExp[] {
-  const res: RegExp[] = []
-  for (const list of registry.values()) {
-    for (const c of list) {
-      if (c.hideFromTranscript === false) continue
-      const cmd = c.command
-      if (typeof cmd === 'string') res.push(stringToHideRegex(cmd))
-      else if (Array.isArray(cmd)) cmd.forEach(s => typeof s === 'string' && res.push(stringToHideRegex(s)))
-      else if (cmd instanceof RegExp) res.push(cmd)
-    }
-  }
-  return res
-}
 
 export function SpeechProvider({ children }: { children: React.ReactNode }) {
   const [registry] = useState<Registry>(() => new Map())
@@ -62,31 +53,21 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState('es-BO')
   const [dictationEnabled, setDictationEnabled] = useState(true)
 
-  const [visibleTranscript, setVisibleTranscript] = useState('')
-  const prevRawTranscriptRef = useRef('')
+  // Texto ya consolidado + ancla en el transcript crudo
+  const [visibleBase, setVisibleBase] = useState('')       // segmentos previos “cerrados”
+  const visibleBaseRef = useRef(visibleBase)
+  useEffect(() => { visibleBaseRef.current = visibleBase }, [visibleBase])
 
-  // ✅ ref para usar reset en cualquier callback
-  const resetRef = useRef<() => void>(() => {})
+  const [visibleTranscript, setVisibleTranscript] = useState('') // lo que ve el usuario
+  const anchorRef = useRef<number>(0)                    // índice desde donde se acumula el tramo activo
 
-  // ✅ commands envueltos para auto-limpiar (usan resetRef)
-  const wrappedCommands = useMemo(() => {
-    const all = Array.from(registry.values()).flat()
-    return all.map((c) => {
-      const cb = (...args: any[]) => {
-        try {
-          c.callback?.(...args)
-        } finally {
-          if (c.hideFromTranscript !== false) {
-            resetRef.current()
-            prevRawTranscriptRef.current = ''
-          }
-        }
-      }
-      return { ...c, callback: cb }
-    })
-  }, [version, registry])
+  // Comandos de hijos
+  const mergedCommands = useMemo(
+    () => Array.from(registry.values()).flat(),
+    [version, registry]
+  )
 
-  // --- Hook principal del STT, usando comandos envueltos ---
+  // Hook principal (sin tocar resultados)
   const {
     transcript,
     interimTranscript,
@@ -94,33 +75,33 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
     resetTranscript,
     browserSupportsSpeechRecognition,
     isMicrophoneAvailable,
-  } = useSpeechRecognition({ commands: wrappedCommands })
+  } = useSpeechRecognition({ commands: mergedCommands })
 
-  // ✅ mantener el ref actualizado
-  useEffect(() => { resetRef.current = resetTranscript }, [resetTranscript])
-
-  const hideRegexes = useMemo(() => buildHideRegexes(registry), [version, registry])
-
-  const visibleInterimTranscript = useMemo(() => {
-    let s = interimTranscript || ''
-    for (const r of hideRegexes) s = s.replace(r, '')
-    s = s.replace(/\s{2,}/g, ' ').replace(/\s+([.,;!?])/g, '$1')
-    return s.trim()
-  }, [interimTranscript, hideRegexes])
-
+  // Inicializar el ancla al montar
   useEffect(() => {
-    const prev = prevRawTranscriptRef.current
-    if (transcript.length >= prev.length) {
-      let delta = transcript.slice(prev.length)
-      for (const r of hideRegexes) delta = delta.replace(r, '')
-      delta = delta.replace(/\s{2,}/g, ' ').replace(/\s+([.,;!?])/g, '$1').trim()
-      if (dictationEnabled && delta) {
-        setVisibleTranscript((b) => (b + (b && !b.endsWith(' ') ? ' ' : '') + delta).trim())
-      }
-    }
-    prevRawTranscriptRef.current = transcript
-  }, [transcript, hideRegexes, dictationEnabled])
+    anchorRef.current = transcript.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
+  // === Acumulación del visible ===
+  useEffect(() => {
+    if (dictationEnabled) {
+      // visible = base + tramo activo (si el motor reescribe, heredamos correcciones)
+      const next = visibleBaseRef.current + transcript.slice(anchorRef.current)
+      setVisibleTranscript(next)
+    } else {
+      // en mute: NO tocamos visible; solo descartamos backlog avanzando el ancla
+      anchorRef.current = transcript.length
+    }
+  }, [transcript, dictationEnabled])
+
+  // Interim visible solo si dictado ON (para no “parpadear” en mute)
+  const visibleInterimTranscript = useMemo(
+    () => (dictationEnabled ? interimTranscript : ''),
+    [dictationEnabled, interimTranscript]
+  )
+
+  // === Control básico ===
   const start = useCallback((opts?: Partial<Parameters<typeof SpeechRecognition.startListening>[0]>) => {
     SpeechRecognition.startListening({
       continuous: true,
@@ -130,36 +111,72 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
     })
   }, [language])
 
-  const stop = useCallback(() => SpeechRecognition.stopListening(), [])
+  const stop = useCallback(() => { void SpeechRecognition.stopListening() }, [])
+  const setLanguage = useCallback((lang: string) => setLanguageState(lang), [])
 
+  // === Dictado ON/OFF (sin parar el micro) ===
   const enableDictation = useCallback(() => {
+    // reanudar: abrir nuevo tramo desde el final actual
+    anchorRef.current = transcript.length
     setDictationEnabled(true)
-    resetRef.current()                 // ✅
-    prevRawTranscriptRef.current = ''
-  }, [])
+  }, [transcript.length])
 
   const disableDictation = useCallback(() => {
+    // consolidar tramo activo y congelar visible SIN parpadeo
+    const snapshot = visibleBaseRef.current + transcript.slice(anchorRef.current)
+    setVisibleBase(snapshot)        // cierra el tramo en la base
+    setVisibleTranscript(snapshot)  // deja visible como está (consolida ya)
+    anchorRef.current = transcript.length
     setDictationEnabled(false)
-    resetRef.current()                 // ✅
-    prevRawTranscriptRef.current = ''
-  }, [])
+  }, [transcript.length])
 
   const toggleDictation = useCallback(() => {
     setDictationEnabled(d => {
-      resetRef.current()               // ✅
-      prevRawTranscriptRef.current = ''
+      if (d) {
+        // ON -> OFF
+        const snapshot = visibleBaseRef.current + transcript.slice(anchorRef.current)
+        setVisibleBase(snapshot)
+        setVisibleTranscript(snapshot)
+        anchorRef.current = transcript.length
+      } else {
+        // OFF -> ON
+        anchorRef.current = transcript.length
+      }
       return !d
     })
-  }, [])
+  }, [transcript.length])
 
+  // === Resets ===
   const resetVisibleTranscript = useCallback(() => {
+    // Borrar visible, empezar un nuevo capítulo a partir de ahora
+    setVisibleBase('')
     setVisibleTranscript('')
-    resetRef.current()                 // ✅
-    prevRawTranscriptRef.current = ''
+    visibleBaseRef.current = ''
+    anchorRef.current = transcript.length
+  }, [transcript.length])
+
+  const resetVisibleTranscriptAndSyncPointer = useCallback(() => {
+    // Igual que el anterior en este modelo (sin backlog)
+    setVisibleBase('')
+    setVisibleTranscript('')
+    visibleBaseRef.current = ''
+    anchorRef.current = transcript.length
+  }, [transcript.length])
+
+  const resetAllTranscripts = useCallback(() => {
+    setVisibleBase('')
+    visibleBaseRef.current = ''
+    setVisibleTranscript('')
+    anchorRef.current = 0
+    resetTranscript()
+  }, [resetTranscript])
+
+  // Limpieza al desmontar
+  useEffect(() => {
+    return () => { void SpeechRecognition.stopListening() }
   }, [])
 
-  const setLanguage = useCallback((lang: string) => setLanguageState(lang), [])
-
+  // Registro de comandos
   const registerCommands = useCallback((id: string, cmds: SpeechCommand[]) => {
     registry.set(id, cmds)
     setVersion(v => v + 1)
@@ -170,25 +187,35 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
     setVersion(v => v + 1)
   }, [registry])
 
-  useEffect(() => {
-    return () => {
-        void SpeechRecognition.stopListening()
-    }
-    
-  }, [])
-
   const value: SpeechCtx = {
+    transcript,
+    interimTranscript,
+
     visibleTranscript,
     visibleInterimTranscript,
+
     listening,
     dictationEnabled,
-    start, stop,
-    enableDictation, disableDictation, toggleDictation,
+
+    start,
+    stop,
+    resetTranscript,
+
+    enableDictation,
+    disableDictation,
+    toggleDictation,
+
     resetVisibleTranscript,
+    resetVisibleTranscriptAndSyncPointer,
+    resetAllTranscripts,
+
     setLanguage,
+
     browserSupportsSpeechRecognition,
     isMicrophoneAvailable,
-    registerCommands, unregisterCommands,
+
+    registerCommands,
+    unregisterCommands,
   }
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

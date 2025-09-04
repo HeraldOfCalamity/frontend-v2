@@ -12,8 +12,9 @@ export default function Anamnesis({
 }: AnamnesisProps){
     const { 
         visibleTranscript,
-        visibleInterimTranscript,
-        resetVisibleTranscript,
+        transcript,
+        interimTranscript,
+        resetAllTranscripts,
         enableDictation,
         disableDictation,
         stop
@@ -22,7 +23,7 @@ export default function Anamnesis({
      const commands = useMemo(() => ([
         {
             command: 'limpiar dictado',
-            callback: () => resetVisibleTranscript()
+            callback: () => resetAllTranscripts()
         },
         {
             command: ['silenciar microfono', 'silenciar micrófono', 'detener dictado'],
@@ -39,7 +40,7 @@ export default function Anamnesis({
             matchInterim: true,
             callback: () => stop()
         },
-    ]), [disableDictation, enableDictation, resetVisibleTranscript]);
+    ]), [disableDictation, enableDictation, resetAllTranscripts]);
 
     useSpeechCommands(commands, [commands])
     return(
@@ -51,7 +52,7 @@ export default function Anamnesis({
                 </Typography>
                 
                 <Box height={'20vh'}>
-                    { visibleTranscript}
+                    { transcript}
                 </Box>
                 
             </Grid>
@@ -60,7 +61,7 @@ export default function Anamnesis({
                     Antecedentes Familiares
                 </Typography>
                 <Box height={'20vh'}>
-                    { visibleInterimTranscript}
+                    { interimTranscript}
                 </Box>
             </Grid>
             <Grid size={{xs: 12, md: 6 }}>
@@ -68,7 +69,7 @@ export default function Anamnesis({
                     Condicion Actual
                 </Typography>
                 <Box height={'20vh'}>
-                    
+                    {visibleTranscript}
                 </Box>
             </Grid>
             <Grid size={{xs: 12, md: 6 }}>
