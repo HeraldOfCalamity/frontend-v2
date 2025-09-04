@@ -1,4 +1,5 @@
 import { 
+    Alert,
     Box,
     Button, 
     Container, 
@@ -12,17 +13,68 @@ import {
     TextField, 
     Typography 
 } from "@mui/material";
-import { benedettaPink } from "../../config/theme.config";
+import { benedettaPink } from "../../../config/theme.config";
+import Anamnesis from "./Anamnesis";
+import { useEffect, useState } from "react";
+import { Mic, MicOff } from "@mui/icons-material";
+import Swal from "sweetalert2";
+import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 
 interface HistorialDialogProps{
     open: boolean;
     onClose: () => void;
 }
+interface Tab{
+    name: string;
+    component: React.ReactNode;
+}
+
 
 export default function HistorialDialog({
     onClose,
     open
 }: HistorialDialogProps){
+    
+    const {
+        listening,
+        isMicrophoneAvailable,
+        browserSupportsSpeechRecognition,
+        dictationEnabled,
+        start,
+        stop
+    } = useSpeech();
+
+   
+    const HISTORIAL_TABS: Tab[] = [
+        {
+            name: 'anamnesis',
+            component: <Anamnesis/>
+        },
+        {
+            name: 'evolución',
+            component: <></>
+        }
+    ]
+    const [selectedTab, setSelectedTab] = useState<Tab>(HISTORIAL_TABS[0]);
+
+    const handleStartDictaphone = () => start({language: 'es-BO'});
+
+    const handlePauseDictaphone = () => stop();
+
+    useEffect(() => {
+        if(!browserSupportsSpeechRecognition){
+            Swal.fire(
+                'Atención',
+                'El navegador no soporta el dictado!',
+                'warning'
+            )
+            return;
+        }
+  
+            start();
+
+    }, [])
+
 
     return (
         <Dialog
@@ -30,18 +82,19 @@ export default function HistorialDialog({
             onClose={onClose}
             fullWidth
             fullScreen
+            
         >
-            <DialogContent>
-                <Container>
+            <DialogContent >
+                <Container >
                     <DialogTitle variant="h3">
                         Historial Clinico
                     </DialogTitle>
                     <Stack spacing={2}>
                         <Box>
-                            <Typography variant="h5" fontWeight={500} textAlign={'center'} bgcolor={benedettaPink} p={2} border={1}>
+                            <Typography variant="h5" fontWeight={500} textAlign={'center'} bgcolor={benedettaPink} p={2} border={2} borderRadius={2}>
                                 Identificación del Usuario/Paciente
                             </Typography>
-                            <Grid spacing={2} p={2} container borderLeft={1} borderRight={1} borderBottom={1}>
+                            <Grid spacing={2} p={2} container borderLeft={2} borderRight={2} borderBottom={2}>
                                 <Grid size={{xs: 6, md: 4}}>
                                     <InputLabel>
                                         N° de HC
@@ -181,11 +234,67 @@ export default function HistorialDialog({
                             </Grid>
                         </Box>
                         <Box>
-                            <Typography variant="h5" fontWeight={500} textAlign={'center'} bgcolor={benedettaPink} p={2} border={1}>
-                                Anamnesis
-                            </Typography>
-                            <Grid container>
-                            </Grid>
+                            <Stack direction={'row'} spacing={1} ml={2}>
+                                {HISTORIAL_TABS.map(tab => 
+                                    <Button key={tab.name} onClick={() => setSelectedTab(tab)} variant="text" sx={{
+                                        borderTop: 2,
+                                        borderRight: 2,
+                                        borderLeft: 2,
+                                        color: theme => theme.palette.common.black,
+                                        bgcolor: tab.name === selectedTab.name ? benedettaPink : 'inherit',
+                                        textTransform: 'capitalize'
+                                    }}>
+                                        {tab.name}
+                                    </Button>
+                                )}
+                            </Stack>
+                            <Box border={4} borderRadius={2} borderColor={theme => 
+                                    listening 
+                                        ?  dictationEnabled 
+                                            ? theme.palette.success.main 
+                                            : theme.palette.error.main 
+                                        : 'transparent'
+                                }>
+
+                                <Box border={2} flexGrow={1} p={2} borderRadius={2}>
+                                    <Typography variant="h5" fontWeight={500} textAlign={'center'} bgcolor={benedettaPink} p={2} border={1} gutterBottom textTransform={'capitalize'}>
+                                        {selectedTab.name}
+                                    </Typography>
+
+                                    <Stack direction={'row'} spacing={2}>
+                                        <Button 
+                                            fullWidth 
+                                            size="large" 
+                                            variant="contained" 
+                                            startIcon={<Mic />}
+                                            onClick={() => handleStartDictaphone()}
+                                        >
+                                            Iniciar Dictado
+                                        </Button>
+                                        {/* <Button 
+                                            fullWidth 
+                                            size='large' 
+                                            variant='contained' 
+                                            color="secondary" 
+                                            startIcon={<MicOff />}
+                                            onClick={() => handlePauseDictaphone()}
+                                        >
+                                            Pausar Dictado
+                                        </Button> */}
+                                    </Stack>
+                                    {
+                                        !isMicrophoneAvailable && (
+                                            <Alert severity={'error'} sx={{height:50, mt: 1}}>
+                                                El micrófono no está disponible o sin permisos.
+                                            </Alert>
+                                        )
+                                    }
+                                    {
+                                        selectedTab.component
+                                    }
+                                </Box>
+                            </Box>
+
                         </Box>
                     </Stack>
                 </Container>

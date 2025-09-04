@@ -1,0 +1,120 @@
+Date : 2025-09-02 11:20:20
+Directory : c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src
+Total : 71 files,  7717 codes, 286 comments, 686 blanks, all 8689 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| TypeScript JSX |         49 |      6,872 |        190 |        571 |      7,633 |
+| TypeScript     |         20 |        841 |         58 |        109 |      1,008 |
+| PostCSS        |          1 |          3 |         38 |          6 |         47 |
+| XML            |          1 |          1 |          0 |          0 |          1 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                            | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                               |         71 |      7,717 |        286 |        686 |      8,689 |
+| . (Files)                                                                                                       |          4 |         88 |         39 |         19 |        146 |
+| api                                                                                                             |         11 |        554 |         54 |         79 |        687 |
+| assets                                                                                                          |          1 |          1 |          0 |          0 |          1 |
+| components                                                                                                      |         25 |      3,576 |         99 |        275 |      3,950 |
+| components (Files)                                                                                              |          6 |        812 |         40 |         68 |        920 |
+| components\ReservarCita                                                                                         |          4 |        541 |         27 |         57 |        625 |
+| components\Skeletons                                                                                            |          1 |         16 |          0 |          2 |         18 |
+| components\admin                                                                                                |          7 |      1,469 |         16 |         77 |      1,562 |
+| components\common                                                                                               |          7 |        738 |         16 |         71 |        825 |
+| config                                                                                                          |          3 |        256 |          3 |         21 |        280 |
+| context                                                                                                         |          3 |        189 |          3 |         30 |        222 |
+| hooks                                                                                                           |          2 |         41 |          0 |          9 |         50 |
+| layouts                                                                                                         |          1 |         77 |          4 |         16 |         97 |
+| models                                                                                                          |          1 |          5 |          0 |          0 |          5 |
+| pages                                                                                                           |         17 |      2,890 |         84 |        232 |      3,206 |
+| pages (Files)                                                                                                   |          1 |         57 |          0 |         12 |         69 |
+| pages\admin                                                                                                     |          9 |      1,690 |         76 |        137 |      1,903 |
+| pages\especialista                                                                                              |          4 |        640 |          2 |         38 |        680 |
+| pages\especialista (Files)                                                                                      |          2 |        396 |          2 |         27 |        425 |
+| pages\especialista\Historial                                                                                    |          2 |        244 |          0 |         11 |        255 |
+| pages\paciente                                                                                                  |          3 |        503 |          6 |         45 |        554 |
+| utils                                                                                                           |          3 |         40 |          0 |          5 |         45 |
++-----------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                                        | language       | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\App.tsx                                          | TypeScript JSX |         66 |          0 |          9 |         75 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\authService.ts                               | TypeScript     |         17 |          0 |          4 |         21 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\citaService.ts                               | TypeScript     |         84 |          0 |         10 |         94 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\configService.ts                             | TypeScript     |         25 |          0 |          5 |         30 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\especialidadService.ts                       | TypeScript     |         61 |         10 |          7 |         78 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\especialistaService.ts                       | TypeScript     |         93 |          0 |         13 |        106 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\pacienteService.ts                           | TypeScript     |        103 |          0 |         13 |        116 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\parameterService.ts                          | TypeScript     |          0 |         44 |          8 |         52 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\permisosService.ts                           | TypeScript     |         20 |          0 |          3 |         23 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\roleService.ts                               | TypeScript     |         60 |          0 |          5 |         65 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\tratamientoService.ts                        | TypeScript     |         41 |          0 |          5 |         46 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\api\userService.ts                               | TypeScript     |         50 |          0 |          6 |         56 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\assets\react.svg                                 | XML            |          1 |          0 |          0 |          1 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\CalendarioCitas.tsx                   | TypeScript JSX |        288 |         37 |         31 |        356 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\Carousel.tsx                          | TypeScript JSX |        132 |          0 |         15 |        147 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\EspecialidadCard.tsx                  | TypeScript JSX |         30 |          0 |          3 |         33 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\InputFileUpload.tsx                   | TypeScript JSX |         54 |          0 |          1 |         55 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\LoginModal.tsx                        | TypeScript JSX |        179 |          3 |         11 |        193 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\ReservarCita\ReservaCita.tsx          | TypeScript JSX |        258 |         13 |         27 |        298 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\ReservarCita\ReservarCitaPaso1.tsx    | TypeScript JSX |         85 |          4 |          6 |         95 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\ReservarCita\ReservarCitaPaso2.tsx    | TypeScript JSX |        138 |          1 |         17 |        156 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\ReservarCita\ReservarCitaPaso3.tsx    | TypeScript JSX |         60 |          9 |          7 |         76 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\Skeletons\EspecialidadSkeleton.tsx    | TypeScript JSX |         16 |          0 |          2 |         18 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\UserForm.tsx                          | TypeScript JSX |        129 |          0 |          7 |        136 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\BuscarEspecialidad.tsx          | TypeScript JSX |         84 |          2 |          5 |         91 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\BuscarPaciente.tsx              | TypeScript JSX |        131 |          0 |          7 |        138 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\EspecialidadForm.tsx            | TypeScript JSX |        179 |          3 |          8 |        190 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\EspecialistaForm.tsx            | TypeScript JSX |        516 |          7 |         29 |        552 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\PacienteForm.tsx                | TypeScript JSX |        334 |          2 |         17 |        353 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\RoleForm.tsx                    | TypeScript JSX |        113 |          1 |          4 |        118 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\admin\TratamientoForm.tsx             | TypeScript JSX |        112 |          1 |          7 |        120 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\CustomInput.tsx                | TypeScript JSX |         99 |          0 |          6 |        105 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\Footer.tsx                     | TypeScript JSX |         17 |          0 |          4 |         21 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\GenericTable.tsx               | TypeScript JSX |        282 |         11 |         35 |        328 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\ImagePreviewDialog.tsx         | TypeScript JSX |         43 |          0 |          2 |         45 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\Modal.tsx                      | TypeScript JSX |         32 |          0 |          2 |         34 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\NavBar.tsx                     | TypeScript JSX |        245 |          5 |         16 |        266 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\components\common\ProtectedRoute.tsx             | TypeScript JSX |         20 |          0 |          6 |         26 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\config\benedetta.api.config.ts                   | TypeScript     |         16 |          0 |         10 |         26 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\config\navbar.config.tsx                         | TypeScript JSX |         55 |          0 |          6 |         61 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\config\theme.config.ts                           | TypeScript     |        185 |          3 |          5 |        193 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\context\AuthContext.tsx                          | TypeScript JSX |         78 |          0 |         12 |         90 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\context\ParameterContext.tsx                     | TypeScript JSX |         53 |          0 |          9 |         62 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\context\userProfileContext.tsx                   | TypeScript JSX |         58 |          3 |          9 |         70 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\hooks\useLocalStorage.ts                         | TypeScript     |         22 |          0 |          4 |         26 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\hooks\useRoleRedirect.ts                         | TypeScript     |         19 |          0 |          5 |         24 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\layouts\AppLayout.tsx                            | TypeScript JSX |         77 |          4 |         16 |         97 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\main.css                                         | PostCSS        |          3 |         38 |          6 |         47 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\main.tsx                                         | TypeScript JSX |         19 |          0 |          3 |         22 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\models\LoginDTO.ts                               | TypeScript     |          5 |          0 |          0 |          5 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\HomeRedirect.tsx                           | TypeScript JSX |         57 |          0 |         12 |         69 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\AdminDashboard.tsx                   | TypeScript JSX |         91 |         16 |         15 |        122 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\ConfiguracionPage.tsx                | TypeScript JSX |        102 |          0 |         10 |        112 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\EspecialidadesPage.tsx               | TypeScript JSX |        180 |          0 |          9 |        189 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\EspecialistasPage.tsx                | TypeScript JSX |        315 |          8 |         21 |        344 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\OfficeConfigForm.tsx                 | TypeScript JSX |         89 |          8 |         11 |        108 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\PacientesPage.tsx                    | TypeScript JSX |        307 |          0 |         28 |        335 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\RolesPage.tsx                        | TypeScript JSX |        131 |         41 |         13 |        185 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\TratamientosPage.tsx                 | TypeScript JSX |        145 |          0 |          7 |        152 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\admin\UsuariosPage.tsx                     | TypeScript JSX |        330 |          3 |         23 |        356 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\especialista\Historial\Anamnesis.tsx       | TypeScript JSX |         14 |          0 |          1 |         15 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\especialista\Historial\HistorialDialog.tsx | TypeScript JSX |        230 |          0 |         10 |        240 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\especialista\InicioEspecialista.tsx        | TypeScript JSX |         65 |          0 |         11 |         76 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\especialista\PerfilEspecialista.tsx        | TypeScript JSX |        331 |          2 |         16 |        349 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\paciente\InicioPaciente.tsx                | TypeScript JSX |        187 |          5 |         26 |        218 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\paciente\MisCitasPaciente.tsx              | TypeScript JSX |        178 |          1 |         13 |        192 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\pages\paciente\PerfilPaciente.tsx                | TypeScript JSX |        138 |          0 |          6 |        144 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\utils\calendarLocalazer.ts                       | TypeScript     |         13 |          0 |          2 |         15 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\utils\errorHandler.ts                            | TypeScript     |         22 |          0 |          3 |         25 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\utils\textUtils.ts                               | TypeScript     |          5 |          0 |          0 |          5 |
+| c:\Users\relee\Code\Benedetta\trabajo-grado-v2\frontend-v2\src\vite-env.d.ts                                    | TypeScript     |          0 |          1 |          1 |          2 |
+| Total                                                                                                           |                |      7,717 |        286 |        686 |      8,689 |
++-----------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

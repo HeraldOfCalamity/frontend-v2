@@ -76,7 +76,7 @@ export default function CalendarioCitas({
     }
 
     const dayPropGetter = (date: Date) => {
-        const isToday = dayjs(date).date() === dayjs().date();
+        const isToday = dayjs(date).isSame(dayjs(), 'day');
         if(isToday){
             return {style: {
                 // backgroundColor: theme.palette.background.default,

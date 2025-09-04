@@ -7,7 +7,8 @@ import { getCitasByEspecialista, type Cita } from "../../api/citaService";
 import CalendarioCitas from "../../components/CalendarioCitas";
 import dayjs from "dayjs";
 import { useUserProfile } from "../../context/userProfileContext";
-import HistorialDialog from "./HistorialDialog";
+import HistorialDialog from "./Historial/HistorialDialog";
+import { SpeechProvider } from "../../context/SpeechContext";
 
 interface InicioEspecialistaProps{
 
@@ -48,7 +49,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
     }, [loadingProfile,espProfile])
 
     return (
-        loading || loadingProfile ? (
+        loading || loadingProfile || !espProfile?.especialista ? (
             <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flexGrow={1}>
                 <CircularProgress color="secondary"/>
             </Box>
@@ -64,10 +65,12 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
                     defaultView="day"
                     onAtenderCita={() => setOpenAtencion(true)}
                 />
-                <HistorialDialog
-                    onClose={() => setOpenAtencion(false)}
-                    open={openAtencion}
-                />
+                <SpeechProvider>
+                    <HistorialDialog
+                        onClose={() => setOpenAtencion(false)}
+                        open={openAtencion}
+                    />
+                </SpeechProvider>
             </Box>
         )
     )

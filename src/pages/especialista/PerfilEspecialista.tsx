@@ -23,7 +23,7 @@ export default function PerfilEspecialista(){
     const {profile, reloadProfile} = useUserProfile();
     const especialista = profile as EspecialistaWithUser;
     const [loading, setLoading] = useState(false);
-    const [preview, setPreview] = useState(especialista.especialista.image || '');
+    const [preview, setPreview] = useState(especialista?.especialista.image || '');
     const [openDisponibilidades,setOpenDisponibilidades] = useState(false);
     const [openEspecialidades, setOpenEspecialidades] = useState(false)
     const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
@@ -36,6 +36,7 @@ export default function PerfilEspecialista(){
         }
     });
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLoading(true)
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             const reader = new FileReader();
@@ -43,11 +44,14 @@ export default function PerfilEspecialista(){
                 const base64String = reader.result as string;
                 // Aquí puedes guardarlo en el estado, o mandarlo directo en el submit:
                 // setPreview(base64String);
+                console.log('base64', base64String);
+                
                 setValue("image", base64String);
                 setPreview(base64String)
             };
             reader.readAsDataURL(file);
         }
+        setLoading(false)
     };
 
     
@@ -80,6 +84,7 @@ export default function PerfilEspecialista(){
                 'success'
             )
             reloadProfile()
+            setPreview(especialista.especialista.image || '')
         }catch(err: any){
             Swal.fire(
                 'Error',
@@ -108,6 +113,13 @@ export default function PerfilEspecialista(){
         obtenerEspecialidades()
         console.log('imageurl:',`${BASE_URL}${preview}`)
     }, [])
+
+    useEffect(() => {
+        console.log('image preview', preview);
+        console.log('condition', especialista.especialista.image ? `${BASE_URL}${preview}` : preview || '');
+        
+    }, [preview])
+
     return(
         <Box display={'flex'} flexDirection={'column'} flexGrow={1} justifyContent={'center'}>
             <Typography variant="h4" fontWeight={600}  mb={7} textAlign='center'>
@@ -128,9 +140,9 @@ export default function PerfilEspecialista(){
                         <Grid size={12} display={'flex'} flexDirection={'column'} alignItems={'center'} flexGrow={1} justifyContent={'center'}> 
                             <Box
                                 component={'img'}
-                                src={`${BASE_URL}${preview}`}
+                                src={especialista.especialista.image === preview ? `${BASE_URL}${preview}` : preview || ''}
                                 alt={`Imagen Perfil ${especialista.user.name} ${especialista.user.lastname}`}
-                                sx={{maxHeight:'50vh', borderRadius: 2, border:1}}
+                                sx={{height:'50vh', borderRadius: 2, border:1}}
                             />
                             <InputLabel>Fotografia Personal</InputLabel>
                             <InputFileUpload 
@@ -161,10 +173,10 @@ export default function PerfilEspecialista(){
                         sx={{
                             maxHeight: '55vh',
                             overflowY: 'auto',
-                            pr: 2
+                            pr: 2,
                         }}
                     >
-                            <Grid container size={12} spacing={2}>
+                            <Grid container size={12} spacing={2} pt={1}>
                                 <Grid size={{xs:12, md: 6}} >
                                     <TextField label="Nombre" size="small" fullWidth value={especialista.user.name} slotProps={{
                                         input:{
