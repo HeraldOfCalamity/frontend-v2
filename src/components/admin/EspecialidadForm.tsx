@@ -8,6 +8,7 @@ import ImagePreviewDialog from '../common/ImagePreviewDialog';
 import TratamientoForm from './TratamientoForm';
 import { getTratamientos, type Tratamiento } from '../../api/tratamientoService';
 import Swal from 'sweetalert2';
+import { BASE_URL } from '../../config/benedetta.api.config';
 
 type EspecialidadFormField = 'nombre' | 'descripcion' | 'image';
 
@@ -182,7 +183,7 @@ export default function EspecialidadForm({
             <ImagePreviewDialog
                 open={openImagePreviewDialog}
                 onClose={() => setOpenImagePreviewDialog(false)}
-                image={preview || ''}
+                image={initialData?.image === preview ? `${BASE_URL}${preview}` : preview || ''}
                 alt='Especialidad Image'
             />
         </>
