@@ -260,7 +260,7 @@ export default function HistorialDialog({
                                         {selectedTab.name}
                                     </Typography>
 
-                                    <Stack direction={'row'} spacing={2}>
+                                    <Stack direction={'row'} spacing={2} mb={2}>
                                         <Button 
                                             fullWidth 
                                             size="large" 
