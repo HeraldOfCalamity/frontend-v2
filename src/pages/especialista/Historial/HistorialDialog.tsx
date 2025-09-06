@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { Mic, MicOff } from "@mui/icons-material";
 import Swal from "sweetalert2";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
+import Evolucion from "./Evolucion";
 
 interface HistorialDialogProps{
     open: boolean;
@@ -52,7 +53,7 @@ export default function HistorialDialog({
         },
         {
             name: 'evolución',
-            component: <></>
+            component: <Evolucion />
         }
     ]
     const [selectedTab, setSelectedTab] = useState<Tab>(HISTORIAL_TABS[0]);
@@ -71,7 +72,7 @@ export default function HistorialDialog({
             return;
         }
   
-            start();
+            // start();
 
     }, [])
 
@@ -249,10 +250,11 @@ export default function HistorialDialog({
                                 )}
                             </Stack>
                             <Box border={4} borderRadius={2} borderColor={theme => 
-                                    listening && dictationEnabled 
-                                        ?  theme.palette.success.main 
-                                        : theme.palette.error.main 
-                                        
+                                    selectedTab.name === 'anamnesis' ?
+                                        listening && dictationEnabled 
+                                            ?  theme.palette.success.main 
+                                            : theme.palette.error.main 
+                                    : 'transparent'    
                                 }>
 
                                 <Box border={2} flexGrow={1} p={2} borderRadius={2}>
@@ -261,15 +263,18 @@ export default function HistorialDialog({
                                     </Typography>
 
                                     <Stack direction={'row'} spacing={2} mb={2}>
-                                        <Button 
-                                            fullWidth 
-                                            size="large" 
-                                            variant="contained" 
-                                            startIcon={<Mic />}
-                                            onClick={() => handleStartDictaphone()}
-                                        >
-                                            Iniciar Dictado
-                                        </Button>
+                                        {selectedTab.name === 'anamnesis' && (
+                                            <Button 
+                                                fullWidth 
+                                                size="large" 
+                                                variant="contained" 
+                                                startIcon={<Mic />}
+                                                onClick={() => handleStartDictaphone()}
+                                            >
+                                                Iniciar Dictado
+                                            </Button>
+                                        )}
+                                        
                                         {/* <Button 
                                             fullWidth 
                                             size='large' 

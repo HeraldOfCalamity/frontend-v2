@@ -299,6 +299,11 @@ export default function Anamnesis() {
           </Box>
         </Grid>
       </Grid>
+      <Stack my={2}>
+        <Button variant="contained">
+            Guardar Informacion
+        </Button>
+      </Stack>
     </Box>
   );
 }
