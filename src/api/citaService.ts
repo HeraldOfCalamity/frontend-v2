@@ -2,7 +2,7 @@ import api from "../config/benedetta.api.config";
 import { handleError } from "../utils/errorHandler";
 import type { Especialidad } from "./especialidadService";
 import type { Especialista } from "./especialistaService";
-import type { Paciente } from "./pacienteService";
+import type { Paciente, PacienteWithUser } from "./pacienteService";
 
 export interface Cita {
     id: string;
@@ -12,6 +12,7 @@ export interface Cita {
     fecha_inicio: string | Date;
     fecha_fin: string | Date;
     duration_minutes: number;
+    pacienteProfile?: PacienteWithUser;
     estado: {
         id: string;
         nombre: string;

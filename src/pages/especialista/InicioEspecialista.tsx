@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import { useUserProfile } from "../../context/userProfileContext";
 import HistorialDialog from "./Historial/HistorialDialog";
 import { SpeechProvider } from "../../context/SpeechContext";
+import type { PacienteWithUser } from "../../api/pacienteService";
 
 interface InicioEspecialistaProps{
 
@@ -20,6 +21,14 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
     const [loading, setLoading] = useState(false);
     const [citas, setCitas] = useState<Cita[]>([]);
     const [openAtencion, setOpenAtencion] = useState(false);
+    const [selectedPacienteProfile, setSelectedPacienteProfile] = useState<PacienteWithUser>({
+        paciente: {
+
+        },
+        user: {
+
+        }
+    })
     
 
     const obtenerCitasEspecialista = async () => {
@@ -63,12 +72,16 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
                 <CalendarioCitas
                     citas={citas}
                     defaultView="day"
-                    onAtenderCita={() => setOpenAtencion(true)}
+                    onAtenderCita={(cita) => {
+                        setSelectedPacienteProfile(cita?.pacienteProfile as PacienteWithUser)
+                        setOpenAtencion(true)
+                    }}
                 />
                 <SpeechProvider>
                     <HistorialDialog
                         onClose={() => setOpenAtencion(false)}
                         open={openAtencion}
+                        pacienteProfile={selectedPacienteProfile}
                     />
                 </SpeechProvider>
             </Box>

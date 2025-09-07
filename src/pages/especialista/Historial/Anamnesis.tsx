@@ -1,6 +1,7 @@
 import { Box, Grid, InputLabel, Stack, Typography, Button } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
+import type { HistorialClinico } from "../../../api/historialService";
 
 /** Claves de los 4 campos */
 type FieldKey = "personales" | "familiares" | "condicion" | "intervencion";
@@ -97,7 +98,13 @@ function mapCampo(str: string): FieldKey {
 /* =========================
    Componente
    ========================= */
-export default function Anamnesis() {
+interface AnamnesisProps{
+  historial: HistorialClinico;
+}
+
+export default function Anamnesis({
+  historial
+}: AnamnesisProps) {
   const {
     transcript,
     interimTranscript,
@@ -249,6 +256,10 @@ export default function Anamnesis() {
     p: 1,
     whiteSpace: 'pre-wrap',
   });
+
+  useEffect(() => {
+    console.log('historial', historial)
+  }, [])
 
   return (
     <Box>

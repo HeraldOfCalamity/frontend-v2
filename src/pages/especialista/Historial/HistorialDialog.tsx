@@ -20,10 +20,13 @@ import { Mic, MicOff } from "@mui/icons-material";
 import Swal from "sweetalert2";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import Evolucion from "./Evolucion";
+import type { PacienteWithUser } from "../../../api/pacienteService";
+import { getHistorialesPorPaciente, type HistorialClinico } from "../../../api/historialService";
 
 interface HistorialDialogProps{
     open: boolean;
     onClose: () => void;
+    pacienteProfile: PacienteWithUser;
 }
 interface Tab{
     name: string;
@@ -33,7 +36,8 @@ interface Tab{
 
 export default function HistorialDialog({
     onClose,
-    open
+    open,
+    pacienteProfile
 }: HistorialDialogProps){
     
     const {
@@ -45,15 +49,16 @@ export default function HistorialDialog({
         stop
     } = useSpeech();
 
+    const [historial, setHistorial] = useState<HistorialClinico>()
    
     const HISTORIAL_TABS: Tab[] = [
         {
             name: 'anamnesis',
-            component: <Anamnesis/>
+            component: <Anamnesis historial={historial as HistorialClinico}/>
         },
         {
             name: 'evolución',
-            component: <Evolucion />
+            component: <Evolucion historial={historial as HistorialClinico}/>
         }
     ]
     const [selectedTab, setSelectedTab] = useState<Tab>(HISTORIAL_TABS[0]);
@@ -62,19 +67,36 @@ export default function HistorialDialog({
 
     const handlePauseDictaphone = () => stop();
 
-    useEffect(() => {
-        if(!browserSupportsSpeechRecognition){
-            Swal.fire(
-                'Atención',
-                'El navegador no soporta el dictado!',
-                'warning'
-            )
-            return;
-        }
-  
-            // start();
 
-    }, [])
+    const obtenerHistorialByPacienteId = async () => {
+        try{
+            const hist = await getHistorialesPorPaciente(pacienteProfile.paciente.id || '')
+            setHistorial(hist)
+        }catch(err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
+        }
+    }
+
+    useEffect(() => {
+       if(open){
+            if(!browserSupportsSpeechRecognition){
+                Swal.fire(
+                    'Atención',
+                    'El navegador no soporta el dictado!',
+                    'warning'
+                )
+                return;
+            }
+            obtenerHistorialByPacienteId()
+
+    
+            // alert(`paciente id ${pacienteProfile.paciente.fecha_nacimiento}`)
+       }
+    }, [open])
 
 
     return (

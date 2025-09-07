@@ -22,6 +22,7 @@ import PerfilPaciente from './pages/paciente/PerfilPaciente';
 import PerfilEspecialista from './pages/especialista/PerfilEspecialista';
 import TratamientosPage from './pages/admin/TratamientosPage';
 import { AuthProvider } from './context/AuthContext';
+import ImageUploadTest from './pages/especialista/Historial/ImageUploadTest';
 
 
 
@@ -60,6 +61,7 @@ function App() {
                       <Route path='/admin/roles' element={<RolesPage />} />
                       <Route path='/admin/configuracion' element={<ConfiguracionPage />} />
                     </Route>
+                    <Route path='/image/test' element={<ImageUploadTest />} />
                   </Routes>
                 </AppLayout>
               </UserProfileProvider>

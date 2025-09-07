@@ -10,6 +10,7 @@ import ImagePreviewDialog from "../../../components/common/ImagePreviewDialog";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import InputFileUpload from "../../../components/InputFileUpload";
+import type { HistorialClinico } from "../../../api/historialService";
 
 interface Entrada{
   id: string,
@@ -191,7 +192,13 @@ const RE_DICTAR_EVOLUCION = new RegExp(
   String.raw`(?:^|\s)dictar\s+(?:evoluci(?:o|ó)n(?:\s+del\s+tratamiento)?)${END}`, 'i'
 );
 
-export default function Evolucion(){
+interface EvolucionProps{
+  historial: HistorialClinico
+}
+
+export default function Evolucion({
+  historial
+}: EvolucionProps){
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [selectedImage, setSelectedImage] = useState('');
@@ -352,6 +359,10 @@ export default function Evolucion(){
     p: 1,
     whiteSpace: 'pre-wrap',
   });
+
+  useEffect(() => {
+    console.log('historial evolucion', historial)
+  }, [])
 
   return (
     <>
