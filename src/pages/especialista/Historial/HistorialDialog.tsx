@@ -71,7 +71,16 @@ export default function HistorialDialog({
     const obtenerHistorialByPacienteId = async () => {
         try{
             const hist = await getHistorialesPorPaciente(pacienteProfile.paciente.id || '')
-            setHistorial(hist)
+            if(hist){
+                setHistorial(hist)
+                return;
+            }
+
+            Swal.fire(
+                'Paciente Nuevo',
+                'El paciente no tiene un historial Asociado, al momento de guardar los cambios se le creará uno automaticamente',
+                'info'
+            )
         }catch(err: any){
             Swal.fire(
                 'Error',

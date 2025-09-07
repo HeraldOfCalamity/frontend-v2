@@ -259,7 +259,7 @@ export default function Anamnesis({
 
   useEffect(() => {
     console.log('historial', historial)
-  }, [])
+  }, [historial])
 
   return (
     <Box>

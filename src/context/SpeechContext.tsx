@@ -53,21 +53,18 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState('es-BO')
   const [dictationEnabled, setDictationEnabled] = useState(true)
 
-  // Texto ya consolidado + ancla en el transcript crudo
-  const [visibleBase, setVisibleBase] = useState('')       // segmentos previos “cerrados”
+  // Texto consolidado + visible derivado
+  const [visibleBase, setVisibleBase] = useState('')
   const visibleBaseRef = useRef(visibleBase)
   useEffect(() => { visibleBaseRef.current = visibleBase }, [visibleBase])
 
-  const [visibleTranscript, setVisibleTranscript] = useState('') // lo que ve el usuario
-  const anchorRef = useRef<number>(0)                    // índice desde donde se acumula el tramo activo
+  const [visibleTranscript, setVisibleTranscript] = useState('')
+  const visibleTranscriptRef = useRef(visibleTranscript)
+  useEffect(() => { visibleTranscriptRef.current = visibleTranscript }, [visibleTranscript])
 
-  // Comandos de hijos
-  const mergedCommands = useMemo(
-    () => Array.from(registry.values()).flat(),
-    [version, registry]
-  )
+  const anchorRef = useRef<number>(0) // índice desde donde acumulamos tramo activo
 
-  // Hook principal (sin tocar resultados)
+  // Hook principal
   const {
     transcript,
     interimTranscript,
@@ -75,33 +72,39 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
     resetTranscript,
     browserSupportsSpeechRecognition,
     isMicrophoneAvailable,
-  } = useSpeechRecognition({ commands: mergedCommands })
+  } = useSpeechRecognition({
+    commands: useMemo(() => Array.from(registry.values()).flat(), [version, registry])
+  })
 
-  // Inicializar el ancla al montar
+  // Mantener un ref con transcript.length para no pinchar deps de callbacks
+  const transcriptLenRef = useRef(0)
+  useEffect(() => { transcriptLenRef.current = transcript.length }, [transcript.length])
+
+  // Inicializar ancla al montar
   useEffect(() => {
     anchorRef.current = transcript.length
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // === Acumulación del visible ===
+  // Acumulación del visible
   useEffect(() => {
     if (dictationEnabled) {
-      // visible = base + tramo activo (si el motor reescribe, heredamos correcciones)
       const next = visibleBaseRef.current + transcript.slice(anchorRef.current)
-      setVisibleTranscript(next)
+      // Evita sets redundantes (no es obligatorio, pero reduce renders)
+      if (next !== visibleTranscriptRef.current) setVisibleTranscript(next)
     } else {
-      // en mute: NO tocamos visible; solo descartamos backlog avanzando el ancla
+      // en mute: no cambiamos visible, solo “saltamos” backlog
       anchorRef.current = transcript.length
     }
   }, [transcript, dictationEnabled])
 
-  // Interim visible solo si dictado ON (para no “parpadear” en mute)
+  // Interim visible solo si dictado ON
   const visibleInterimTranscript = useMemo(
     () => (dictationEnabled ? interimTranscript : ''),
     [dictationEnabled, interimTranscript]
   )
 
-  // === Control básico ===
+  // Control básico
   const start = useCallback((opts?: Partial<Parameters<typeof SpeechRecognition.startListening>[0]>) => {
     SpeechRecognition.startListening({
       continuous: true,
@@ -114,75 +117,80 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
   const stop = useCallback(() => { void SpeechRecognition.stopListening() }, [])
   const setLanguage = useCallback((lang: string) => setLanguageState(lang), [])
 
-  // === Dictado ON/OFF (sin parar el micro) ===
+  // === Dictado ON/OFF (callbacks ESTABLES, sin depender de transcript.length) ===
   const enableDictation = useCallback(() => {
-    // reanudar: abrir nuevo tramo desde el final actual
-    anchorRef.current = transcript.length
+    anchorRef.current = transcriptLenRef.current // abrir nuevo tramo
     setDictationEnabled(true)
-  }, [transcript.length])
+  }, [])
 
   const disableDictation = useCallback(() => {
-    // consolidar tramo activo y congelar visible SIN parpadeo
-    const snapshot = visibleBaseRef.current + transcript.slice(anchorRef.current)
-    setVisibleBase(snapshot)        // cierra el tramo en la base
-    setVisibleTranscript(snapshot)  // deja visible como está (consolida ya)
-    anchorRef.current = transcript.length
+    // consolidar tramo activo y congelar visible
+    const snapshot = visibleBaseRef.current + 
+                     (transcriptLenRef.current >= anchorRef.current
+                       ? transcript.slice(anchorRef.current)
+                       : '') // por seguridad si el motor “resetea”
+    setVisibleBase(snapshot)
+    setVisibleTranscript(snapshot)
+    anchorRef.current = transcriptLenRef.current
     setDictationEnabled(false)
-  }, [transcript.length])
+  }, [transcript])
 
   const toggleDictation = useCallback(() => {
     setDictationEnabled(d => {
       if (d) {
-        // ON -> OFF
-        const snapshot = visibleBaseRef.current + transcript.slice(anchorRef.current)
+        const snapshot = visibleBaseRef.current + 
+                         (transcriptLenRef.current >= anchorRef.current
+                           ? transcript.slice(anchorRef.current)
+                           : '')
         setVisibleBase(snapshot)
         setVisibleTranscript(snapshot)
-        anchorRef.current = transcript.length
+        anchorRef.current = transcriptLenRef.current
       } else {
-        // OFF -> ON
-        anchorRef.current = transcript.length
+        anchorRef.current = transcriptLenRef.current
       }
       return !d
     })
-  }, [transcript.length])
+  }, [transcript])
 
-  // === Resets ===
+  // Resets
   const resetVisibleTranscript = useCallback(() => {
-    // Borrar visible, empezar un nuevo capítulo a partir de ahora
     setVisibleBase('')
     setVisibleTranscript('')
     visibleBaseRef.current = ''
-    anchorRef.current = transcript.length
-  }, [transcript.length])
+    visibleTranscriptRef.current = ''
+    anchorRef.current = transcriptLenRef.current
+  }, [])
 
   const resetVisibleTranscriptAndSyncPointer = useCallback(() => {
-    // Igual que el anterior en este modelo (sin backlog)
     setVisibleBase('')
     setVisibleTranscript('')
     visibleBaseRef.current = ''
-    anchorRef.current = transcript.length
-  }, [transcript.length])
+    visibleTranscriptRef.current = ''
+    anchorRef.current = transcriptLenRef.current
+  }, [])
 
   const resetAllTranscripts = useCallback(() => {
     setVisibleBase('')
     visibleBaseRef.current = ''
     setVisibleTranscript('')
+    visibleTranscriptRef.current = ''
     anchorRef.current = 0
     resetTranscript()
   }, [resetTranscript])
 
   // Limpieza al desmontar
-  useEffect(() => {
-    return () => { void SpeechRecognition.stopListening() }
-  }, [])
+  useEffect(() => () => { void SpeechRecognition.stopListening() }, [])
 
   // Registro de comandos
   const registerCommands = useCallback((id: string, cmds: SpeechCommand[]) => {
+    const prev = registry.get(id)
+    if (prev === cmds) return          // nada que hacer
     registry.set(id, cmds)
     setVersion(v => v + 1)
   }, [registry])
 
   const unregisterCommands = useCallback((id: string) => {
+    if (!registry.has(id)) return      // evita setVersion en vacío
     registry.delete(id)
     setVersion(v => v + 1)
   }, [registry])
@@ -227,12 +235,31 @@ export function useSpeech() {
   return ctx
 }
 
-export function useSpeechCommands(cmds: SpeechCommand[], deps: React.DependencyList = []) {
+export function useSpeechCommands(cmds: SpeechCommand[], _deps: React.DependencyList = []) {
   const { registerCommands, unregisterCommands } = useSpeech()
   const idRef = useRef(`cmp_${Math.random().toString(36).slice(2)}`)
+
+  // Mantiene SIEMPRE la referencia al array de comandos más reciente
+  const cmdsRef = useRef(cmds)
+  useEffect(() => { cmdsRef.current = cmds }, [cmds])
+
+  // Construimos una copia ESTABLE que proxiea callbacks al cmdsRef actual
+  const stableCmds = useMemo<SpeechCommand[]>(() => {
+    return cmds.map((c, idx) => {
+      const origCb = c.callback
+      // callback estable que llama a la versión más nueva
+      const proxiedCb = (...args: any[]) => {
+        const current = cmdsRef.current[idx]
+        current?.callback?.(...args)
+      }
+      return { ...c, callback: proxiedCb }
+    })
+    // 👇 deps vacías ⇒ identidad estable
+  }, [])
+
   useEffect(() => {
-    registerCommands(idRef.current, cmds)
+    registerCommands(idRef.current, stableCmds)
     return () => unregisterCommands(idRef.current)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [registerCommands, unregisterCommands, stableCmds])
 }
+
