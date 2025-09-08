@@ -289,7 +289,7 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
 
       // 3) registrar en backend
       const reg = await registrarImagen({
-        paciente_id: pacienteId,
+        pacienteId,
         historialId,
         entradaId: entryId,
         key: pres.key,

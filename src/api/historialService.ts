@@ -10,7 +10,7 @@ export interface ImagePresignRes {
 }
 
 export interface RegisterImageReq {
-  paciente_id: string;
+  pacienteId: string;
   historialId?: string;
   entradaId?: string | null;
   key: string;
