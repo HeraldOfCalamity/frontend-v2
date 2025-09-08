@@ -1,5 +1,5 @@
 import { Box, Grid, InputLabel, Stack, Typography, Button } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState, version } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import type { HistorialClinico } from "../../../api/historialService";
 
@@ -100,10 +100,17 @@ function mapCampo(str: string): FieldKey {
    ========================= */
 interface AnamnesisProps{
   historial: HistorialClinico;
+  handleClickGuardar: (data: {
+          personales: string;
+          familiares: string;
+          condicion: string;
+          intervencion: string;
+        }) => void;
 }
 
 export default function Anamnesis({
-  historial
+  historial,
+  handleClickGuardar=()=>{}
 }: AnamnesisProps) {
   const {
     transcript,
@@ -251,14 +258,23 @@ export default function Anamnesis({
   const boxSx = (isActive: boolean) => ({
     height: '20vh',
     border: 2,
-    borderColor: isActive ? 'success.main' : 'divider',
+    borderColor: isActive ? 'secondary.main' : 'divider',
     borderRadius: 1,
     p: 1,
     whiteSpace: 'pre-wrap',
   });
 
+  const onGuardarHistorialClick = () => {
+    handleClickGuardar({
+          personales: view.personales,
+          familiares: view.familiares,
+          condicion: view.condicion,
+          intervencion: view.intervencion
+        })
+  }
+
   useEffect(() => {
-    console.log('historial', historial)
+    console.log('historial anamnesis', historial)
   }, [historial])
 
   return (
@@ -285,35 +301,35 @@ export default function Anamnesis({
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Antecedentes Personales</Typography>
           <Box sx={boxSx(active === 'personales')}>
-            {view.personales}
+            {historial ? historial.antPersonales : view.personales}
           </Box>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Antecedentes Familiares</Typography>
           <Box sx={boxSx(active === 'familiares')}>
-            {view.familiares}
+            {historial ? historial.antfamiliares : view.familiares}
           </Box>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Condición Actual</Typography>
           <Box sx={boxSx(active === 'condicion')}>
-            {view.condicion}
+            {historial ? historial.condActual : view.condicion}
           </Box>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Intervención Clínica</Typography>
           <Box sx={boxSx(active === 'intervencion')}>
-            {view.intervencion}
+            {historial ? historial.intervencionClinica : view.intervencion}
           </Box>
         </Grid>
       </Grid>
       <Stack my={2}>
-        <Button variant="contained">
+        {!historial && <Button variant="contained" onClick={() => onGuardarHistorialClick()}>
             Guardar Informacion
-        </Button>
+        </Button>}
       </Stack>
     </Box>
   );

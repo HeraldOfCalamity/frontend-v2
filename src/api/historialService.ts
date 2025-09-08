@@ -65,7 +65,7 @@ const HISTORIAL_ROUTE = "historiales/";
 export async function crearHistorial(data: CreateHistorialReq) {
   try {
     const res = await api.post(`${HISTORIAL_ROUTE}`, data);
-    return res.data as { ok: boolean; id: string };
+    return res.data;
   } catch (err: any) {
     handleError(err, "Error al crear historial clínico");
   }
@@ -93,7 +93,7 @@ export async function getHistorialesPorPaciente(pacienteId: string) {
 export async function agregarEntrada(historialId: string, data: AddEntradaReq) {
   try {
     const res = await api.post(`${HISTORIAL_ROUTE}${historialId}/entradas`, data);
-    return res.data as { ok: boolean; entradaId?: string };
+    return res.data
   } catch (err: any) {
     handleError(err, "Error al agregar entrada al historial");
   }
@@ -118,10 +118,10 @@ export async function adjuntarImagenesAEntrada(
 /** ===== Subida de imágenes (R2) ===== */
 export async function presignUploadImagen(params: {
   paciente_id: string;
-  historialId?: string;
-  entradaId?: string | null;
+  historial_id?: string;
+  entrada_id?: string | null;
   filename: string;
-  contentType: string; // "image/webp" o "application/octet-stream"
+  content_type: string; // "image/webp" o "application/octet-stream"
 }) {
   try {
     const res = await api.post(`${HISTORIAL_ROUTE}upload/presign`, params);

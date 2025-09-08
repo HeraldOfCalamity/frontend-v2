@@ -21,14 +21,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
     const [loading, setLoading] = useState(false);
     const [citas, setCitas] = useState<Cita[]>([]);
     const [openAtencion, setOpenAtencion] = useState(false);
-    const [selectedPacienteProfile, setSelectedPacienteProfile] = useState<PacienteWithUser>({
-        paciente: {
-
-        },
-        user: {
-
-        }
-    })
+    const [selectedPacienteProfile, setSelectedPacienteProfile] = useState<PacienteWithUser>()
     
 
     const obtenerCitasEspecialista = async () => {
@@ -81,7 +74,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
                     <HistorialDialog
                         onClose={() => setOpenAtencion(false)}
                         open={openAtencion}
-                        pacienteProfile={selectedPacienteProfile}
+                        pacienteProfile={selectedPacienteProfile as PacienteWithUser}
                     />
                 </SpeechProvider>
             </Box>

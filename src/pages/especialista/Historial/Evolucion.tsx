@@ -1,139 +1,22 @@
-import { AddCircleOutline, Mic, MicOff } from "@mui/icons-material";
+import { AddCircleOutline, AddPhotoAlternate, Mic, MicOff } from "@mui/icons-material";
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
-  Grid, Stack, Typography, useMediaQuery, useTheme, InputLabel,
-  Link
+  Grid, Stack, Typography, useMediaQuery, useTheme, InputLabel
 } from "@mui/material";
-import GenericTable, { type Column } from "../../../components/common/GenericTable";
+import GenericTable, { type Column, type TableAction } from "../../../components/common/GenericTable";
 import dayjs from "dayjs";
 import ImagePreviewDialog from "../../../components/common/ImagePreviewDialog";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
-import InputFileUpload from "../../../components/InputFileUpload";
-import type { HistorialClinico } from "../../../api/historialService";
-
-interface Entrada{
-  id: string,
-  createdAt: string,
-  recursosTerapeuticos: string,
-  evolucionText: string,
-  evolucionImage?: string
-}
-
-const entries: Entrada[] = [
-  {
-    id: 'EV-2025-08-15-001',
-    createdAt: '2025-08-15',
-    recursosTerapeuticos: 'Evaluación inicial, educación del paciente, higiene postural',
-    evolucionText: `S: Refiere dolor anterior de rodilla derecha 7/10 (EVA) post actividad.
-O: Tumefacción leve, T° normal, ROM flex 110°, ext -5°, fuerza cuad 3/5.
-A: Síndrome femoropatelar probable; déficit de control proximal y extensores.
-P: Educar sobre carga, hielo 10’, ejercicios isométricos de cuádriceps (3x10), PUCP domiciliario.`,
-    evolucionImage: 'https://picsum.photos/seed/ev1/800/600'
-  },
-  {
-    id: 'EV-2025-08-18-002',
-    createdAt: '2025-08-18',
-    recursosTerapeuticos: 'TENS analgésico, crioterapia, movilización patelar grado I-II',
-    evolucionText: `S: Dolor disminuyó a 6/10. Sensación de rigidez matutina.
-O: ROM flex 115°, ext -3°. Test compresión patelar (+) leve. Marcha antálgica leve.
-A: Respuesta favorable al control de dolor; persiste hipomovilidad patelar.
-P: TENS 15’, crioterapia 10’, movilización patelar, isométricos + straight leg raise (3x10).`,
-  },
-  {
-    id: 'EV-2025-08-20-003',
-    createdAt: '2025-08-20',
-    recursosTerapeuticos: 'Ultrasonido 3 MHz, activación VM, estiramientos isquios',
-    evolucionText: `S: Dolor 5/10 tras subir escaleras.
-O: ROM flex 120°, ext 0°. VMO con retraso de activación. Balance unipodal 10 s.
-A: Mejora del rango y dolor; déficit de control medial patelar.
-P: US 6’, activación VMO con biofeedback, mini sentadillas 0–30° (3x12), estiramiento isquios.`,
-  },
-  {
-    id: 'EV-2025-08-22-004',
-    createdAt: '2025-08-22',
-    recursosTerapeuticos: 'Terapia manual (liberación miofascial), kinesiotaping patelar',
-    evolucionText: `S: Reporta alivio al caminar, dolor 4/10.
-O: Menor hipertonía en vasto lateral; tracking patelar mejora con taping.
-A: Buena respuesta a control de vectores patelares.
-P: Liberación VL, tape correctivo, puente glúteo (3x12), clam shells con banda (3x15).`,
-    evolucionImage: 'https://picsum.photos/seed/ev2/800/600'
-  },
-  {
-    id: 'EV-2025-08-24-005',
-    createdAt: '2025-08-24',
-    recursosTerapeuticos: 'Propiocepción, bosu, excéntricos de cuádriceps',
-    evolucionText: `S: Dolor 3/10 al agacharse prolongado.
-O: Balance unipodal 20 s, control valgo dinámico leve en sentadilla.
-A: Progresar a trabajo excéntrico y control de rodilla en plano frontal.
-P: Sentadilla a caja (3x10), step-down 15 cm (3x8), propiocepción en bosu 3x30 s.`,
-  },
-  {
-    id: 'EV-2025-08-26-006',
-    createdAt: '2025-08-26',
-    recursosTerapeuticos: 'Bicicleta estática, termoterapia pre-ejercicio',
-    evolucionText: `S: Toleró tareas domésticas sin aumento de dolor >3/10.
-O: ROM completo sin dolor final; fuerza cuad 4-/5.
-A: Aumentar volumen y controlar técnica.
-P: Calentamiento 8’, sentadilla goblet ligera (3x10), puente unilateral (3x10), estiramientos 5’.`,
-  },
-  {
-    id: 'EV-2025-08-28-007',
-    createdAt: '2025-08-28',
-    recursosTerapeuticos: 'Reeducación de marcha, ejercicios de cadena posterior',
-    evolucionText: `S: Dolor 2/10 al final del día.
-O: Cadencia y zancada simétricas; leve caída de pelvis contralateral.
-A: Déficit de estabilidad pelviana; foco en glúteo medio.
-P: Marcha consciente, monster walks (3x12), step-up lateral (3x10), control de valgo frente a espejo.`,
-  },
-  {
-    id: 'EV-2025-08-30-008',
-    createdAt: '2025-08-30',
-    recursosTerapeuticos: 'Punción seca (VL), crioterapia post-intervención',
-    evolucionText: `S: Dolor puntual 3/10 al bajar escaleras.
-O: Trigger Points en VL disminuyen tras punción; mejora tracking funcional.
-A: Descarga miofascial efectiva; mantener progresión.
-P: Punción seca selectiva, crioterapia 10’, excéntricos de cuádriceps en inclinación (3x8).`,
-    evolucionImage: 'https://picsum.photos/seed/ev3/800/600'
-  },
-  {
-    id: 'EV-2025-09-02-009',
-    createdAt: '2025-09-02',
-    recursosTerapeuticos: 'Circuito funcional, pliometría baja, propiocepción avanzada',
-    evolucionText: `S: Sin dolor en AVDs; 1–2/10 post ejercicio intenso.
-O: Step-down con buen control; salto bipodal suave sin dolor.
-A: Listo para reintroducción gradual de impacto.
-P: Skips suaves, saltos bipodales controlados (3x8), aterrizajes con énfasis en alineación.`,
-  },
-  {
-    id: 'EV-2025-09-03-010',
-    createdAt: '2025-09-03',
-    recursosTerapeuticos: 'Entrenamiento de fuerza progresiva, control neuromuscular',
-    evolucionText: `S: Se siente confiado; dolor 0–1/10.
-O: Fuerza cuad 4/5; test Y-balance dentro del 90% bilateral.
-A: Continuar progresión de carga y impacto controlado.
-P: Sentadilla 40–50% 1RM (3x8), zancadas caminando (3x12), saltos en línea (3x6).`,
-  },
-  {
-    id: 'EV-2025-09-04-011',
-    createdAt: '2025-09-04',
-    recursosTerapeuticos: 'Taping preventivo, educación en retorno a la actividad',
-    evolucionText: `S: Dolor 0/10 en reposo, 1/10 post carrera suave 10’.
-O: Técnica de carrera aceptable; no hay derrame.
-A: Alta funcional parcial con plan de retorno gradual.
-P: Correr 2’/caminar 1’ x 6 rep, fuerza 2 días/sem, movilidad diaria.`,
-    evolucionImage: 'https://picsum.photos/seed/ev4/800/600'
-  },
-  {
-    id: 'EV-2025-09-05-012',
-    createdAt: '2025-09-05',
-    recursosTerapeuticos: 'Reevaluación, actualización de plan domiciliario (HEP)',
-    evolucionText: `S: Asintomático en AVDs; tolera escaleras sin dolor.
-O: Fuerza cuad 4+/5, ROM completo, balance unipodal 30 s estable.
-A: Objetivos a corto plazo cumplidos; continuar consolidación.
-P: HEP 4–6 semanas: fuerza 2–3x/sem, impacto bajo progresivo, chequeo en 3 semanas.`,
-  }
-];
+import type { Entrada, HistorialClinico } from "../../../api/historialService";
+import {
+  presignUploadImagen,
+  registrarImagen,
+  getSignedImageUrl,
+  agregarEntrada as agregarEntradaService,
+} from "../../../api/historialService";
+import { compressToWebp } from "../../../utils/evoImage";
+import Swal from "sweetalert2";
 
 /* ========= Campos y estado de dictado en el diálogo ========= */
 type EvoField = 'recursos' | 'evolucion';
@@ -193,25 +76,32 @@ const RE_DICTAR_EVOLUCION = new RegExp(
 );
 
 interface EvolucionProps{
-  historial: HistorialClinico
+  historial: HistorialClinico,
+  onAddEntry: (hist: HistorialClinico) => void
 }
 
-export default function Evolucion({
-  historial
-}: EvolucionProps){
+export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Estado tabla (partimos de las entradas del historial)
+  const [rows, setRows] = useState<Entrada[]>(historial?.entradas ?? []);
+
+  // Imagen / preview dialog
   const [selectedImage, setSelectedImage] = useState('');
   const [openImage, setOpenImage] = useState(false);
+
+  // Diálogo para agregar entrada (solo texto)
   const [openAddEntry, setOpenAddEntry] = useState(false);
 
+  // ===== Speech =====
   const {
     listening, dictationEnabled, start, stop,
     transcript, interimTranscript,
     enableDictation, disableDictation, resetAllTranscripts
   } = useSpeech();
 
-  // ===== Estado de ruteo por campo (dentro del diálogo) =====
+  // Campo activo
   const [active, setActive] = useState<EvoField>('recursos');
   const [store, setStore] = useState<Store>({ recursos: "", evolucion: "" });
 
@@ -220,21 +110,6 @@ export default function Evolucion({
     recursos: transcript.length,
     evolucion: transcript.length
   });
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = reader.result as string;
-                // Aquí puedes guardarlo en el estado, o mandarlo directo en el submit:
-                // setPreview(base64String);
-                // setValue("image", base64String);
-                setSelectedImage(base64String)
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
   // detectar ON->OFF para consolidar lo hablado en curso
   const prevDictRef = useRef(dictationEnabled);
@@ -278,7 +153,7 @@ export default function Evolucion({
     } as Store;
   }, [store, active, dictationEnabled, transcript]);
 
-  // ===== Registrar comandos locales (porque Anamnesis se desmonta) =====
+  // ===== Registrar comandos locales =====
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
 
   const evoCommands = useMemo(() => ([
@@ -293,7 +168,7 @@ export default function Evolucion({
     { command: RE_DICTAR_RECURSOS,  matchInterim: false, bestMatchOnly: true, callback: () => execFinal.schedule(() => selectField('recursos')) },
     { command: RE_DICTAR_EVOLUCION, matchInterim: false, bestMatchOnly: true, callback: () => execFinal.schedule(() => selectField('evolucion')) },
 
-    // Limpieza total por voz (reseteo de provider + campos locales)
+    // Limpieza total por voz
     {
       command: 'limpiar dictado',
       matchInterim: false,
@@ -308,7 +183,199 @@ export default function Evolucion({
 
   useSpeechCommands(evoCommands, [evoCommands]);
 
-  // ===== UI =====
+  /* ============ Subida de imágenes (desde acción de la tabla) ============ */
+  const pacienteId = historial?.paciente_id || (historial as any)?.pacienteId || "";
+  const historialId = historial?.id || (historial as any)?._id || "";
+
+  // Modal para “Agregar imagen” a una entrada concreta
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [targetEntry, setTargetEntry] = useState<Entrada | null>(null);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+  const [imageIds, setImageIds] = useState<string[]>([]);
+
+  // Cámara in-app (solo dentro del modal de imágenes)
+  const [openCam, setOpenCam] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } }, audio: false
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" }, audio: false
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    }
+  }
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+  }
+  async function handleOpenCam() {
+    setOpenCam(true);
+    await startCamera();
+  }
+  function handleCloseCam() {
+    stopCamera();
+    setOpenCam(false);
+  }
+  async function handleTakePhoto() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !targetEntry) return;
+
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    if (w === 0 || h === 0) return;
+
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, w, h);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      console.log('id entrada handle take photo', targetEntry.id)
+      await processAndUploadToEntry(blob, "camera.jpg", targetEntry.id);
+      handleCloseCam();
+    }, "image/jpeg", 0.92);
+  }
+  useEffect(() => () => stopCamera(), []);
+
+  // Reusa lógica para archivos/blobs → sube a la entrada target
+  async function processAndUploadToEntry(fileOrBlob: File | Blob, filename = "photo.jpg", entryId?: string) {
+    console.log('entry id', entryId)
+    try {
+      if (!historialId || !pacienteId || !entryId) { alert("Falta historial, paciente o entrada"); return; }
+
+      const file = fileOrBlob instanceof File
+        ? fileOrBlob
+        : new File([fileOrBlob], filename, { type: (fileOrBlob as Blob).type || "image/jpeg" });
+
+      const { blob, width, height, type } = await compressToWebp(file);
+
+      // 1) presign
+      const pres = await presignUploadImagen({
+        paciente_id: pacienteId,
+        historial_id: historialId,
+        entrada_id: entryId,           // <- aquí vinculamos a la entrada
+        filename: file.name,
+        content_type: type,            // "image/webp"
+      });
+      if (!pres?.url || !pres.key) { alert("No se pudo obtener URL firmada"); return; }
+
+      // 2) PUT a R2
+      const put = await fetch(pres.url, {
+        method: "PUT",
+        headers: { "Content-Type": type },
+        body: blob,
+      });
+      if (!put.ok) { alert("Error subiendo a R2"); return; }
+
+      // 3) registrar en backend
+      const reg = await registrarImagen({
+        paciente_id: pacienteId,
+        historialId,
+        entradaId: entryId,
+        key: pres.key,
+        width, height,
+        size: blob.size,
+        originalName: file.name,
+        originalType: type,
+      });
+      if (!reg?.ok) { alert("No se pudo registrar la imagen"); return; }
+
+      setImageIds(prev => [...prev, reg.imageId]);
+
+      // 4) preview firmado y actualización de fila
+      const sg = await getSignedImageUrl(pres.key);
+      if (sg?.url) setImagePreviewUrls(prev => [...prev, sg.url]);
+
+      // Actualiza la fila localmente (si la entrada tiene un arreglo images)
+      setRows(prev => prev.map(e =>
+        e.id === entryId
+          ? ({ ...e, images: Array.isArray((e as any).images) ? [ ...(e as any).images, { key: pres.key } ] : [{ key: pres.key }] })
+          : e
+      ));
+    } catch (err: any) {
+      Swal.fire('Error', `${err}`, 'error');
+    }
+  }
+
+  async function onPickImagesForEntry(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!targetEntry) return;
+    const files = Array.from(e.target.files || []);
+    for (const f of files) await processAndUploadToEntry(f, f.name, targetEntry.id);
+    e.target.value = ""; // permite volver a seleccionar la misma foto
+  }
+
+  function openImageModalFor(entry: Entrada) {
+    setTargetEntry(entry);
+    setImageIds([]);
+    setImagePreviewUrls([]);
+    setImageModalOpen(true);
+  }
+  function closeImageModal() {
+    setImageModalOpen(false);
+    setTargetEntry(null);
+    setImageIds([]);
+    setImagePreviewUrls([]);
+    // por si quedó la cámara abierta
+    if (openCam) handleCloseCam();
+  }
+
+  /* ============ Guardar entrada (texto) ============ */
+  async function onGrabarEntrada() {
+    try{
+      if (!historialId) return;
+      commitActive();
+
+      const payload = {
+        recursosTerapeuticos: cleanCommandsLater(view.recursos),
+        evolucionText:        cleanCommandsLater(view.evolucion),
+        imageIds: [], // ← ahora las imágenes se agregan a posteriori por acción de tabla
+      };
+
+      const res = await agregarEntradaService(historialId, payload);
+      if (res) {
+        await Swal.fire('Éxito','Se agregó una nueva entrada al historial','success');
+        setStore({ recursos: "", evolucion: "" });
+        anchorsRef.current.recursos = transcript.length;
+        anchorsRef.current.evolucion = transcript.length;
+
+        // Añade la nueva entrada al inicio
+        // const newEntry: Entrada = res.entry ?? {
+        //   id: res.entryId ?? `ev_${Date.now()}`,
+        //   createdAt: new Date().toISOString(),
+        //   recursosTerapeuticos: payload.recursosTerapeuticos,
+        //   evolucionText: payload.evolucionText,
+        // } as Entrada;
+
+        // setRows(prev => [newEntry, ...prev]);
+        onAddEntry(res)
+        setOpenAddEntry(false);
+      }
+    }catch(err: any){
+      Swal.fire('Error', `${err}`, 'error');
+    }
+  }
+
+  /* ===== UI ===== */
   const columns: Column<Entrada>[] = [
     {
       field: 'recursosTerapeuticos',
@@ -321,14 +388,14 @@ export default function Evolucion({
       )
     },
     {
-      field: 'craetedAt',
+      field: 'createdAt',
       headerName: 'Fecha',
       align: 'center',
       render: (v) => dayjs(v).format('DD/MM/YYYY')
     },
     {
       field: 'evolucionText',
-      headerName: 'Evolucion del tratamiento',
+      headerName: 'Evolución del tratamiento',
       align: 'center',
       render: (v) => (
         <Box maxHeight={'14vh'}>
@@ -337,18 +404,26 @@ export default function Evolucion({
       )
     },
     {
-      field: 'evolucionImage',
+      field: 'images',
       headerName: 'Imagen',
       align: 'center',
-      render: (v) => v ? (
-        <Button
-          onClick={() => { setSelectedImage(`${v}`); setOpenImage(true); }}
-          variant="text"
-        >
-          Ver Imagen
-        </Button>
+      render: (imgs) => Array.isArray(imgs) && imgs.length ? (
+        <Button onClick={async () => {
+          const url = await getSignedImageUrl(imgs[0].key).then(r=>r?.url);
+          if (url) { setSelectedImage(url); setOpenImage(true); }
+        }} variant="text">Ver Imagen</Button>
       ) : 'Sin Imagen'
     },
+  ];
+
+  // 👉 Acción en la tabla: abrir modal para agregar imágenes a esa entrada
+  const actions: TableAction<Entrada>[] = [
+    {
+      icon: <AddPhotoAlternate />,
+      label: 'Agregar Imagen',
+      color: 'secondary',
+      onClick: (entry) => openImageModalFor(entry),
+    }
   ];
 
   const boxSx = (isActive: boolean) => ({
@@ -359,10 +434,6 @@ export default function Evolucion({
     p: 1,
     whiteSpace: 'pre-wrap',
   });
-
-  useEffect(() => {
-    console.log('historial evolucion', historial)
-  }, [])
 
   return (
     <>
@@ -378,21 +449,18 @@ export default function Evolucion({
             Agregar Entrada
           </Button>
         </Stack>
-        <GenericTable columns={columns} data={entries} />
+        <GenericTable columns={columns} data={rows} actions={actions}/>
       </Box>
 
+      {/* Preview de imagen (al ver imágenes de la tabla) */}
       <ImagePreviewDialog
         open={openImage}
         onClose={() => setOpenImage(false)}
         image={selectedImage}
       />
 
-      <Dialog
-        maxWidth={"md"}
-        fullWidth
-        open={openAddEntry}
-        onClose={() => setOpenAddEntry(false)}
-      >
+      {/* Diálogo para crear una entrada (SOLO TEXTO) */}
+      <Dialog maxWidth={"md"} fullWidth open={openAddEntry} onClose={() => setOpenAddEntry(false)}>
         <DialogContent>
           <DialogTitle>Agregar Registro de Evolución</DialogTitle>
 
@@ -405,7 +473,6 @@ export default function Evolucion({
             <Button
               variant="outlined"
               onClick={() => {
-                // Limpieza manual (post) de ambos campos
                 setStore(prev => ({
                   recursos:  cleanCommandsLater(prev.recursos),
                   evolucion: cleanCommandsLater(prev.evolucion),
@@ -462,41 +529,76 @@ export default function Evolucion({
                 </Box>
               </Grid>
             </Grid>
-            <Stack mt={1} spacing={1}>
-                <InputLabel>Fotografia</InputLabel>
-                <InputFileUpload
-                    label="Subir Captura" 
-                    handleChange={handleImageChange} 
-                    accept="image/"
-                    color="secondary"
-                    // disabled={isDisabled('image')}
-                    variant={'outlined'}
-                />
-                {selectedImage && <Link 
-                    component={'button'} 
-                    type="button"
-                    color="secondary"
-                    textAlign={'center'} 
-                    onClick={() => setOpenImage(true)}>
-                    Ver imagen cargada
-                </Link>}
-            </Stack>
+
+            {/* ⛔️ Quitamos los botones de imágenes de aquí */}
           </Box>
         </DialogContent>
 
         <DialogActions>
-          <Button variant="contained" color="success">
+          <Button variant="contained" color="success" onClick={onGrabarEntrada}>
             Grabar
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => setOpenAddEntry(false)}
-          >
+          <Button variant="contained" color="error" onClick={() => setOpenAddEntry(false)}>
             Cancelar
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Diálogo: Agregar imágenes a una entrada (desde acción de tabla) */}
+      <Dialog maxWidth="sm" fullWidth open={imageModalOpen} onClose={closeImageModal}>
+        <DialogTitle>
+          Agregar imágenes {targetEntry ? `a la entrada #${targetEntry.id}` : ""}
+        </DialogTitle>
+        <DialogContent>
+          <Stack direction="row" spacing={2} flexWrap="wrap" mb={1}>
+            <Button variant="outlined" component="label">
+              Adjuntar imágenes
+              <input hidden accept="image/*" multiple type="file" onChange={onPickImagesForEntry} />
+            </Button>
+
+            <Button variant="outlined" component="label">
+              Cámara (sistema móvil)
+              <input hidden accept="image/*" capture="environment" type="file" onChange={onPickImagesForEntry} />
+            </Button>
+
+            <Button variant="outlined" onClick={handleOpenCam}>
+              Cámara en la app
+            </Button>
+          </Stack>
+
+          {imagePreviewUrls.length > 0 && (
+            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mt: 1 }}>
+              {imagePreviewUrls.map((u, i) => (
+                <img key={i} src={u} alt="" style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }} />
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeImageModal} variant="contained">Listo</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Sub-diálogo: Cámara en la app (invocado desde el modal de imágenes) */}
+      <Dialog open={openCam} onClose={handleCloseCam} fullWidth maxWidth="sm">
+        <DialogTitle>Tomar foto</DialogTitle>
+        <DialogContent>
+          <Box sx={{ position: "relative" }}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              style={{ width: "100%", borderRadius: 8, background: "#000" }}
+            />
+            <canvas ref={canvasRef} style={{ display: "none" }} />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCam} color="inherit">Cancelar</Button>
+          <Button onClick={handleTakePhoto} variant="contained">Tomar</Button>
+        </DialogActions>
+      </Dialog>
     </>
-  )
+  );
 }

@@ -17,7 +17,7 @@ const HomeRedirect: React.FC = () => {
         <CircularProgress />
       ) : (
         <Stack spacing={2}>
-          <Box
+          {/* <Box
             sx={{
               bgcolor: 'transparent',
               borderRadius: 2,
@@ -43,7 +43,7 @@ const HomeRedirect: React.FC = () => {
 
               </Grid>
             </Grid>
-          </Box>
+          </Box> */}
 
           <Box sx={{
               background: theme =>  `linear-gradient(to left, transparent 0%, ${theme.palette.background.default} 50%, transparent 100%)`,
@@ -53,12 +53,7 @@ const HomeRedirect: React.FC = () => {
           </Box>
 
 
-          <Box sx={{
-              background: theme =>  `linear-gradient(to right, ${theme.palette.background.default} 0%, transparent 100%)`,
-              borderRadius: 2
-            }} bgcolor={theme => theme.palette.background.default} minHeight={'70vh'}> {/** Presentación */}
 
-          </Box>
         </Stack>
       )}
     </Box>
