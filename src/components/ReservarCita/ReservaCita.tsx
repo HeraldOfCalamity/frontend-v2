@@ -93,6 +93,7 @@ export default function ReservaCita({
         {
             title:'Seleccion de fecha y hora', 
             component: <ReservarCitaPaso2 
+                paciente={paciente}
                 especialista={especialista?.especialista || {}}
                 onSelect={handlePaso2Complete}
             />

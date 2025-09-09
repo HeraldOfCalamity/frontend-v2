@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Stack, Typography } from "@mui/material";
 import type { Disponibilidad, Especialista } from "../../api/especialistaService";
 import { useEffect, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
@@ -9,6 +9,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isBetween from "dayjs/plugin/isBetween";
 import { useConfig } from "../../context/ParameterContext";
+import type { PacienteWithUser } from "../../api/pacienteService";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
@@ -16,11 +17,13 @@ dayjs.extend(isSameOrBefore);
 
 interface ReservarCitaPaso2Props{
   especialista: Partial<Especialista>;
+  paciente: Partial<PacienteWithUser>;
   onSelect: (fecha: string, hora: string) => void;
 }
 
 export default function ReservarCitaPaso2({
   especialista,
+  paciente,
   onSelect
 }: ReservarCitaPaso2Props) {
   const [fecha, setFecha] = useState<Dayjs | null>(null);
@@ -28,11 +31,13 @@ export default function ReservarCitaPaso2({
   const {getParam} = useConfig();
   const [citas, setCitas] = useState<Cita[]>([]);
   const [_slotsDisponibles, _setSlotsDisponibles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false)
 
  
 
   useEffect(() => {
     const citasEspecialista = async () => {
+      setLoading(true)
       try{
         const citasEspecialista = await getCitasByEspecialista(especialista.id || '');
         setCitas(citasEspecialista || []);
@@ -43,13 +48,37 @@ export default function ReservarCitaPaso2({
           icon:'error',
           topLayer: true
         })
+      }finally{
+        setLoading(false)
       }
     }
 
     if(especialista.id) citasEspecialista();
   }, [especialista])
 
-  const diasDisponibles = (especialista.disponibilidades || []).map(d => d.dia);
+  
+  const isInDisponibilidad = (date: Dayjs) => {
+    const diaModelo = date.day();
+    const diasDisponibles = (especialista.disponibilidades || []).map(d => d.dia);
+    return diasDisponibles.includes(diaModelo);
+  }
+
+  const isDateDisabled = (date:  Dayjs): boolean => {
+    const inDisponibilidad = isInDisponibilidad(date);
+    const inReserved = isInReservedCitas(date);
+    return !inDisponibilidad || inReserved;
+  }
+
+  const isInReservedCitas = (date: Dayjs) => {
+    const targetDate = date.date();
+    
+    return citas.some(c => 
+      c.pacienteProfile?.paciente.id === paciente.paciente?.id &&
+      c.estado.nombre !== 'cancelada' && 
+      c.estado.nombre !== 'atendida' &&
+      dayjs(c.fecha_inicio).date() === targetDate
+    );
+  };
 
   useEffect(() => {
     if(fecha && especialista.disponibilidades){
@@ -91,9 +120,10 @@ export default function ReservarCitaPaso2({
           value={fecha}
           onChange={setFecha}
           disablePast
+          loading={loading}
+          renderLoading={() => <CircularProgress />}
           shouldDisableDate={data => {
-            const diaModelo = data.day();
-            return !diasDisponibles.includes(diaModelo);
+            return isDateDisabled(data)
           }}
         />
         {fecha && (
