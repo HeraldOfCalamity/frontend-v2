@@ -45,11 +45,11 @@ export default function OfficeConfigForm({
                     return ['0', '1'].includes(value) ? true : 'El valor debe ser "0" o "1"';
                 }
 
-            case "confirmacion_automatica_admin":
-                return (value: string | undefined) => {
-                    if (value === undefined) return 'El valor no puede ser vacío';
-                    return ['0', '1'].includes(value) ? true : 'El valor debe ser "0" o "1"';
-                }
+            // case "confirmacion_automatica_admin":
+            //     return (value: string | undefined) => {
+            //         if (value === undefined) return 'El valor no puede ser vacío';
+            //         return ['0', '1'].includes(value) ? true : 'El valor debe ser "0" o "1"';
+            //     }
                 
             case "confirmacion_automatica":
                 return (value: string | undefined) => {
@@ -72,6 +72,11 @@ export default function OfficeConfigForm({
                     if(parsed > 60) return 'El valor ingresado debe ser menor que 60';
 
                     return true;
+                }
+            case 'restringir_atencion_horario':
+                return (value: string | undefined) => {
+                    if (value === undefined) return 'El valor no puede ser vacío';
+                    return ['0', '1'].includes(value) ? true : 'El valor debe ser "0" o "1"';
                 }
             default:
                 return undefined;

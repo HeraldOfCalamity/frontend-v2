@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isBetween from "dayjs/plugin/isBetween";
+import { useConfig } from "../context/ParameterContext";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isBetween);
@@ -41,6 +42,8 @@ export default function CalendarioCitas({
     const [loading, setLoading] = useState(false);
     const hasRun = useRef(false);
     const theme = useTheme()
+    const {getParam} = useConfig()
+
     
 
     const min = useMemo(() => dayjs().hour(8).minute(0).second(0).toDate(), []);
@@ -201,10 +204,11 @@ export default function CalendarioCitas({
     }
 
     const isBetweenInicioFin = (inicio: string| Date, fin: string|Date): boolean => {
-        return dayjs().isBetween(dayjs(inicio), dayjs(fin))
+        const strictAttentionOn = getParam('restringir_atencion_horario') === '1'
+
+        return strictAttentionOn ? dayjs().isBetween(dayjs(inicio), dayjs(fin)) : true
     }
 
-    
     return(
         <>
             <Paper 
