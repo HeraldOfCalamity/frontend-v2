@@ -6,13 +6,13 @@ import { Calendar, Views, type View } from "react-big-calendar";
 import { localizer } from "../utils/calendarLocalazer";
 import Swal from "sweetalert2";
 import { useAuth } from "../context/AuthContext";
-import { useUserProfile } from "../context/userProfileContext";
-import type { Especialista } from "../api/especialistaService";
-import { AddCircleOutline, ReplayOutlined } from "@mui/icons-material";
-import type { Paciente, PacienteWithUser } from "../api/pacienteService";
-import BuscarEspecialidad from "./admin/BuscarEspecialidad";
-import type { Especialidad } from "../api/especialidadService";
-import ReservaCita from "./ReservarCita/ReservaCita";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isBetween from "dayjs/plugin/isBetween";
+
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isBetween);
+dayjs.extend(isSameOrBefore);
 
 interface CalendarioCitaProps {
     defaultView?: View;
@@ -200,6 +200,10 @@ export default function CalendarioCitas({
         }
     }
 
+    const isBetweenInicioFin = (inicio: string| Date, fin: string|Date): boolean => {
+        return dayjs().isBetween(dayjs(inicio), dayjs(fin))
+    }
+
     
     return(
         <>
@@ -308,7 +312,10 @@ export default function CalendarioCitas({
                             Confirmar Cita
                         </Button>
                     )}
-                    {selectedEvent?.estado.nombre === 'confirmada' && user?.role==='especialista' && (
+                    {selectedEvent?.estado.nombre === 'confirmada' 
+                        && user?.role==='especialista'
+                        && isBetweenInicioFin(selectedEvent.fecha_inicio, selectedEvent.fecha_fin) 
+                        && (
                         <Button
                             variant="contained"
                             color="primary"

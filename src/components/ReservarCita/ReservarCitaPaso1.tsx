@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getEspecialistasByEspecialidadId, type Especialista, type EspecialistaWithUser } from "../../api/especialistaService";
 import type { Especialidad } from "../../api/especialidadService";
 import Swal from "sweetalert2";
-import { Box, Card, CardActionArea, CardContent, CardMedia, Divider, Grid, Skeleton, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Card, CardActionArea, CardContent, CardMedia, CircularProgress, Divider, Grid, Skeleton, Stack, Typography, useTheme } from "@mui/material";
 import { BASE_URL } from "../../config/benedetta.api.config";
 import { benedettaPink } from "../../config/theme.config";
 
@@ -19,15 +19,19 @@ export default function ReservarCitaPaso1({
 }: ReservarCitaPaso1Props) {
     const theme = useTheme();
     const [especialistas, setEspecialistas] = useState<EspecialistaWithUser[]>([]);
+    const [loading, setLoading] = useState(false);
 
 
     useEffect(() => {
         const obtenerEspecialistasPorEspecialidad = async () => {
+            setLoading(true)
             try{
                 const especialistas = await getEspecialistasByEspecialidadId(especialidad.id || '');
                 setEspecialistas(especialistas);
             }catch(err: any){
                 Swal.fire('Error', `${err}`, 'error');
+            }finally{
+                setLoading(false)
             }
         }
         if(especialidad.id){
@@ -43,7 +47,11 @@ export default function ReservarCitaPaso1({
     return (
         <Box sx={{overflowY: 'scroll'}}>
             <Grid justifyContent={'space-around'} container spacing={1}>
-                {especialistas.map(esp => (
+                {loading ? (
+                    <Box display={'flex'} justifyContent={'center'} alignItems={'center'} flexGrow={1}>
+                        <CircularProgress color="secondary"/>
+                    </Box>
+                ) : especialistas.map(esp => (
                     <Grid size={{lg: 4, md: 6, xs: 12}} key={esp.especialista.id}>
                         <Card sx={{
                                 m:1,
