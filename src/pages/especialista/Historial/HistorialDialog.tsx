@@ -26,6 +26,7 @@ import {
   getHistorialesPorPaciente,
   type HistorialClinico,
 } from "../../../api/historialService";
+import dayjs from "dayjs";
 
 interface HistorialDialogProps {
   open: boolean;
@@ -201,7 +202,7 @@ export default function HistorialDialog({
                   <TextField
                     variant="standard"
                     fullWidth
-                    value={"HC218973"}
+                    value={historial?._id}
                     slotProps={{ input: { readOnly: true } }}
                   />
                 </Grid>
@@ -210,7 +211,7 @@ export default function HistorialDialog({
                   <TextField
                     variant="standard"
                     fullWidth
-                    value={"Leonardo Rene Eguino Vasquez"}
+                    value={`${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`}
                     slotProps={{ input: { readOnly: true } }}
                   />
                 </Grid>
@@ -219,7 +220,9 @@ export default function HistorialDialog({
                   <TextField
                     variant="standard"
                     fullWidth
-                    value={"22"}
+                    value={
+                      dayjs().year() - dayjs(pacienteProfile?.paciente.fecha_nacimiento).year()
+                    }
                     slotProps={{ input: { readOnly: true } }}
                   />
                 </Grid>
@@ -228,11 +231,11 @@ export default function HistorialDialog({
                   <TextField
                     variant="standard"
                     fullWidth
-                    value={"1/8/2002"}
+                    value={dayjs(pacienteProfile?.paciente.fecha_nacimiento).format('DD/MM/YYYY')}
                     slotProps={{ input: { readOnly: true } }}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, md: 4 }}>
+                {/* <Grid size={{ xs: 6, md: 4 }}>
                   <InputLabel>Estado Civil</InputLabel>
                   <TextField
                     variant="standard"
@@ -240,17 +243,17 @@ export default function HistorialDialog({
                     value={"Casado"}
                     slotProps={{ input: { readOnly: true } }}
                   />
-                </Grid>
+                </Grid> */}
                 <Grid size={{ xs: 6, md: 4 }}>
                   <InputLabel>C.I.</InputLabel>
                   <TextField
                     variant="standard"
                     fullWidth
-                    value={"8998787"}
+                    value={pacienteProfile?.user.ci}
                     slotProps={{ input: { readOnly: true } }}
                   />
                 </Grid>
-                <Grid size={{ xs: 6, md: 4 }}>
+                {/* <Grid size={{ xs: 6, md: 4 }}>
                   <InputLabel>Sexo</InputLabel>
                   <TextField
                     variant="standard"
@@ -258,8 +261,8 @@ export default function HistorialDialog({
                     value={"M"}
                     slotProps={{ input: { readOnly: true } }}
                   />
-                </Grid>
-                <Grid size={{ xs: 6, md: 4 }}>
+                </Grid> */}
+                {/* <Grid size={{ xs: 6, md: 4 }}>
                   <InputLabel>Domicilio</InputLabel>
                   <TextField
                     variant="standard"
@@ -267,13 +270,13 @@ export default function HistorialDialog({
                     value={"Hermanos Sejas"}
                     slotProps={{ input: { readOnly: true } }}
                   />
-                </Grid>
+                </Grid> */}
                 <Grid size={{ xs: 6, md: 4 }}>
                   <InputLabel>Teléfono</InputLabel>
                   <TextField
                     variant="standard"
                     fullWidth
-                    value={"79725695"}
+                    value={pacienteProfile?.user.phone}
                     slotProps={{ input: { readOnly: true } }}
                   />
                 </Grid>
@@ -327,26 +330,6 @@ export default function HistorialDialog({
                   >
                     {selectedTab.name}
                   </Typography>
-
-                  <Stack direction={"row"} spacing={2} mb={2}>
-                    {selectedTab.name === "anamnesis" && (
-                      <Button
-                        fullWidth
-                        size="large"
-                        variant="contained"
-                        startIcon={<Mic />}
-                        onClick={() => handleStartDictaphone()}
-                      >
-                        Iniciar Dictado
-                      </Button>
-                    )}
-                  </Stack>
-
-                  {!isMicrophoneAvailable && (
-                    <Alert severity={"error"} sx={{ height: 50, mt: 1 }}>
-                      El micrófono no está disponible o sin permisos.
-                    </Alert>
-                  )}
 
                   {selectedTab.component}
                 </Box>

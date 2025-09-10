@@ -40,7 +40,7 @@ export interface AddEntradaReq {
 }
 
 export interface HistorialClinico {
-  id: string;
+  _id: string;
   paciente_id: string;
 //   cita_id?: string;
   antfamiliares: string;

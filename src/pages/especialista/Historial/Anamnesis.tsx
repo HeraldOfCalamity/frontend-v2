@@ -1,7 +1,9 @@
-import { Box, Grid, InputLabel, Stack, Typography, Button } from "@mui/material";
+import { Box, Grid, InputLabel, Stack, Typography, Button, Alert, useTheme } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useRef, useState, version } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import type { HistorialClinico } from "../../../api/historialService";
+import { Mic } from "@mui/icons-material";
+import Swal from "sweetalert2";
 
 /** Claves de los 4 campos */
 type FieldKey = "personales" | "familiares" | "condicion" | "intervencion";
@@ -115,14 +117,17 @@ export default function Anamnesis({
   const {
     transcript,
     interimTranscript,
+    isMicrophoneAvailable,
     dictationEnabled,
     resetAllTranscripts,
     enableDictation,
     disableDictation,
-    stop,
+    stop, start
   } = useSpeech();
 
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
+  const [canEdit, setCanEdit] = useState(false);
+  const theme = useTheme();
 
   // Campo activo
   const [active, setActive] = useState<FieldKey>("personales");
@@ -273,63 +278,139 @@ export default function Anamnesis({
         })
   }
 
+  const onEditHistorialClick = async () => {
+    const result = await Swal.fire({
+      title: 'Confirmar Modificación',
+      text: 'Está seguro de guardar los cambios? La operación no se puede deshacer.',
+      showCancelButton: true,
+      cancelButtonText: 'No',
+      cancelButtonColor: theme.palette.error.main,
+      confirmButtonText: 'Si, guardar los cambios',
+      confirmButtonColor: theme.palette.success.main,
+      icon: 'question',
+      // animation: true
+    })
+    if(result.isConfirmed){
+      setCanEdit(false)
+    }
+  }
+
+  const onDiscardChangesClick = () => {
+    setStore({
+      personales: historial.antPersonales,
+      familiares: historial.antfamiliares,
+      condicion: historial.condActual,
+      intervencion: historial.intervencionClinica,
+    })
+    setCanEdit(false)
+  }
+
   useEffect(() => {
-    console.log('historial anamnesis', historial)
+    setStore(prev => (historial ? {
+      condicion: historial.condActual,
+      familiares: historial.antfamiliares,
+      personales: historial.antPersonales,
+      intervencion: historial.intervencionClinica
+    }: {
+     ...prev 
+    }))
   }, [historial])
 
   return (
     <Box>
-      <Stack mb={2} direction="row" spacing={2} alignItems="center">
-        <div>
-          <InputLabel>Dictado (interim):</InputLabel>
-          <Typography>{interimTranscript}</Typography>
-        </div>
-        <Button variant="outlined" onClick={() => {
-          // Limpieza manual (a posteriori) de los 4 campos
-          setStore(prev => ({
-            personales:  cleanCommandsLater(prev.personales),
-            familiares:  cleanCommandsLater(prev.familiares),
-            condicion:   cleanCommandsLater(prev.condicion),
-            intervencion: cleanCommandsLater(prev.intervencion),
-          }));
-        }}>
-          Limpiar comandos (post)
-        </Button>
+      <Stack mb={2} direction="column" spacing={2} alignItems="center">
+          {(canEdit || !historial) && <Button
+            fullWidth
+            size="large"
+            variant="contained"
+            startIcon={<Mic />}
+            onClick={() => start({ language: "es-BO" })}
+          >
+            Iniciar Dictado
+          </Button>}
+        {!isMicrophoneAvailable && (
+          <Alert severity={"error"} sx={{ height: 50, mt: 1 }}>
+            El micrófono no está disponible o sin permisos.
+          </Alert>
+        )}
+        <Box display={'flex'} width={'100%'} alignItems={'center'} gap={2}>    
+            <Button variant="outlined" onClick={() => {
+              // Limpieza manual (a posteriori) de los 4 campos
+              setStore(prev => ({
+                personales:  cleanCommandsLater(prev.personales),
+                familiares:  cleanCommandsLater(prev.familiares),
+                condicion:   cleanCommandsLater(prev.condicion),
+                intervencion: cleanCommandsLater(prev.intervencion),
+              }));
+            }}>
+              Limpiar comandos (post)
+            </Button>
+          
+          
+            <InputLabel>Dictado (interim):</InputLabel>
+            <Typography>{interimTranscript}</Typography>
+          
+        </Box>
       </Stack>
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Antecedentes Personales</Typography>
           <Box sx={boxSx(active === 'personales')}>
-            {historial ? historial.antPersonales : view.personales}
+            {view.personales}
           </Box>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Antecedentes Familiares</Typography>
           <Box sx={boxSx(active === 'familiares')}>
-            {historial ? historial.antfamiliares : view.familiares}
+            {view.familiares}
           </Box>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Condición Actual</Typography>
           <Box sx={boxSx(active === 'condicion')}>
-            {historial ? historial.condActual : view.condicion}
+            {view.condicion}
           </Box>
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Intervención Clínica</Typography>
           <Box sx={boxSx(active === 'intervencion')}>
-            {historial ? historial.intervencionClinica : view.intervencion}
+            {view.intervencion}
           </Box>
         </Grid>
       </Grid>
-      <Stack my={2}>
-        {!historial && <Button variant="contained" onClick={() => onGuardarHistorialClick()}>
-            Guardar Informacion
-        </Button>}
+      <Stack my={2} width={'100%'} spacing={2}>
+        
+        {!historial ? (
+          <Button 
+            variant="contained" 
+            fullWidth
+            color='success'
+            onClick={() => onGuardarHistorialClick()}>
+              Guardar Información
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="contained"
+              color={canEdit ? 'success' : "warning"}
+              fullWidth
+              onClick={() => canEdit ? onEditHistorialClick() : setCanEdit(true)}
+            >
+              {canEdit ? 'Guardar Cambios' : 'Activar Edicion'}
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => onDiscardChangesClick()}
+            >
+              Descartar Cambios
+            </Button>
+          </>
+        )}
       </Stack>
     </Box>
   );
