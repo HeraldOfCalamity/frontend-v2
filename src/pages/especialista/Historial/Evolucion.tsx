@@ -98,7 +98,8 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
   const {
     listening, dictationEnabled, start, stop,
     transcript, interimTranscript,
-    enableDictation, disableDictation, resetAllTranscripts
+    enableDictation, disableDictation, resetAllTranscripts,
+    hardStop
   } = useSpeech();
 
   // Campo activo
@@ -167,7 +168,7 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
       enableDictation();
       anchorsRef.current[active] = transcript.length;
     }) },
-    { command: RE_TERMINAR,  matchInterim: false, bestMatchOnly: true, callback: () => execFinal.schedule(() => { commitActive(); stop(); }) },
+    { command: RE_TERMINAR,  matchInterim: false, bestMatchOnly: true, callback: () => execFinal.schedule(() => { commitActive(); hardStop() }) },
 
     // Cambiar campo por voz:
     { command: RE_DICTAR_RECURSOS,  matchInterim: false, bestMatchOnly: true, callback: () => execFinal.schedule(() => selectField('recursos')) },
@@ -519,8 +520,7 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
                 startIcon={<MicOff />}
                 onClick={() => { 
                   commitActive(); 
-                  disableDictation();
-                  stop(); 
+                  hardStop();
                 }}
               >
                 Detener Dictado
@@ -552,7 +552,7 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
             Grabar
           </Button>
           <Button variant="contained" color="error" onClick={() => {
-              stop();
+              hardStop();
               setOpenAddEntry(false);
             }}>
             Cancelar
