@@ -32,6 +32,7 @@ export default function ReservarCitaPaso2({
   const [citas, setCitas] = useState<Cita[]>([]);
   const [_slotsDisponibles, _setSlotsDisponibles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false)
+  const [duracionCita, setDuracionCita] = useState(45);
 
  
 
@@ -79,14 +80,23 @@ export default function ReservarCitaPaso2({
       dayjs(c.fecha_inicio).date() === targetDate
     );
   };
+  const getCitaParam = async () => {
+    try{
+      const param = await getParam('duracion_cita_minutos');
+      const intParam = parseInt(param)
+      setDuracionCita(value => !isNaN(intParam) ? intParam : value);
+    }catch(err: any){
+      Swal.fire(
+        'Error',
+        `${err}`,
+        'error'
+      )
+    }
+  }
 
   useEffect(() => {
     if(fecha && especialista.disponibilidades){
-      let duracionCita = getParam('duracion_cita_minutos');
-      if(!duracionCita){
-        console.error('No se pudo obtener duracion de cita, se usaran 45 mins');
-        duracionCita = 45;
-      }
+      getCitaParam()
       const slots = getSlotsFromDisponibilidades(fecha, especialista.disponibilidades, duracionCita);
       // _setSlotsDisponibles(slots);
       
