@@ -146,12 +146,17 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
 
   // Vista del texto por campo (el activo muestra base + slice “en vivo”)
   const view = useMemo(() => {
-    const liveSlice = dictationEnabled ? transcript.slice(anchorsRef.current[active]) : "";
+    // tramo finalizado desde el ancla
+    const baseLive = transcript.slice(anchorsRef.current[active]);
+    // si el dictado está habilitado, añadimos además el interino;
+    // si está deshabilitado, no mostramos nada “en vivo”
+    const liveNow = dictationEnabled ? (baseLive + interimTranscript) : "";
+
     return {
-      recursos:  active === 'recursos'  ? (store.recursos  + liveSlice) : store.recursos,
-      evolucion: active === 'evolucion' ? (store.evolucion + liveSlice) : store.evolucion,
+      recursos:  active === 'recursos'  ? (store.recursos  + liveNow) : store.recursos,
+      evolucion: active === 'evolucion' ? (store.evolucion + liveNow) : store.evolucion,
     } as Store;
-  }, [store, active, dictationEnabled, transcript]);
+  }, [store, active, dictationEnabled, transcript, interimTranscript]);
 
   // ===== Registrar comandos locales =====
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
@@ -498,7 +503,11 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
                 size="large"
                 variant="contained"
                 startIcon={<Mic />}
-                onClick={() => start({ language: 'es-BO' })}
+                onClick={() => {
+                  enableDictation()
+                  anchorsRef.current[active] = transcript.length;
+                  start({ language: 'es-BO' })
+                }}
               >
                 Iniciar Dictado
               </Button>
@@ -508,7 +517,11 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
                 variant="contained"
                 color="secondary"
                 startIcon={<MicOff />}
-                onClick={() => { commitActive(); stop(); }}
+                onClick={() => { 
+                  commitActive(); 
+                  disableDictation();
+                  stop(); 
+                }}
               >
                 Detener Dictado
               </Button>
@@ -538,7 +551,10 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
           <Button variant="contained" color="success" onClick={onGrabarEntrada}>
             Grabar
           </Button>
-          <Button variant="contained" color="error" onClick={() => setOpenAddEntry(false)}>
+          <Button variant="contained" color="error" onClick={() => {
+              stop();
+              setOpenAddEntry(false);
+            }}>
             Cancelar
           </Button>
         </DialogActions>
