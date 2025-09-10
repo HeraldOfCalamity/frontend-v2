@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cancelCita, confirmCita, getCitas, getCitasByEspecialista, getCitasByPaciente, type Cita } from "../api/citaService";
 import dayjs from "dayjs";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Typography, useTheme } from "@mui/material";
 import { Calendar, Views, type View } from "react-big-calendar";
 import { localizer } from "../utils/calendarLocalazer";
 import Swal from "sweetalert2";
@@ -32,17 +32,17 @@ export default function CalendarioCitas({
     onAtenderCita
 }: CalendarioCitaProps) {
     const {user} = useAuth();
-    // const {profile, loading:loadingProfile} = useUserProfile();
     // const [eventos, setEventos] = useState<Cita[]>([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<{start: Date, end: Date} | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<Cita | null>(null);
     const [date, setDate] = useState(new Date());
     const [view, setView] = useState(defaultView);
-    const [loading, setLoading] = useState(false);
+    const [loadingAttention, setLoadingAttention] = useState(false);
     const hasRun = useRef(false);
     const theme = useTheme()
     const {getParam} = useConfig()
+    const [canAttend, setCanAttend] = useState(false);
 
     
 
@@ -203,11 +203,20 @@ export default function CalendarioCitas({
         }
     }
 
-    const isBetweenInicioFin = (inicio: string| Date, fin: string|Date): boolean => {
-        const strictAttentionOn = getParam('restringir_atencion_horario') === '1'
-
-        return strictAttentionOn ? dayjs().isBetween(dayjs(inicio), dayjs(fin)) : true
+    const isBetweenInicioFin = async (inicio: string| Date, fin: string|Date) => {
+        setLoadingAttention(true)
+        const param = await getParam('restringir_atencion_horario')
+        const strictAttentionOn = param === '1'
+        const canAttend = strictAttentionOn ? dayjs().isBetween(dayjs(inicio), dayjs(fin)) : true;
+        setCanAttend(canAttend);
+        setLoadingAttention(false);
     }
+
+    useEffect(() => {
+        if (selectedEvent?.estado.nombre === 'confirmada' && user?.role === 'especialista') {
+            isBetweenInicioFin(selectedEvent.fecha_inicio, selectedEvent.fecha_fin);
+        }
+    }, [selectedEvent, user]);
 
     return(
         <>
@@ -316,18 +325,20 @@ export default function CalendarioCitas({
                             Confirmar Cita
                         </Button>
                     )}
-                    {selectedEvent?.estado.nombre === 'confirmada' 
-                        && user?.role==='especialista'
-                        && isBetweenInicioFin(selectedEvent.fecha_inicio, selectedEvent.fecha_fin) 
-                        && (
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={async () => await handleAtenderCitaClick(selectedEvent)}
-                        >
-                            Comenzar Atencion
-                        </Button>
-                    )}
+                    {selectedEvent && canAttend && (
+                        loadingAttention ? <Button>
+                                <CircularProgress />
+                            </Button>
+                        : (
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={async () => await handleAtenderCitaClick(selectedEvent)}
+                            >
+                                Comenzar Atencion
+                            </Button>
+                        )
+                    )}   
                     <Button
                         variant="contained"
                         color="error"

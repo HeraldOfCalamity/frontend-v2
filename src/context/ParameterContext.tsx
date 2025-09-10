@@ -32,11 +32,16 @@ export const ParamsProvider: React.FC<{children: React.ReactNode}> = ({children}
         }
     }
 
-    const getParam = (name: string) => {
-        
-        const param = params.find(p => p.name === name);
-        console.log(`founded param: ${name}`, param)
-        return param ? param.value : null;
+    const getParam = async (name: string) => {
+        try {
+            const res = await getOfficeConfig();
+            const param = res?.find((p: OfficeConfiguration) => p.name === name);
+            console.log(`founded param: ${name}`, param);
+            return param ? param.value : null;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
     }
 
     useEffect(() => {
