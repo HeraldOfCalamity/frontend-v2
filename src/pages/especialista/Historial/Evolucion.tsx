@@ -185,7 +185,7 @@ export default function Evolucion({ historial , onAddEntry}: EvolucionProps){
 
   /* ============ Subida de imágenes (desde acción de la tabla) ============ */
   const pacienteId = historial?.paciente_id || (historial as any)?.pacienteId || "";
-  const historialId = historial?.id || (historial as any)?._id || "";
+  const historialId = historial?._id || (historial as any)?._id || "";
 
   // Modal para “Agregar imagen” a una entrada concreta
   const [imageModalOpen, setImageModalOpen] = useState(false);
