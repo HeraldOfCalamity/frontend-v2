@@ -106,6 +106,7 @@ export default function Anamnesis({
     disableDictation,
     stop,
     start,
+    hardStop
   } = useSpeech();
 
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
@@ -172,9 +173,8 @@ export default function Anamnesis({
   /* ===== stop seguro (móvil) ===== */
   const stopDictationSafely = useCallback(() => {
     commitActive();
-    disableDictation();
-    setTimeout(() => { try { stop(); } catch {} }, 50);
-  }, [commitActive, disableDictation, stop]);
+    hardStop();
+  }, [commitActive, hardStop]);
 
   /* ===== Comandos ===== */
   const commands = useMemo(() => ([

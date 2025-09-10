@@ -26,6 +26,7 @@ type SpeechCtx = {
 
   start: (opts?: Partial<Parameters<typeof SpeechRecognition.startListening>[0]>) => void
   stop: () => void
+  hardStop: () => void
   resetTranscript: () => void
 
   enableDictation: () => void
@@ -115,6 +116,26 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
   }, [language])
 
   const stop = useCallback(() => { void SpeechRecognition.stopListening() }, [])
+
+  const hardStop = useCallback(() => {
+    // 1) congelar visible como hace disableDictation (sin depender de los comp.)
+    const snapshot = visibleBaseRef.current + 
+                    (transcriptLenRef.current >= anchorRef.current
+                      ? transcript.slice(anchorRef.current)
+                      : '');
+    setVisibleBase(snapshot);
+    setVisibleTranscript(snapshot);
+    anchorRef.current = transcriptLenRef.current;
+    setDictationEnabled(false);
+
+    // 2) detener y ABORTAR (Android/Chrome)
+    try { SpeechRecognition.stopListening(); } catch {}
+    setTimeout(() => { try { SpeechRecognition.abortListening?.(); } catch {} }, 0);
+
+    // 3) limpiar posibles restos del motor
+    setTimeout(() => resetTranscript(), 0);
+  }, [resetTranscript]);
+  
   const setLanguage = useCallback((lang: string) => setLanguageState(lang), [])
 
   // === Dictado ON/OFF (callbacks ESTABLES, sin depender de transcript.length) ===
@@ -207,6 +228,7 @@ export function SpeechProvider({ children }: { children: React.ReactNode }) {
 
     start,
     stop,
+    hardStop,
     resetTranscript,
 
     enableDictation,
