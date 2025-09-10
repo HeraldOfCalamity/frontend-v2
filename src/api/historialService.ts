@@ -151,15 +151,14 @@ export async function getSignedImageUrl(key: string) {
   }
 }
 
-export async function actualizarAnamnesis(histId: string, data: {condActual: string,
-        intervencionClinica: string}) {
-          console.log('actualizando anamnesis')
-          console.log('data: ', data)
-          console.log('id', histId)
-  // try {
-  //   const res = await api.put(`${HISTORIAL_ROUTE}${histId}/anamnesis`, data);
-  //   return res.data;
-  // } catch (err: any) {
-  //   handleError(err, "Error al actualizar anamnesis");
-  // }
+export async function actualizarAnamnesis(histId: string, data: {
+  condActual: string,
+  intervencionClinica: string
+}) {
+  try {
+    const res = await api.put(`${HISTORIAL_ROUTE}${histId}/anamnesis`, data);
+    return res.data;
+  } catch (err: any) {
+    handleError(err, "Error al actualizar anamnesis");
+  }
 }

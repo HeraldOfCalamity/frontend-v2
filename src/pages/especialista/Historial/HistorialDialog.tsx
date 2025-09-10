@@ -22,6 +22,7 @@ import { useSpeech } from "../../../context/SpeechContext";
 import Evolucion from "./Evolucion";
 import type { PacienteWithUser } from "../../../api/pacienteService";
 import {
+  actualizarAnamnesis,
   crearHistorial,
   getHistorialesPorPaciente,
   type HistorialClinico,
@@ -119,20 +120,34 @@ export default function HistorialDialog({
     }
   }, [pacienteId]);
 
+  const handleEditarHistorial = async (payload: {
+    condActual: string,
+    intervencionClinica: string
+  }) => {
+    try{
+      const res = await actualizarAnamnesis(historial?._id || '', payload);
+      if(res){
+        setHistorial(res)
+        await Swal.fire("Éxito", "Cambios guardados correctamente", "success");
+      }
+
+    }catch(err: any){
+      Swal.fire(
+        'Error',
+        `${err}`,
+        'error'
+      )
+    }
+  }
+
   const HISTORIAL_TABS: Tab[] = useMemo(
     () => [
       {
         name: "anamnesis",
         component: (
           <Anamnesis
-            handleClickGuardar={(data) =>
-              handleCrearHistorial({
-                condicion: data.condicion,
-                familiares: data.familiares,
-                intervencion: data.intervencion,
-                personales: data.personales,
-              })
-            }
+            handleClickEditar={handleEditarHistorial}
+            handleClickGuardar={handleCrearHistorial}
             historial={historial as HistorialClinico}
           />
         ),

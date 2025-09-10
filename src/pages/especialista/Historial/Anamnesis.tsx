@@ -90,11 +90,16 @@ interface AnamnesisProps {
     condicion: string;
     intervencion: string;
   }) => void;
+  handleClickEditar: (data: {
+    condActual: string;
+    intervencionClinica: string;
+  }) => void
 }
 
 export default function Anamnesis({
   historial,
   handleClickGuardar = () => {},
+  handleClickEditar = () => {},
 }: AnamnesisProps) {
   const {
     transcript,
@@ -259,17 +264,16 @@ export default function Anamnesis({
       // limpiamos comandos y preparamos payload
       const payload = {
         condActual: cleanCommandsLater(view.condicion),
-        intervencionClinica: cleanCommandsLater(view.intervencion),
-        
+        intervencionClinica: cleanCommandsLater(view.intervencion),        
       };
 
       // detener dictado si estaba activo
       if (dictationEnabled) stopDictationSafely();
 
-      const res = await actualizarAnamnesis(historial._id, payload);
+      handleClickEditar(payload)
+      
       // if (!res?.ok) throw new Error("No se pudo actualizar el historial");
 
-      await Swal.fire("Éxito", "Cambios guardados correctamente", "success");
       setCanEdit(false);
 
       // opcional: sincroniza el store con lo guardado

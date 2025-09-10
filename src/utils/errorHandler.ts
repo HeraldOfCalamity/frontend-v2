@@ -22,4 +22,9 @@ export const handleError = (err: any, defaultMessage: string) => {
             defaultMessage
         )
     }
+    
+    throw new Error(
+        err?.message ||
+        defaultMessage
+    );
 }
