@@ -155,6 +155,7 @@ export default function HistorialDialog({
       {
         name: "evolución",
         component: <Evolucion 
+          onAddImage={(hist) => setHistorial(hist)}
           onAddEntry={(hist) => setHistorial(hist)}
           historial={historial as HistorialClinico} 
         />,

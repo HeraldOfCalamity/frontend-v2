@@ -134,7 +134,7 @@ export async function presignUploadImagen(params: {
 export async function registrarImagen(data: RegisterImageReq) {
   try {
     const res = await api.post(`${HISTORIAL_ROUTE}upload/register`, data);
-    return res.data as { ok: boolean; imageId: string; key: string };
+    return res.data;
   } catch (err: any) {
     handleError(err, "Error al registrar imagen del historial");
   }
