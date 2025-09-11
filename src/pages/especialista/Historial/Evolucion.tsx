@@ -6,7 +6,6 @@ import {
 } from "@mui/material";
 import GenericTable, { type Column, type TableAction } from "../../../components/common/GenericTable";
 import dayjs from "dayjs";
-import ImagePreviewDialog from "../../../components/common/ImagePreviewDialog";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import type { Entrada, HistorialClinico } from "../../../api/historialService";
@@ -82,22 +81,26 @@ interface EvolucionProps{
   onAddImage: (hist: HistorialClinico) => void;
 }
 
-export default function Evolucion({ 
-  historial , 
+export default function Evolucion({
+  historial,
   onAddEntry,
   onAddImage
 }: EvolucionProps){
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [detailText, setDetailText] = useState('');
-  const [openDetailDialog, setOpenDetailDialog] = useState(false)
+  const [openDetailDialog, setOpenDetailDialog] = useState(false);
 
   // Estado tabla (partimos de las entradas del historial)
   const [rows, setRows] = useState<Entrada[]>(historial?.entradas ?? []);
+  const sortedRows = useMemo(
+    () => [...rows].sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()),
+    [rows]
+  );
 
-  // Imagen / preview dialog
-  // const [selectedImage, setSelectedImage] = useState('');
+  // Modal “ver imágenes de la entrada”
   const [openImage, setOpenImage] = useState(false);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
 
   // Diálogo para agregar entrada (solo texto)
   const [openAddEntry, setOpenAddEntry] = useState(false);
@@ -153,12 +156,9 @@ export default function Evolucion({
     if (prev && !dictationEnabled) commitActive();
   }, [dictationEnabled, commitActive]);
 
-  // Vista del texto por campo (el activo muestra base + slice “en vivo”)
+  // Vista del texto por campo (el activo muestra base + slice “en vivo” + interim)
   const view = useMemo(() => {
-    // tramo finalizado desde el ancla
     const baseLive = transcript.slice(anchorsRef.current[active]);
-    // si el dictado está habilitado, añadimos además el interino;
-    // si está deshabilitado, no mostramos nada “en vivo”
     const liveNow = dictationEnabled ? (baseLive + interimTranscript) : "";
 
     return {
@@ -199,15 +199,14 @@ export default function Evolucion({
 
   /* ============ Subida de imágenes (desde acción de la tabla) ============ */
   const pacienteId = historial?.paciente_id || (historial as any)?.pacienteId || "";
-  const historialId = historial?._id || (historial as any)?._id || "";
+  const historialId = (historial as any)?._id || historial?._id || "";
 
   // Modal para “Agregar imagen” a una entrada concreta
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [targetEntry, setTargetEntry] = useState<Entrada | null>(null);
-  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
-  // const [imageKeys, setImageKeys] = useState<string[]>([]);
-  const signedUrlCacheRef = useRef<Record<string, string>>({});
 
+  // Caché de URLs firmadas
+  const signedUrlCacheRef = useRef<Record<string, string>>({});
   const getSignedUrlCached = useCallback(async (key: string) => {
     if (!key) return "";
     if (signedUrlCacheRef.current[key]) return signedUrlCacheRef.current[key];
@@ -216,7 +215,6 @@ export default function Evolucion({
     if (url) signedUrlCacheRef.current[key] = url;
     return url;
   }, []);
-
 
   // Cámara in-app (solo dentro del modal de imágenes)
   const [openCam, setOpenCam] = useState(false);
@@ -275,16 +273,14 @@ export default function Evolucion({
     ctx.drawImage(video, 0, 0, w, h);
     canvas.toBlob(async (blob) => {
       if (!blob) return;
-      console.log('id entrada handle take photo', targetEntry.id)
       await processAndUploadToEntry(blob, "camera.jpg", targetEntry.id);
       handleCloseCam();
     }, "image/jpeg", 0.92);
   }
   useEffect(() => () => stopCamera(), []);
 
-  // Reusa lógica para archivos/blobs → sube a la entrada target
+  // Subida + registro al backend
   async function processAndUploadToEntry(fileOrBlob: File | Blob, filename = "photo.jpg", entryId?: string) {
-    console.log('entry id', entryId)
     try {
       if (!historialId || !pacienteId || !entryId) { alert("Falta historial, paciente o entrada"); return; }
 
@@ -298,9 +294,9 @@ export default function Evolucion({
       const pres = await presignUploadImagen({
         paciente_id: pacienteId,
         historial_id: historialId,
-        entrada_id: entryId,           // <- aquí vinculamos a la entrada
+        entrada_id: entryId,
         filename: file.name,
-        content_type: type,            // "image/webp"
+        content_type: type,
       });
       if (!pres?.url || !pres.key) { alert("No se pudo obtener URL firmada"); return; }
 
@@ -312,7 +308,7 @@ export default function Evolucion({
       });
       if (!put.ok) { alert("Error subiendo a R2"); return; }
 
-      // 3) registrar en backend
+      // 3) Registrar en backend (ahora empuja la KEY y puede devolver historial)
       const reg = await registrarImagen({
         pacienteId,
         historialId,
@@ -323,18 +319,26 @@ export default function Evolucion({
         originalName: file.name,
         originalType: type,
       });
-      
-      // onAddImage(reg)
 
-      setRows(prev => prev.map(e =>
-        e.id === entryId
-          ? ({ ...e, imagenes: Array.isArray((e as any).imagenes) ? [ ...(e as any).imagenes, pres.key ] : [ pres.key ] })
-          : e
-      ));
+      if (!reg?.ok) { alert("No se pudo registrar la imagen"); return; }
 
-      // ✅ firma la key y precarga en el cache + previews del modal de "agregar"
+      // a) Si el backend devuelve el historial, refrescamos desde ahí
+      if (reg.historial?.entradas) {
+        setRows(reg.historial.entradas as Entrada[]);
+        onAddImage?.(reg.historial as HistorialClinico);
+      } else {
+        // b) Si no, actualizamos localmente empujando la KEY
+        setRows(prev => prev.map(e =>
+          e.id === entryId
+            ? ({ ...e, imagenes: Array.isArray((e as any).imagenes) ? [ ...(e as any).imagenes, pres.key ] : [ pres.key ] })
+            : e
+        ));
+      }
+
+      // Firma y cachea para no refirmar luego (y mostrar en el modal “agregar”)
       const sg = await getSignedUrlCached(pres.key);
       if (sg) setImagePreviewUrls(prev => [...prev, sg]);
+
     } catch (err: any) {
       Swal.fire('Error', `${err}`, 'error');
     }
@@ -349,7 +353,6 @@ export default function Evolucion({
 
   function openImageModalFor(entry: Entrada) {
     setTargetEntry(entry);
-    // setImageKeys([]);
     setImagePreviewUrls([]);
     setImageModalOpen(true);
   }
@@ -357,17 +360,15 @@ export default function Evolucion({
   function closeImageModal() {
     setImageModalOpen(false);
     setTargetEntry(null);
-    // setImageKeys([]);
     setImagePreviewUrls([]);
-    // por si quedó la cámara abierta
     if (openCam) handleCloseCam();
   }
 
+  // Ver TODAS las imágenes de una entrada (firma todas las keys con cache)
   async function openViewImages(keys?: string[]) {
-    setImagePreviewUrls([]);             // limpiamos previews anteriores
-    setOpenImage(true);                  // abrimos el modal de vista
+    setImagePreviewUrls([]);
+    setOpenImage(true);
     if (!keys || keys.length === 0) return;
-
     const urls = await Promise.all(keys.map(k => getSignedUrlCached(k)));
     setImagePreviewUrls(urls.filter(Boolean));
   }
@@ -391,16 +392,7 @@ export default function Evolucion({
         anchorsRef.current.recursos = transcript.length;
         anchorsRef.current.evolucion = transcript.length;
 
-        // Añade la nueva entrada al inicio
-        // const newEntry: Entrada = res.entry ?? {
-        //   id: res.entryId ?? `ev_${Date.now()}`,
-        //   createdAt: new Date().toISOString(),
-        //   recursosTerapeuticos: payload.recursosTerapeuticos,
-        //   evolucionText: payload.evolucionText,
-        // } as Entrada;
-
-        // setRows(prev => [newEntry, ...prev]);
-        onAddEntry(res)
+        onAddEntry(res);
         setOpenAddEntry(false);
       }
     }catch(err: any){
@@ -417,12 +409,12 @@ export default function Evolucion({
       render: (v) => (
         <Box maxHeight={'14vh'}>
           {!isMobile ? v : (
-            <Button 
+            <Button
               onClick={() => {
-                setDetailText(v); 
+                setDetailText(v);
                 setOpenDetailDialog(true)
               }}>
-                Leer
+              Leer
             </Button>
           )}
         </Box>
@@ -441,26 +433,30 @@ export default function Evolucion({
       render: (v) => (
         <Box maxHeight={'14vh'}>
           {!isMobile ? v : (
-            <Button 
+            <Button
               onClick={() => {
-                setDetailText(v); 
+                setDetailText(v);
                 setOpenDetailDialog(true)
               }}>
-                Leer
+              Leer
             </Button>
           )}
         </Box>
       )
     },
+    // 👇 Importante: el campo ahora es 'imagenes' (array de KEYS)
     {
-      field: 'images',
-      headerName: 'Imagen',
+      field: 'imagenes',
+      headerName: 'Imágenes',
       align: 'center',
-      render: (keys?: string[]) => (Array.isArray(keys) && keys.length > 0) ? (
-        <Button onClick={() => openViewImages(keys)} variant="text">
-          Ver imágenes ({keys.length})
-        </Button>
-      ) : 'Sin imagen'
+      render: (keys?: string[]) =>
+        (Array.isArray(keys) && keys.length > 0)
+          ? (
+            <Button onClick={() => openViewImages(keys)} variant="text">
+              Ver imágenes ({keys.length})
+            </Button>
+          )
+          : 'Sin imagen'
     },
   ];
 
@@ -483,9 +479,8 @@ export default function Evolucion({
     whiteSpace: 'pre-wrap',
   });
 
-
   useEffect(() => {
-    if(!historial) return;
+    if (!historial) return;
     setRows(historial?.entradas || [])
   }, [historial])
 
@@ -503,14 +498,14 @@ export default function Evolucion({
             Agregar Entrada
           </Button>
         </Stack>
-        <GenericTable 
-          columns={columns} 
-          data={rows.sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf())} 
+        <GenericTable
+          columns={columns}
+          data={sortedRows}
           actions={actions}
         />
       </Box>
 
-      {/* Preview de imagen (al ver imágenes de la tabla) */}
+      {/* Modal: ver imágenes de la entrada (todas las keys firmadas) */}
       <Dialog maxWidth="md" fullWidth open={openImage} onClose={() => setOpenImage(false)}>
         <DialogTitle>Imágenes guardadas</DialogTitle>
         <DialogContent>
@@ -564,7 +559,7 @@ export default function Evolucion({
                 variant="contained"
                 startIcon={<Mic />}
                 onClick={() => {
-                  enableDictation()
+                  enableDictation();
                   anchorsRef.current[active] = transcript.length;
                   start({ language: 'es-BO' })
                 }}
@@ -577,8 +572,8 @@ export default function Evolucion({
                 variant="contained"
                 color="secondary"
                 startIcon={<MicOff />}
-                onClick={() => { 
-                  commitActive(); 
+                onClick={() => {
+                  commitActive();
                   hardStop();
                 }}
               >
@@ -601,8 +596,6 @@ export default function Evolucion({
                 </Box>
               </Grid>
             </Grid>
-
-            {/* ⛔️ Quitamos los botones de imágenes de aquí */}
           </Box>
         </DialogContent>
 
@@ -674,18 +667,18 @@ export default function Evolucion({
           <Button onClick={handleTakePhoto} variant="contained">Tomar</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Detalle para móviles (mostrar textos largos) */}
       <Dialog
         maxWidth={'md'}
         fullWidth
         open={openDetailDialog}
         onClose={() => {setOpenDetailDialog(false); setDetailText('')}}
       >
-        <DialogTitle>
-          Detalle
-        </DialogTitle>
+        <DialogTitle>Detalle</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {detailText ? `${detailText.charAt(0).toUpperCase()}${detailText.toLowerCase().slice(1,detailText.length)}.`: 'Sin información.'}
+            {detailText ? `${detailText.charAt(0).toUpperCase()}${detailText.toLowerCase().slice(1)}.` : 'Sin información.'}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
