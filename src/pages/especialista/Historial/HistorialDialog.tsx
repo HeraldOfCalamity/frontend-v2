@@ -12,6 +12,7 @@ import {
     Stack,
     TextField,
     Typography,
+    useTheme,
 } from "@mui/material";
 import { benedettaPink } from "../../../config/theme.config";
 import Anamnesis from "./Anamnesis";
@@ -46,11 +47,12 @@ export default function HistorialDialog({
 }: HistorialDialogProps) {
   const {
     listening,
-    isMicrophoneAvailable,
+    resetAllTranscripts,
     browserSupportsSpeechRecognition,
     dictationEnabled,
+    disableDictation,
     start,
-    stop,
+    stop, hardStop
   } = useSpeech();
 
   // Id del paciente estabilizado (evita capturar undefined en handlers)
@@ -63,6 +65,7 @@ export default function HistorialDialog({
   );
 
   const [historial, setHistorial] = useState<HistorialClinico | undefined>();
+  const theme = useTheme()
 
   const handleCrearHistorial = useCallback(
     async (data: {
@@ -187,8 +190,37 @@ export default function HistorialDialog({
     console.log("pacienteId (estable):", pacienteId);
   }, [open, browserSupportsSpeechRecognition, obtenerHistorialByPacienteId, pacienteId]);
 
+  const handleEndAttention = useCallback(async () => {
+    const res = await Swal.fire({
+      title: 'Terminar Atención?',
+      text: 'Está seguro de terminar la atención? Los cambios NO guardados se perderán.',
+      icon: 'warning',
+      showCancelButton: true,
+      cancelButtonColor: theme.palette.error.main,
+      confirmButtonText: 'Si, terminar',
+      confirmButtonColor: theme.palette.primary.main,
+      cancelButtonText: 'Cancelar'
+    });
+
+    if(!res.isConfirmed) return;
+
+    try{
+        try { disableDictation?.(); } catch {}
+        try { hardStop?.(); } catch { try { stop(); } catch {} }
+        try { resetAllTranscripts?.(); } catch {}
+
+        setHistorial(undefined)
+        setSelectedTab(HISTORIAL_TABS[0])
+
+        onClose();
+
+    }catch{
+      onClose()
+    }
+  }, [disableDictation, hardStop, stop, resetAllTranscripts, onClose, HISTORIAL_TABS])
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth fullScreen>
+    <Dialog open={open} onClose={handleEndAttention} fullWidth fullScreen>
       <DialogContent>
         <Container>
           <DialogTitle variant="h3">Historial Clinico</DialogTitle>
@@ -356,7 +388,7 @@ export default function HistorialDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button color="error" variant="contained" onClick={() => onClose()}>
+        <Button color="error" variant="contained" onClick={handleEndAttention}>
           Terminar Atención
         </Button>
       </DialogActions>

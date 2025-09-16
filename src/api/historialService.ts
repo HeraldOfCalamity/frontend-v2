@@ -48,7 +48,71 @@ export interface HistorialClinico {
   condActual: string;
   intervencionClinica: string;
   entradas: Entrada[];
+  ner_sections: any;
   createdAt: string;
+}
+
+export type NerSpan = {
+  text: string;
+  label: string;
+  start?: number;
+  end?: number;
+  norm?: string;
+  source?: 'rules'|'ml';
+  confidence?: number;
+};
+
+export const NER_COLORS: Record<string, "default"|"primary"|"secondary"|"success"|"warning"|"error"|"info"> = {
+  SYMPTOM: "error",
+  PAIN_QUALITY: "warning",
+  PAIN_INTENSITY: "warning",
+  BODY_PART: "info",
+  MOVEMENT: "info",
+  FUNCTIONAL_LIMITATION: "secondary",
+  DIAGNOSIS: "error",
+  TREATMENT: "success",
+  EXERCISE: "success",
+  FREQUENCY: "secondary",
+  SCALE: "primary",
+  MEASURE: "primary",
+  DURATION: "primary",
+  ROM: "primary",
+  LATERALITY: "secondary",
+  TEST: "info",
+};
+
+export function groupNer(raw?: unknown) {
+  // 1) aplanar: soporta array de spans o array de { section, ents: NerSpan[] }
+  const flat: NerSpan[] = [];
+  if (Array.isArray(raw)) {
+    for (const it of raw) {
+      const maybe = it as any;
+      if (maybe && Array.isArray(maybe.ents)) {
+        for (const e of maybe.ents) if (e) flat.push(e as NerSpan);
+      } else if (maybe) {
+        flat.push(maybe as NerSpan);
+      }
+    }
+  }
+
+  // 2) agrupar de forma segura
+  const out: Record<string, string[]> = {};
+  for (const e of flat) {
+    if (!e) continue;
+    const label = String((e as any).label ?? "MISC");
+    const rawText =
+      typeof (e as any).norm === "string"
+        ? (e as any).norm
+        : typeof (e as any).text === "string"
+        ? (e as any).text
+        : "";
+    const val = rawText.trim();
+    if (!val) continue;
+
+    const bucket = (out[label] ||= []);
+    if (!bucket.includes(val)) bucket.push(val);
+  }
+  return out;
 }
 
 export interface Entrada {
@@ -57,6 +121,7 @@ export interface Entrada {
   recursosTerapeuticos: string;
   evolucionText: string;
   imagenes: string[]; // ids de ImageAsset
+  ner: any
 }
 
 const HISTORIAL_ROUTE = "historiales/";

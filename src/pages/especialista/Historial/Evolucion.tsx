@@ -2,21 +2,28 @@ import { AddCircleOutline, AddPhotoAlternate, Mic, MicOff } from "@mui/icons-mat
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   Grid, Stack, Typography, useMediaQuery, useTheme, InputLabel,
-  DialogContentText
+  DialogContentText,
+  Chip,
+  ToggleButtonGroup,
+  ToggleButton,
+  TextField
 } from "@mui/material";
 import GenericTable, { type Column, type TableAction } from "../../../components/common/GenericTable";
 import dayjs from "dayjs";
 import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
-import type { Entrada, HistorialClinico } from "../../../api/historialService";
+import type { Entrada, HistorialClinico, NerSpan } from "../../../api/historialService";
 import {
   presignUploadImagen,
   registrarImagen,
   getSignedImageUrl,
   agregarEntrada as agregarEntradaService,
+  groupNer,
+  NER_COLORS,
 } from "../../../api/historialService";
 import { compressToWebp } from "../../../utils/evoImage";
 import Swal from "sweetalert2";
+import { labelEs } from "../../../utils/nerLabels";
 
 /* ========= Campos y estado de dictado en el diálogo ========= */
 type EvoField = 'recursos' | 'evolucion';
@@ -75,6 +82,25 @@ const RE_DICTAR_EVOLUCION = new RegExp(
   String.raw`(?:^|\s)dictar\s+(?:evoluci(?:o|ó)n(?:\s+del\s+tratamiento)?)${END}`, 'i'
 );
 
+const LABEL_COLOR: Record<string, "default"|"primary"|"secondary"|"success"|"warning"|"error"|"info"> = {
+  SYMPTOM: "error",
+  BODY_PART: "primary",
+  LATERALITY: "secondary",
+  DIAGNOSIS: "warning",
+  TEST: "info",
+  TREATMENT: "success",
+  EXERCISE: "success",
+  ROM: "info",
+  SCALE: "info",
+  PHASE: "default",
+  DURATION: "default",
+  FREQUENCY: "default",
+  PAIN_QUALITY: "default",
+  PAIN_INTENSITY: "default",
+  MOVEMENT: "default",
+  FUNCTIONAL_LIMITATION: "default",
+};
+
 interface EvolucionProps{
   historial: HistorialClinico;
   onAddEntry: (hist: HistorialClinico) => void;
@@ -90,6 +116,19 @@ export default function Evolucion({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [detailText, setDetailText] = useState('');
   const [openDetailDialog, setOpenDetailDialog] = useState(false);
+  const [nerEntry, setNerEntry] = useState<Entrada | null>(null)
+  const [nerField, setNerField] = useState<'recursos'|'evolucion'>('recursos')
+  const [openNerDialog, setOpenNerDialog] = useState(false)
+
+  function openNer(entry: Entrada) {
+    setNerEntry(entry);
+    setNerField('recursos');
+    setOpenNerDialog(true);
+  }
+  function closeNer() {
+    setOpenNerDialog(false);
+    setNerEntry(null);
+  }
 
   // Estado tabla (partimos de las entradas del historial)
   const [rows, setRows] = useState<Entrada[]>(historial?.entradas ?? []);
@@ -158,14 +197,13 @@ export default function Evolucion({
 
   // Vista del texto por campo (el activo muestra base + slice “en vivo” + interim)
   const view = useMemo(() => {
-    const baseLive = transcript.slice(anchorsRef.current[active]);
-    const liveNow = dictationEnabled ? (baseLive + interimTranscript) : "";
+    const liveSlice = dictationEnabled ? transcript.slice(anchorsRef.current[active]) : '';
 
     return {
-      recursos:  active === 'recursos'  ? (store.recursos  + liveNow) : store.recursos,
-      evolucion: active === 'evolucion' ? (store.evolucion + liveNow) : store.evolucion,
+      recursos:  active === 'recursos'  ? (store.recursos  + liveSlice) : store.recursos,
+      evolucion: active === 'evolucion' ? (store.evolucion + liveSlice) : store.evolucion,
     } as Store;
-  }, [store, active, dictationEnabled, transcript, interimTranscript]);
+  }, [store, active, dictationEnabled, transcript]);
 
   // ===== Registrar comandos locales =====
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
@@ -401,25 +439,28 @@ export default function Evolucion({
   }
 
   /* ===== UI ===== */
+
+  function EntitiesView({ner}: {ner?: Record<string, string[]>}){
+    if(!ner || Object.keys(ner).length === 0) return <Typography>Sin entidades.</Typography>;
+    return(
+      <Stack spacing={1}>
+        {Object.entries(ner).map(([label, values])=>(
+          <Box key={label}>
+            <Typography variant="subtitle2" gutterBottom>
+              {label}
+            </Typography>
+            <Stack direction={'row'} gap={1} flexWrap={'wrap'}>
+              {values.map((v, i) => (
+                <Chip key={label+i} label={v} color={LABEL_COLOR[label] ?? 'default'} size="medium" />
+              ))}
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    )
+  }
+
   const columns: Column<Entrada>[] = [
-    {
-      field: 'recursosTerapeuticos',
-      headerName: 'Recursos Terapeuticos',
-      align: 'center',
-      render: (v) => (
-        <Box maxHeight={'14vh'}>
-          {!isMobile ? v : (
-            <Button
-              onClick={() => {
-                setDetailText(v);
-                setOpenDetailDialog(true)
-              }}>
-              Leer
-            </Button>
-          )}
-        </Box>
-      )
-    },
     {
       field: 'createdAt',
       headerName: 'Fecha',
@@ -427,20 +468,46 @@ export default function Evolucion({
       render: (v) => dayjs(v).format('DD/MM/YYYY')
     },
     {
+      field: 'recursosTerapeuticos',
+      headerName: 'Recursos Terapeuticos',
+      align: 'center',
+      render: (v) => (
+          <Box maxHeight={'14vh'}>
+            { v 
+              ? isMobile 
+                ? (
+                <Button
+                  onClick={() => {
+                    setDetailText(v);
+                    setOpenDetailDialog(true)
+                  }}>
+                  Leer
+                </Button>
+              ) : v
+              : 'Sin Información.'
+            }
+          </Box>
+      )
+    },
+    {
       field: 'evolucionText',
       headerName: 'Evolución del tratamiento',
       align: 'center',
       render: (v) => (
         <Box maxHeight={'14vh'}>
-          {!isMobile ? v : (
-            <Button
-              onClick={() => {
-                setDetailText(v);
-                setOpenDetailDialog(true)
-              }}>
-              Leer
-            </Button>
-          )}
+          { v 
+            ? isMobile 
+              ? (
+              <Button
+                onClick={() => {
+                  setDetailText(v);
+                  setOpenDetailDialog(true)
+                }}>
+                Leer
+              </Button>
+            ) : v
+            : 'Sin Información.'
+          }
         </Box>
       )
     },
@@ -467,6 +534,12 @@ export default function Evolucion({
       label: 'Agregar Imagen',
       color: 'secondary',
       onClick: (entry) => openImageModalFor(entry),
+    },
+    {
+      icon: <MicOff />,
+      label: 'Ver entidades',
+      color: 'primary',
+      onClick: (entry) => openNer(entry)
     }
   ];
 
@@ -483,6 +556,72 @@ export default function Evolucion({
     if (!historial) return;
     setRows(historial?.entradas || [])
   }, [historial])
+
+
+  // +++ NUEVO: safe-highlight: usa offsets si existen; si no, busca por texto (case-insensitive)
+function highlightText(text: string, ents?: NerSpan[]) {
+  if (!text) return text;
+  const spans = (ents || []).slice();
+
+  // a) si hay offsets válidos y dentro del rango, úsalos
+  const offsetSpans = spans
+    .filter(s => typeof s.start === "number" && typeof s.end === "number" && s.start! >= 0 && s.end! <= text.length && s.end! > s.start!)
+    .map(s => ({ start: s.start!, end: s.end!, label: s.label }));
+
+  // b) si no hay offsets, hacemos matching por texto (case-insensitive, prefiriendo spans largos)
+  let textLower = text.toLowerCase();
+  const byText: { start: number; end: number; label: string }[] = [];
+  if (offsetSpans.length === 0) {
+    const entsByLen = spans
+      .filter(s => s.text && s.text.trim().length > 0)
+      .sort((a,b) => (b.text.length - a.text.length));
+    const used: boolean[] = new Array(text.length).fill(false);
+
+    for (const e of entsByLen) {
+      const needle = e.text.toLowerCase();
+      let from = 0;
+      while (true) {
+        const idx = textLower.indexOf(needle, from);
+        if (idx === -1) break;
+        const j = idx + needle.length;
+        // evita solapados burdos
+        let free = true;
+        for (let k = idx; k < j; k++) if (used[k]) { free = false; break; }
+        if (free) {
+          for (let k = idx; k < j; k++) used[k] = true;
+          byText.push({ start: idx, end: j, label: e.label });
+        }
+        from = j;
+      }
+    }
+  }
+
+  const ranges = (offsetSpans.length ? offsetSpans : byText)
+    .sort((a,b) => a.start - b.start);
+
+  if (ranges.length === 0) return text;
+
+  const out: React.ReactNode[] = [];
+    let cursor = 0;
+    ranges.forEach((r, i) => {
+      if (r.start > cursor) {
+        out.push(<span key={`t-${i}-plain`}>{text.slice(cursor, r.start)}</span>);
+      }
+      out.push(
+        <mark
+          key={`t-${i}-hl`}
+          style={{ padding: "0 2px", background: "rgba(255,235,59,0.6)", borderRadius: 3 }}
+          title={r.label}
+        >
+          {text.slice(r.start, r.end)}
+        </mark>
+      );
+      cursor = r.end;
+    });
+    if (cursor < text.length) out.push(<span key="t-last">{text.slice(cursor)}</span>);
+    return <>{out}</>;
+  }
+
 
   return (
     <>
@@ -509,7 +648,7 @@ export default function Evolucion({
       <Dialog maxWidth="md" fullWidth open={openImage} onClose={() => setOpenImage(false)}>
         <DialogTitle>Imágenes guardadas</DialogTitle>
         <DialogContent>
-          <Stack direction="row" spacing={2} flexWrap="wrap">
+          <Stack direction="row" spacing={2} flexWrap="wrap" justifyContent={'space-around'}>
             {imagePreviewUrls.length === 0 ? (
               <Typography variant="body2">Sin imágenes.</Typography>
             ) : imagePreviewUrls.map((u, i) => (
@@ -584,16 +723,44 @@ export default function Evolucion({
             <Grid container spacing={2}>
               <Grid size={{xs: 12, md:6}}>
                 <Typography variant="h6">Recursos Terapéuticos</Typography>
-                <Box sx={boxSx(active === 'recursos')}>
+                {/* <Box sx={boxSx(active === 'recursos')}>
                   {view.recursos}
-                </Box>
+                </Box> */}
+                <TextField
+                  multiline
+                  minRows={6}
+                  fullWidth
+                  value={view.recursos}
+                  onFocus={() => setActive('recursos')}
+                  onChange={(e) => setStore((p) => ({ ...p, recursos: e.target.value }))}
+                  sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+                  slotProps={{
+                    input:{
+                      readOnly: dictationEnabled
+                    }
+                  }}
+                />
               </Grid>
 
               <Grid size={{xs: 12, md:6}}>
                 <Typography variant="h6">Evolución del Tratamiento</Typography>
-                <Box sx={boxSx(active === 'evolucion')}>
+                {/* <Box sx={boxSx(active === 'evolucion')}>
                   {view.evolucion}
-                </Box>
+                </Box> */}
+                <TextField
+                  multiline
+                  minRows={6}
+                  fullWidth
+                  value={view.evolucion}
+                  onFocus={() => setActive('evolucion')}
+                  onChange={(e) => setStore((p) => ({ ...p, evolucion: e.target.value }))}
+                  sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+                  slotProps={{
+                    input:{
+                      readOnly: dictationEnabled
+                    }
+                  }}
+                />
               </Grid>
             </Grid>
           </Box>
@@ -691,6 +858,74 @@ export default function Evolucion({
           </Button>
         </DialogActions>
       </Dialog>
+      {/* +++ NUEVO: Diálogo NER por entrada */}
+      <Dialog
+        maxWidth="md"
+        fullWidth
+        open={openNerDialog}
+        onClose={closeNer}
+      >
+        <DialogTitle>Entidades detectadas</DialogTitle>
+        <DialogContent>
+          {nerEntry?.ner && nerEntry.ner.length > 0 ? (
+            <>
+              {/* Chips por etiqueta */}
+              <Stack direction="row" gap={2} flexWrap="wrap" mb={2}>
+                {Object.entries(groupNer(nerEntry.ner as unknown as NerSpan[])).map(([label, items]) => (
+                  <Stack key={label} gap={1}>
+                    <Typography variant="subtitle2">{labelEs(label)}</Typography>
+                    <Stack direction="row" gap={1} flexWrap="wrap">
+                      {items.map((t, i) => (
+                        <Chip
+                          key={`${label}-${i}`}
+                          size="small"
+                          label={t}
+                          color={NER_COLORS[label] || "default"}
+                        />
+                      ))}
+                    </Stack>
+                  </Stack>
+                ))}
+              </Stack>
+
+              {/* Toggle para ver recursos / evolución */}
+              <ToggleButtonGroup
+                exclusive
+                size="small"
+                value={nerField}
+                onChange={(_, v) => v && setNerField(v)}
+                sx={{ mb: 2 }}
+              >
+                <ToggleButton value="recursos">Recursos Terapéuticos</ToggleButton>
+                <ToggleButton value="evolucion">Evolución</ToggleButton>
+              </ToggleButtonGroup>
+
+              {/* Texto resaltado */}
+              <Box
+                sx={{
+                  p: 2,
+                  border: 1,
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.6,
+                }}
+              >
+                {highlightText(
+                  nerField === 'recursos' ? (nerEntry?.recursosTerapeuticos || '') : (nerEntry?.evolucionText || ''),
+                  nerEntry?.ner as unknown as NerSpan[] || []
+                )}
+              </Box>
+            </>
+          ) : (
+            <Typography variant="body2">Sin entidades detectadas para esta entrada.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={closeNer}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
     </>
   );
 }

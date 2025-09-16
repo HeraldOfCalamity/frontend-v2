@@ -1,13 +1,15 @@
 // Anamnesis.tsx
 import {
   Box, Grid, InputLabel, Stack, Typography, Button, Alert, useTheme, TextField,
+  Chip,
 } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
-import type { HistorialClinico } from "../../../api/historialService";
-import { Mic } from "@mui/icons-material";
+import type { HistorialClinico, NerSpan } from "../../../api/historialService";
+import { Mic, MicOff } from "@mui/icons-material";
 import Swal from "sweetalert2";
-import { actualizarAnamnesis } from "../../../api/historialService";
+import { actualizarAnamnesis, groupNer, NER_COLORS } from "../../../api/historialService";
+import { labelEs } from "../../../utils/nerLabels";
 
 /** Claves de los 4 campos */
 type FieldKey = "personales" | "familiares" | "condicion" | "intervencion";
@@ -204,10 +206,6 @@ export default function Anamnesis({
       callback: (campoDetectado: string) => {
         const campo = mapCampo(campoDetectado);
         execFinal.schedule(() => {
-          if (canEdit && historial && (campo === "personales" || campo === "familiares")) {
-            // ignoramos cambio de campo en modo edición
-            return;
-          }
           selectField(campo);
         });
       },
@@ -234,6 +232,7 @@ export default function Anamnesis({
     borderRadius: 1,
     p: 1,
     whiteSpace: "pre-wrap",
+    overflowY: 'auto'
   });
 
   const onGuardarHistorialClick = () => {
@@ -318,20 +317,37 @@ export default function Anamnesis({
 
   const startDictation = () => start({ language: "es-BO" });
 
+  const nerRaw = (historial as any)?.ner_sections;
+  const groupedSections = useMemo(() => groupNer(nerRaw), [nerRaw])
+  const hasNer = Object.keys(groupedSections).length > 0;
+
   return (
     <Box>
       <Stack mb={2} direction="column" spacing={2} alignItems="center">
         {(!historial || canEdit) && (
-          <Button
-            fullWidth
-            size="large"
-            variant="contained"
-            startIcon={<Mic />}
-            disabled={!isMicrophoneAvailable}
-            onClick={startDictation}
-          >
-            Iniciar Dictado
-          </Button>
+          <>
+            <Button
+              fullWidth
+              size="large"
+              variant="contained"
+              startIcon={<Mic />}
+              disabled={!isMicrophoneAvailable}
+              onClick={startDictation}
+            >
+              Iniciar Dictado
+            </Button>
+            <Button
+              fullWidth
+              size="large"
+              color="secondary"
+              variant="contained"
+              startIcon={<MicOff />}
+              disabled={!isMicrophoneAvailable}
+              onClick={() => {commitActive(); hardStop();}}
+            >
+              Detener Dictado
+            </Button>
+          </>
         )}
         {!isMicrophoneAvailable && (
           <Alert severity="error" sx={{ height: 50, mt: 1 }}>
@@ -358,54 +374,101 @@ export default function Anamnesis({
           <Typography>{interimTranscript}</Typography>
         </Box>
       </Stack>
+      <Stack direction={'row'}>
+        {hasNer && (
+          <Box my={3} sx={{ border: 1, borderColor: 'divider', borderRadius: 2 }}>
+            <Typography variant="h6" gutterBottom>Entidades detectadas</Typography>
+            <Stack direction="row" gap={2} flexWrap="wrap" borderRight={2} borderLeft={2} p={1} borderRadius={2}>
+              {Object.entries(groupedSections).map(([label, items]) => (
+                <Stack key={label} gap={1}>
+                  <Typography variant="subtitle2">{labelEs(label)}</Typography>
+                  <Stack direction="row" gap={1} flexWrap="wrap" justifyContent={'center'}>
+                    {items.map((t, i) => (
+                      <Chip key={`${label}-${i}`} label={t} color={NER_COLORS[label] || "default"} size="small" />
+                    ))}
+                  </Stack>
+                </Stack>
+              ))}
+            </Stack>
+          </Box>
+        )}
+      </Stack>
 
       <Grid container spacing={2}>
         {/* Siempre solo lectura */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Antecedentes Personales</Typography>
-          <Box sx={boxSx(active === "personales")}>{store.personales}</Box>
+          {/* <Box sx={boxSx(active === "personales")}>{store.personales}</Box> */}
+          <TextField 
+            multiline
+            minRows={6}
+            fullWidth
+            value={view.personales}
+            onFocus={() => setActive('personales')}
+            onChange={(e) => setStore((p) => ({...p, personales: e.target.value}))}
+            sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+            slotProps={{
+              input:{
+                readOnly: dictationEnabled || (!!historial && !canEdit)
+              }
+            }}
+          />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Antecedentes Familiares</Typography>
-          <Box sx={boxSx(active === "familiares")}>{store.familiares}</Box>
+          {/* <Box sx={boxSx(active === "familiares")}>{store.familiares}</Box> */}
+          <TextField
+            multiline
+            minRows={6}
+            fullWidth
+            value={view.familiares}
+            onFocus={() => setActive("familiares")}
+            onChange={(e) => setStore((p) => ({ ...p, familiares: e.target.value }))}
+            sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+            slotProps={{
+              input:{
+                readOnly: dictationEnabled || (!!historial && !canEdit)
+              }
+            }}
+          />
         </Grid>
 
         {/* Editables sólo en modo edición */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Condición Actual</Typography>
-          {canEdit && historial ? (
-            <TextField
-              multiline
-              minRows={6}
-              fullWidth
-              value={view.condicion}
-              onFocus={() => setActive("condicion")}
-              onChange={(e) =>
-                setStore((p) => ({ ...p, condicion: e.target.value }))
+          <TextField
+            multiline
+            minRows={6}
+            fullWidth
+            value={view.condicion}
+            onFocus={() => setActive("condicion")}
+            onChange={(e) => setStore((p) => ({ ...p, condicion: e.target.value }))}
+            sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+            slotProps={{
+              input:{
+                readOnly: dictationEnabled || (!!historial && !canEdit)
               }
-            />
-          ) : (
-            <Box sx={boxSx(active === "condicion")}>{store.condicion}</Box>
-          )}
+            }}
+          />
         </Grid>
 
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6">Intervención Clínica</Typography>
-          {canEdit && historial ? (
-            <TextField
-              multiline
-              minRows={6}
-              fullWidth
-              value={view.intervencion}
-              onFocus={() => setActive("intervencion")}
-              onChange={(e) =>
-                setStore((p) => ({ ...p, intervencion: e.target.value }))
+          <TextField
+            multiline
+            minRows={6}
+            fullWidth
+            value={view.intervencion}
+            onFocus={() => setActive("intervencion")}
+            onChange={(e) => setStore((p) => ({ ...p, intervencion: e.target.value }))}
+            sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+            slotProps={{
+              input:{
+                readOnly: dictationEnabled || (!!historial && !canEdit)
               }
-            />
-          ) : (
-            <Box sx={boxSx(active === "intervencion")}>{store.intervencion}</Box>
-          )}
+            }}
+          />
         </Grid>
       </Grid>
 
@@ -437,6 +500,7 @@ export default function Anamnesis({
           </>
         )}
       </Stack>
+      
     </Box>
   );
 }
