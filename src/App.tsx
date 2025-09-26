@@ -23,6 +23,7 @@ import PerfilEspecialista from './pages/especialista/PerfilEspecialista';
 import TratamientosPage from './pages/admin/TratamientosPage';
 import { AuthProvider } from './context/AuthContext';
 import ImageUploadTest from './pages/especialista/Historial/ImageUploadTest';
+import DashboardCitas from './pages/admin/DashboardCitas';
 
 
 
@@ -52,7 +53,8 @@ function App() {
                     </Route>
 
                     <Route element={<ProtectedRoute roles={['admin']} />}>
-                      <Route path='/admin' element={<AdminDashboard />} />
+                      <Route path='/admin' element={<DashboardCitas />} />
+                      <Route path='/admin/citas' element={<AdminDashboard />} />
                       <Route path='/admin/especialidades' element={<EspecialidadesPage />} />
                       <Route path='/admin/tratamientos' element={<TratamientosPage />} />
                       <Route path='/admin/usuarios' element={<UsuariosPage />} />

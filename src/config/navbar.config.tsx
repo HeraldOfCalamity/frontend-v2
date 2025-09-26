@@ -17,7 +17,8 @@ export interface NavBarMenu {
 }
 
 export const ADMIN_OPTIONS: NavBarConfig = [
-    {type: 'button', text: 'Panel Admin', path: '/admin'},
+    {type: 'button', text: 'Dashboard', path: '/admin'},
+    {type: 'button', text: 'Panel citas', path: '/admin/citas'},
     {
         type: 'menu', 
         text: 'Gestion Usuarios', 
