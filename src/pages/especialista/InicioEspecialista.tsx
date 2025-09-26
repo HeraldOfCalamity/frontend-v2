@@ -9,7 +9,7 @@ import dayjs from "dayjs";
 import { useUserProfile } from "../../context/userProfileContext";
 import HistorialDialog from "./Historial/HistorialDialog";
 import { SpeechProvider } from "../../context/SpeechContext";
-import type { PacienteWithUser } from "../../api/pacienteService";
+import { getPacienteProfileById, type PacienteWithUser } from "../../api/pacienteService";
 
 interface InicioEspecialistaProps{
 
@@ -44,6 +44,29 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
         }
     }
 
+    const handleAtenderCita = async (pacienteId: string) => {
+        try{
+            const paciente = await getPacienteProfileById(pacienteId);
+            if(!paciente){
+                Swal.fire({
+                    title: 'Error',
+                    text: `Ocurrió un error al obtener datos de la cita.`,
+                    icon: 'error'
+                })
+                return;
+            }
+
+            setSelectedPacienteProfile(paciente);
+            setOpenAtencion(true)
+        }catch(err: any){
+            Swal.fire({
+                title: 'Error',
+                text: `${err}`,
+                icon: 'error'
+            })
+        }
+    }
+
     useEffect(() => {
         if(!loadingProfile && espProfile?.especialista){
             obtenerCitasEspecialista();
@@ -66,8 +89,7 @@ const InicioEspecialista: React.FC<InicioEspecialistaProps> = () => {
                     citas={citas}
                     defaultView="day"
                     onAtenderCita={(cita) => {
-                        setSelectedPacienteProfile(cita?.pacienteProfile as PacienteWithUser)
-                        setOpenAtencion(true)
+                        handleAtenderCita(cita?.paciente || '')
                     }}
                 />
                 <SpeechProvider>

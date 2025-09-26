@@ -1,18 +1,18 @@
 import api from "../config/benedetta.api.config";
 import { handleError } from "../utils/errorHandler";
-import type { Especialidad } from "./especialidadService";
-import type { Especialista } from "./especialistaService";
-import type { Paciente, PacienteWithUser } from "./pacienteService";
+// import type { Especialidad } from "./especialidadService";
+// import type { Especialista } from "./especialistaService";
+// import type { Paciente, PacienteWithUser } from "./pacienteService";
 
 export interface Cita {
     id: string;
     paciente: string;
+    pacienteName: string;
+    duration_minutes: number;
+    especialidad: string;
     especialista: string;
-    especialidad: Especialidad;
     fecha_inicio: string | Date;
     fecha_fin: string | Date;
-    duration_minutes: number;
-    pacienteProfile?: PacienteWithUser;
     estado: {
         id: string;
         nombre: string;

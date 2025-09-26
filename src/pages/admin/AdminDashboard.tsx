@@ -1,17 +1,14 @@
 import { AddCircleOutline, AssignmentInd, Category, LocalHospital, PeopleAlt } from "@mui/icons-material";
 import { Box, Button, Card, CardContent, Stack, Typography } from "@mui/material"
-import Grid from "@mui/material/Grid";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CalendarioCitas from "../../components/CalendarioCitas";
 import { cancelCita, confirmCita, getCitas, type Cita } from "../../api/citaService";
 import Swal from "sweetalert2";
-import BuscarPaciente from "../../components/admin/BuscarPaciente";
-import type { Paciente } from "../../api/pacienteService";
-import ReservaCita from "../../components/ReservarCita/ReservaCita";
-import BuscarEspecialidad from "../../components/admin/BuscarEspecialidad";
-import type { Especialidad } from "../../api/especialidadService";
+import { CitasWS } from "../../api/wsClient";
+import { BASE_URL } from "../../config/benedetta.api.config";
+import { applyCitaEvent, type CitaEvent } from "../../utils/citasPatch";
+
 
 interface AdminDashboardProps{
 
@@ -26,42 +23,9 @@ const quickStats = [
 const AdminDashboard: React.FC<AdminDashboardProps> = () => {
     const {user} = useAuth();
     const [citas, setCitas] = useState<Cita[]>([]);
-    const [openSearchPaciente, setOpenSearchPaciente] = useState(false);
-    const [openReservaCita, setOpenReservaCita] = useState(false);
-    const [openSearchEspecialidad, setOpenSearchEspecialidad] = useState(false);
-    const [selectedPaciente, setSelectedPaciente] = useState<Partial<Paciente> | null>(null);
-    const [selectedEspecialidad, setSelectedEspecialidad] = useState<Especialidad | null>(null);
-    const navigate = useNavigate();
-
-    const handleNewCitaClick = () => {
-        setOpenSearchPaciente(true);
-    }
-
-    const handleSearchPacienteClose = () => {
-        setOpenSearchPaciente(false);
-    }
-
-    const handleSelectPaciente = (paciente: Paciente) => {
-        setSelectedPaciente(paciente);
-        setOpenSearchEspecialidad(true);
-    }
-
-    const handleReservarCitaClose = async () => {
-        await obtenerCitas();
-        setSelectedPaciente(null);
-        setOpenReservaCita(false);
-    }
-
-    const handleSearchEspecialidadClose = () => {
-        setSelectedEspecialidad(null);
-        setOpenSearchEspecialidad(false);
-    }
+    const hasRun = useRef(false);
+    const wsRef = useRef<CitasWS | null>(null);
     
-    const handleSelectEspecialidad = (especialidad: Especialidad) => {
-        setSelectedEspecialidad(especialidad)
-        setOpenSearchEspecialidad(false);
-        setOpenReservaCita(true);
-    }
 
     const obtenerCitas = async () => {
         try{
@@ -76,9 +40,36 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
         }
     }
 
-    useEffect(() => {
-        obtenerCitas();
-    }, [])
+
+   useEffect(() => {
+    // 1) carga inicial
+    obtenerCitas();
+
+    // 2) construir URL WS como la de tu prueba manual
+    const httpBase =
+      (typeof BASE_URL === "string" && BASE_URL.length > 0)
+        ? BASE_URL
+        : window.location.origin; // fallback
+    const wsBase = httpBase.replace(/^http/i, "ws");
+
+    let token = localStorage.getItem("bb_token") || "";
+    if (token.startsWith("Bearer ")) token = token.slice(7);
+
+    const wsUrl = token
+      ? `${wsBase}/ws/citas?token=${encodeURIComponent(token)}`
+      : `${wsBase}/ws/citas`;
+
+    // 3) conectar
+    wsRef.current = new CitasWS(wsUrl, (msg: CitaEvent) => {
+      if (msg?.entity === "cita") {
+        setCitas(prev => applyCitaEvent(prev, msg));
+      }
+    });
+    wsRef.current.connect();
+
+    // 4) cleanup
+    return () => wsRef.current?.close();
+  }, []);
 
     return(
         <Box my='auto'>
@@ -90,12 +81,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = () => {
             <CalendarioCitas 
                 citas={citas} 
                 defaultView="agenda"
-                onCancelCita={
-                    getCitas
-                }
-                onConfirmCita={
-                    getCitas
-                }
+                // onCancelCita={
+                //     // () => getCitas()
+                //     () => {}
+                // }
+                // onConfirmCita={
+                //     () => getCitas()
+                // }
             />
             {/* <BuscarPaciente 
                 open={openSearchPaciente} 

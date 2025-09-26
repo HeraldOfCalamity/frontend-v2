@@ -29,7 +29,7 @@ export default function CalendarioCitas({
     citas,
     onCancelCita,
     onConfirmCita,
-    onAtenderCita
+    onAtenderCita,
 }: CalendarioCitaProps) {
     const {user} = useAuth();
     // const [eventos, setEventos] = useState<Cita[]>([]);
@@ -72,6 +72,7 @@ export default function CalendarioCitas({
                 borderRadius: 8, 
                 border:'1px solid #fff',
                 color: tc, 
+                fontSize: '0.9rem'
                 // marginBottom: 0, 
                 // display: 'block'
             }
@@ -110,7 +111,7 @@ export default function CalendarioCitas({
     }
 
     const getEventTitleFromCita = (cita: Cita) => {
-        const title = `${cita.especialidad?.nombre}: ${cita.especialista}`; 
+        const title = `${dayjs(cita.fecha_inicio).format('HH:mm')} - ${cita.estado.nombre}`; 
         return title;
     }
 
@@ -298,11 +299,11 @@ export default function CalendarioCitas({
                 <DialogContent>
                     {selectedEvent && (
                         <>
-                            <p><b>Título:</b> {selectedEvent.especialidad.nombre}</p>
+                            <p><b>Título:</b> {selectedEvent.especialidad}</p>
                             <p><b>Inicio:</b> {dayjs(selectedEvent.fecha_inicio).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Fin:</b> {dayjs(selectedEvent.fecha_fin).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Estado:</b> {selectedEvent.estado.nombre}</p>
-                            <p><b>Paciente:</b> {selectedEvent.paciente}</p>
+                            <p><b>Paciente:</b> {selectedEvent.pacienteName}</p>
                         </>
                     )}
                 </DialogContent>

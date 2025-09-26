@@ -138,7 +138,7 @@ export default function MisCitasPaciente({
                                             {dayjs(cita.fecha_inicio).format("DD/MM/YYYY HH:mm")} — {dayjs(cita.fecha_fin).format("HH:mm")}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
-                                                Especialidad: {cita.especialidad?.nombre || "-"}
+                                                Especialidad: {cita.especialidad || "-"}
                                             </Typography>
                                             <Typography variant="body2" color="text.secondary">
                                                 Especialista: {cita.especialista}
