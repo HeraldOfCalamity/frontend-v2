@@ -29,11 +29,13 @@ import {
   type HistorialClinico,
 } from "../../../api/historialService";
 import dayjs from "dayjs";
+import { attendCita } from "../../../api/citaService";
 
 interface HistorialDialogProps {
   open: boolean;
   onClose: () => void;
   pacienteProfile: PacienteWithUser;
+  citaId: string;
 }
 interface Tab {
   name: string;
@@ -44,6 +46,7 @@ export default function HistorialDialog({
   onClose,
   open,
   pacienteProfile,
+  citaId
 }: HistorialDialogProps) {
   const {
     listening,
@@ -190,6 +193,22 @@ export default function HistorialDialog({
     console.log("pacienteId (estable):", pacienteId);
   }, [open, browserSupportsSpeechRecognition, obtenerHistorialByPacienteId, pacienteId]);
 
+  const marcarCitaAtendida = async () => {
+    try{
+      const cita = await attendCita(citaId)
+      if(cita){
+        Swal.fire('Exito', 'Se ha completado la atención', 'success')
+      }
+      console.log(cita)
+    }catch(err: any){
+      Swal.fire(
+        'Error',
+        `${err}`,
+        'error'
+      )
+    }
+  }
+
   const handleEndAttention = useCallback(async () => {
     const res = await Swal.fire({
       title: 'Terminar Atención?',
@@ -211,6 +230,7 @@ export default function HistorialDialog({
 
         setHistorial(undefined)
         setSelectedTab(HISTORIAL_TABS[0])
+        marcarCitaAtendida()
 
         onClose();
 

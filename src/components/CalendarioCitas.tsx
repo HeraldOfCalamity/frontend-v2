@@ -213,9 +213,14 @@ export default function CalendarioCitas({
         setLoadingAttention(false);
     }
 
+    
+
     useEffect(() => {
         if (selectedEvent?.estado.nombre === 'confirmada' && user?.role === 'especialista') {
             isBetweenInicioFin(selectedEvent.fecha_inicio, selectedEvent.fecha_fin);
+        }
+        else{
+            setCanAttend(false)
         }
     }, [selectedEvent, user]);
 

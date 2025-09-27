@@ -3,7 +3,10 @@ import axios from "axios";
 import dayjs from "dayjs";
 import {
   Stack, Card, CardContent, Typography, Button,
-  FormControl, Select, MenuItem, InputLabel, CircularProgress, Alert, Chip, Box, Divider, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
+  FormControl, Select, MenuItem, InputLabel, CircularProgress, Alert, Chip, Box, Divider, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  ListSubheader,
+  Checkbox,
+  ListItemText
 } from "@mui/material";
 import {
   ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend,
@@ -170,6 +173,21 @@ export default function DashboardCitas() {
     [data, allMonths]
   );
 
+    // ¿todos seleccionados?
+    const isAllSelected = monthsView.length === allMonths.length;
+
+    // Alternar un mes individual (click en el ítem del menú)
+    const handleToggleMonth = (m: string) => {
+    setMonthsView(prev =>
+        prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]
+    );
+    };
+
+    // Seleccionar todo / limpiar
+    const handleToggleAll = () => {
+    setMonthsView(isAllSelected ? [] : allMonths);
+    };
+
   // ------- Series filtradas (vista) -------
   const totalesMes_view = useMemo(
     () => filterByMonths(totalesMes_year, monthsView),
@@ -292,28 +310,70 @@ export default function DashboardCitas() {
 
         {/* Meses para VER (multi-select) */}
         <FormControl size="small" sx={{ minWidth: 260 }}>
-          <InputLabel>Meses a visualizar</InputLabel>
-          <Select
-            multiple
-            value={monthsView}
-            label="Meses a visualizar"
-            onChange={(e) => setMonthsView(e.target.value as string[])}
-            renderValue={(selected) => (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                {(selected as string[]).slice(0, 3).map(v => (
-                  <Chip key={v} label={monthLabel(v)} />
-                ))}
-                {(selected as string[]).length > 3 && (
-                  <Chip label={`+${(selected as string[]).length - 3}`} />
+            <InputLabel>Meses a visualizar</InputLabel>
+            <Select
+                multiple
+                value={monthsView}
+                label="Meses a visualizar"
+                // mantenemos onChange por accesibilidad/teclado
+                onChange={(e) => setMonthsView(e.target.value as string[])}
+                renderValue={(selected) => (
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {(selected as string[]).slice(0, 3).map(v => (
+                    <Chip key={v} label={monthLabel(v)} />
+                    ))}
+                    {(selected as string[]).length > 3 && (
+                    <Chip label={`+${(selected as string[]).length - 3}`} />
+                    )}
+                </Box>
                 )}
-              </Box>
-            )}
-          >
-            {allMonths.map(m => (
-              <MenuItem key={m} value={m}>{monthLabel(m)}</MenuItem>
-            ))}
-          </Select>
+                MenuProps={{
+                PaperProps: { sx: { maxHeight: 360 } },
+                }}
+            >
+                {/* Encabezado del menú con acciones rápidas */}
+                <ListSubheader
+                disableSticky
+                sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}
+                >
+                <Typography variant="subtitle2" sx={{ pl: 1 }}>Selecciona meses</Typography>
+                <Box sx={{ display: "flex", gap: 1, pr: 1 }}>
+                    <Button size="small" onClick={(e) => { e.preventDefault(); handleToggleAll(); }}>
+                    {isAllSelected ? "Limpiar" : "Seleccionar todo"}
+                    </Button>
+                </Box>
+                </ListSubheader>
+
+                <Divider />
+
+                {allMonths.map((m) => {
+                const selected = monthsView.includes(m);
+                return (
+                    <MenuItem
+                    key={m}
+                    value={m}
+                    onClick={(e) => { e.preventDefault(); handleToggleMonth(m); }}
+                    sx={{
+                        // resalta los seleccionados
+                        ...(selected && {
+                        bgcolor: (theme) => theme.palette.action.selected, // tono sutil
+                        "&:hover": { bgcolor: (theme) => theme.palette.action.selected },
+                        fontWeight: 600,
+                        }),
+                    }}
+                    >
+                    <Checkbox
+                        checked={selected}
+                        size="small"
+                        sx={{ mr: 1 }}
+                    />
+                    <ListItemText primary={monthLabel(m)} />
+                    </MenuItem>
+                );
+                })}
+            </Select>
         </FormControl>
+
 
         {/* Mes para PDF */}
         <FormControl size="small" sx={{ minWidth: 200 }}>

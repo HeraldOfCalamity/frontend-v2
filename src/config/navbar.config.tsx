@@ -58,5 +58,5 @@ export const PATIENT_OPTIONS: NavBarConfig = [
 export const ESPECIALIST_OPTIONS: NavBarConfig = [
     {type: 'button', text: 'Inicio', path: '/especialista/inicio'},
     {type: 'button', text: 'Mi Perfil', path: '/especialista/perfil'},
-    {type: 'button', text: 'Pacientes Asignados', path: '/especialista/pacientes'},
+    // {type: 'button', text: 'Pacientes Asignados', path: '/especialista/pacientes'},
 ]

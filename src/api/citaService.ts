@@ -93,3 +93,12 @@ export async function cancelCita(id: string){
         handleError(err, 'Error al confirmar cita')
     }
 }
+
+export async function attendCita(id: string){
+    try{
+        const res = await api.put(`${CITA_ROUTE}attend/${id}`);
+        return res.data;
+    }catch(err: any){
+        handleError(err, 'Error al marcar cita como atendida')
+    }
+}
