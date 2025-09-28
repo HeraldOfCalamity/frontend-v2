@@ -5,6 +5,7 @@ import type { Column, TableAction } from "../common/GenericTable";
 import GenericTable from "../common/GenericTable";
 import Swal from "sweetalert2";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
+import { BASE_URL } from "../../config/benedetta.api.config";
 
 interface BuscarEspecialidadProps{
     open: boolean;
@@ -64,7 +65,7 @@ export default function BuscarEspecialidad({
                                 <CardActionArea onClick={() => onSelectEspecialidad(esp)}>
                                     <CardMedia
                                         sx={{height:140}}
-                                        image={esp.image}
+                                        image={`${BASE_URL}${esp.image}`}
                                     >
                                         {!esp.image && <Skeleton variant="rectangular" height={140} sx={{pb: 2}}/>}
                                     </CardMedia>

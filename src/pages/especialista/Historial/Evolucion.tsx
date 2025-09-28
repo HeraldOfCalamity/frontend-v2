@@ -29,6 +29,15 @@ import { labelEs } from "../../../utils/nerLabels";
 type EvoField = 'recursos' | 'evolucion';
 type Store = Record<EvoField, string>;
 
+async function hasVideoInput(): Promise<boolean> {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.some(d => d.kind === "videoinput");
+  } catch {
+    return false;
+  }
+}
+
 /* ===== Limpieza “post” (no en vivo) ===== */
 function cleanCommandsLater(text: string): string {
   const patterns: RegExp[] = [
@@ -260,36 +269,79 @@ export default function Evolucion({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  async function startCamera() {
+async function startCamera() {
+  if (!("mediaDevices" in navigator) || !navigator.mediaDevices.getUserMedia) {
+    throw new Error("getUserMedia no está soportado en este navegador/contexto.");
+  }
+
+  const trials: (MediaStreamConstraints)[] = [
+    { video: { facingMode: { ideal: "environment" } }, audio: false },
+    { video: { facingMode: "user" }, audio: false },
+    { video: true, audio: false },
+  ];
+
+  let lastErr: any = null;
+  for (const c of trials) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } }, audio: false
-      });
+      const stream = await navigator.mediaDevices.getUserMedia(c);
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-    } catch {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" }, audio: false
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
+      return; // ✅ listo
+    } catch (e) {
+      lastErr = e;
     }
   }
+  throw lastErr; // si todas fallan, propagamos el último error
+}
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
   }
-  async function handleOpenCam() {
-    setOpenCam(true);
+async function handleOpenCam() {
+  try {
+    const hasCam = await hasVideoInput();
+    if (!hasCam) {
+      await Swal.fire(
+        "Cámara no disponible",
+        "No se detectó ningún dispositivo de cámara. Conecta una cámara o prueba desde un móvil.",
+        "warning"
+      );
+      return;
+    }
     await startCamera();
+    setOpenCam(true);
+  } catch (err: any) {
+    const name = err?.name || "";
+    if (name === "NotAllowedError") {
+      Swal.fire(
+        "Permiso denegado",
+        "Concede acceso a la cámara (ícono del candado → Permisos) y vuelve a intentarlo.",
+        "info"
+      );
+    } else if (name === "NotFoundError") {
+      Swal.fire(
+        "Cámara no encontrada",
+        "No se encontró un dispositivo de video compatible. Prueba con otra cámara o dispositivo.",
+        "warning"
+      );
+    } else if (location.protocol !== "https:" && location.hostname !== "localhost") {
+      Swal.fire(
+        "Contexto no seguro",
+        "El acceso a la cámara requiere HTTPS (o localhost). Abre la app en HTTPS.",
+        "info"
+      );
+    } else {
+      Swal.fire("Error al iniciar cámara", `${err}`, "error");
+    }
+    // aseguramos estado limpio
+    stopCamera();
+    setOpenCam(false);
   }
+}
   function handleCloseCam() {
     stopCamera();
     setOpenCam(false);
