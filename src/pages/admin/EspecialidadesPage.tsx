@@ -85,23 +85,23 @@ export default function EspecialidadesPage(){
                 </Box>
             ),
         },
-        {
-            field: 'tratamientos', 
-            headerName: 'Tratamientos', 
-            align: 'center',
-            render: (v: string[]) => {
-                const trat = tratamientos.filter(t => v.includes(t.id));
-                return (
-                    <Box display={'flex'} flexDirection={'column'}>
-                        {trat.map(t => 
-                            <Box display={'flex'} textAlign={'left'} mb={1} alignItems={'center'}>
-                                <MedicalInformationOutlinedIcon color="action" sx={{mr: 1}} /> {t.nombre}
-                            </Box>
-                        )}
-                    </Box>
-                )
-            }
-},
+//         {
+//             field: 'tratamientos', 
+//             headerName: 'Tratamientos', 
+//             align: 'center',
+//             render: (v: string[]) => {
+//                 const trat = tratamientos.filter(t => v.includes(t.id));
+//                 return (
+//                     <Box display={'flex'} flexDirection={'column'}>
+//                         {trat.map(t => 
+//                             <Box display={'flex'} textAlign={'left'} mb={1} alignItems={'center'}>
+//                                 <MedicalInformationOutlinedIcon color="action" sx={{mr: 1}} /> {t.nombre}
+//                             </Box>
+//                         )}
+//                     </Box>
+//                 )
+//             }
+// },
         {field: 'image', headerName: 'Imagen', align: 'center', render: (image) => {
             return image 
                 ? <img src={`${BASE_URL}${image}`} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />

@@ -57,9 +57,9 @@ export default function EspecialidadForm({
         }
     }
 
-    useEffect(() => {
-        obtenerTratamientos();
-    }, [])
+    // useEffect(() => {
+    //     obtenerTratamientos();
+    // }, [])
 
     useEffect(() => {
         reset(initialData || {nombre: '', descripcion: '', image: '', tratamientos: []});
@@ -97,7 +97,7 @@ export default function EspecialidadForm({
                             rows={5}
                             {...register("descripcion")}
                         />
-                        <Stack>
+                        {/* <Stack>
                             <Controller
                                 name="tratamientos"
                                 control={control}
@@ -150,7 +150,7 @@ export default function EspecialidadForm({
                                     </Box>
                                 )}
                             />
-                        </Stack>
+                        </Stack> */}
                         <Stack mt={1} spacing={1}>
                             <InputLabel>Imagen Descriptiva</InputLabel>
                             <InputFileUpload 
