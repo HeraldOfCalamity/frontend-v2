@@ -29,15 +29,7 @@ export const ADMIN_OPTIONS: NavBarConfig = [
             {type: 'button', text: 'Especialistas', path: '/admin/especialistas'},
         ]
     },
-    {
-        type: 'menu', 
-        text: 'Especialidades y Tratamientos', 
-        icon: <KeyboardArrowDownOutlinedIcon />, 
-        options: [
-            {type: 'button', text: 'Especialidades', path: '/admin/especialidades'},
-            {type: 'button', text: 'Tratamientos', path: '/admin/tratamientos'},
-        ]
-    },
+    {type: 'button', text: 'Especialidades', path: '/admin/especialidades'},
     {
         type: 'menu',
         text: 'Gestion Administrativa',

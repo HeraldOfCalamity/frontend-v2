@@ -268,6 +268,30 @@ export default function Evolucion({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  useEffect(() => {
+  if (!openCam) return;
+
+  const attach = async () => {
+    // espera hasta que el <video> esté montado
+    if (videoRef.current && streamRef.current) {
+      try {
+        // Safari/iOS y algunos Chrome requieren setear y luego play()
+        videoRef.current.srcObject = streamRef.current;
+        await videoRef.current.play().catch(() => {});
+      } catch { /* noop */ }
+    } else {
+      // si aún no existe, reintenta en el siguiente frame
+      requestAnimationFrame(attach);
+    }
+  };
+
+  attach();
+
+  // limpieza del srcObject al cerrar o recrear
+  return () => {
+    if (videoRef.current) videoRef.current.srcObject = null;
+  };
+}, [openCam]);
 
 async function startCamera() {
   if (!("mediaDevices" in navigator) || !navigator.mediaDevices.getUserMedia) {
