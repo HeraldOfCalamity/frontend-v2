@@ -119,7 +119,15 @@ export default function Anamnesis({
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
   const [canEdit, setCanEdit] = useState(false);
   const theme = useTheme();
-
+  useEffect(() => {
+    try {
+      hardStop();         // corta cualquiera sesión residual
+      disableDictation(); // fuerza dictationEnabled = false
+      resetAllTranscripts?.();
+    } catch {}
+    // sólo al montar
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Campo activo
   const [active, setActive] = useState<FieldKey>("personales");
 
@@ -263,6 +271,8 @@ export default function Anamnesis({
       // limpiamos comandos y preparamos payload
       const payload = {
         condActual: cleanCommandsLater(view.condicion),
+        antPersonales: cleanCommandsLater(view.personales),
+        antFamiliares: cleanCommandsLater(view.familiares),
         intervencionClinica: cleanCommandsLater(view.intervencion),        
       };
 
@@ -409,7 +419,7 @@ export default function Anamnesis({
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
             slotProps={{
               input:{
-                readOnly: dictationEnabled || (!!historial && !canEdit)
+                readOnly: dictationEnabled || !canEdit /*|| (!!historial && !canEdit)*/
               }
             }}
           />
@@ -428,7 +438,7 @@ export default function Anamnesis({
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
             slotProps={{
               input:{
-                readOnly: dictationEnabled || (!!historial && !canEdit)
+                readOnly: dictationEnabled || !canEdit/*|| (!!historial && !canEdit)*/
               }
             }}
           />
@@ -447,7 +457,7 @@ export default function Anamnesis({
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
             slotProps={{
               input:{
-                readOnly: dictationEnabled || (!!historial && !canEdit)
+                readOnly: dictationEnabled || !canEdit/*|| (!!historial && !canEdit)*/
               }
             }}
           />
@@ -465,7 +475,7 @@ export default function Anamnesis({
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
             slotProps={{
               input:{
-                readOnly: dictationEnabled || (!!historial && !canEdit)
+                readOnly: dictationEnabled || !canEdit/*|| (!!historial && !canEdit)*/
               }
             }}
           />
