@@ -2,6 +2,7 @@ import {
     Alert,
     Box,
     Button,
+    Chip,
     Container,
     Dialog,
     DialogActions,
@@ -9,6 +10,7 @@ import {
     DialogTitle,
     Grid,
     InputLabel,
+    Paper,
     Stack,
     TextField,
     Typography,
@@ -239,179 +241,140 @@ export default function HistorialDialog({
     }
   }, [disableDictation, hardStop, stop, resetAllTranscripts, onClose, HISTORIAL_TABS])
 
+  const handleCancelModal = useCallback(() => {
+    try { disableDictation?.(); } catch {}
+    try { hardStop?.(); } catch { try { stop(); } catch {} }
+    try { resetAllTranscripts?.(); } catch {}
+
+    setHistorial(undefined);
+    setSelectedTab(HISTORIAL_TABS[0]);
+
+    onClose();
+  }, [])
+
   return (
     <Dialog open={open} onClose={handleEndAttention} fullWidth fullScreen>
-      <DialogContent>
-        <Container>
-          <DialogTitle variant="h3">Historial Clinico</DialogTitle>
-          <Stack spacing={2}>
-            <Box>
-              <Typography
-                variant="h5"
-                fontWeight={500}
-                textAlign={"center"}
-                bgcolor={benedettaPink}
-                p={2}
-                border={2}
-                borderRadius={2}
-              >
-                Identificación del Usuario/Paciente
-              </Typography>
-              <Grid
-                spacing={2}
-                p={2}
-                container
-                borderLeft={2}
-                borderRight={2}
-                borderBottom={2}
-              >
-                <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>N° de HC</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={historial?._id}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Nombres y Apellidos</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={`${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Edad</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={
-                      dayjs().year() - dayjs(pacienteProfile?.paciente.fecha_nacimiento).year()
-                    }
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Fecha de Nacimiento</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={dayjs(pacienteProfile?.paciente.fecha_nacimiento).format('DD/MM/YYYY')}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid>
-                {/* <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Estado Civil</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={"Casado"}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid> */}
-                <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>C.I.</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={pacienteProfile?.user.ci}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid>
-                {/* <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Sexo</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={"M"}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid> */}
-                {/* <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Domicilio</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={"Hermanos Sejas"}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid> */}
-                <Grid size={{ xs: 6, md: 4 }}>
-                  <InputLabel>Teléfono</InputLabel>
-                  <TextField
-                    variant="standard"
-                    fullWidth
-                    value={pacienteProfile?.user.phone}
-                    slotProps={{ input: { readOnly: true } }}
-                  />
-                </Grid>
-              </Grid>
-            </Box>
-
-            <Box>
-              <Stack direction={"row"} spacing={1} ml={2}>
-                {HISTORIAL_TABS.map((tab) => (
-                  <Button
-                    key={tab.name}
-                    onClick={() => setSelectedTab(tab)}
-                    variant="text"
-                    sx={{
-                      borderTop: 2,
-                      borderRight: 2,
-                      borderLeft: 2,
-                      color: (theme) => theme.palette.common.black,
-                      bgcolor:
-                        tab.name === selectedTab.name ? benedettaPink : "inherit",
-                      textTransform: "capitalize",
-                      display: !historial && tab.name !== "anamnesis" ? "none" : "",
-                    }}
-                  >
-                    {tab.name}
-                  </Button>
-                ))}
+      {/* Header fijo */}
+      <Box
+        component="header"
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: (t) => t.zIndex.drawer + 1,
+          bgcolor: 'background.paper',
+          borderBottom: (t) => `1px solid ${t.palette.divider}`,
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: 1.5 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
+            <Stack gap={0.5}>
+              <Typography variant="h5" fontWeight={700}>Historial Clínico</Typography>
+              <Stack direction="row" gap={1} flexWrap="wrap">
+                <Chip label={`Paciente: ${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`} size="small" />
+                {historial?._id && <Chip label={`HC: ${historial?._id}`} size="small" color="info" />}
+                {pacienteProfile?.user?.phone && <Chip label={`Tel: ${pacienteProfile?.user.phone}`} size="small" variant="outlined" />}
               </Stack>
+            </Stack>
 
-              <Box
-                border={4}
-                borderRadius={2}
-                borderColor={(theme) =>
-                  selectedTab.name === "anamnesis"
-                    ? listening && dictationEnabled
-                      ? theme.palette.success.main
-                      : theme.palette.error.main
-                    : "transparent"
-                }
-              >
-                <Box border={2} flexGrow={1} p={2} borderRadius={2}>
-                  <Typography
-                    variant="h5"
-                    fontWeight={500}
-                    textAlign={"center"}
-                    bgcolor={benedettaPink}
-                    p={2}
-                    border={1}
-                    gutterBottom
-                    textTransform={"capitalize"}
-                  >
-                    {selectedTab.name}
-                  </Typography>
-
-                  {selectedTab.component}
-                </Box>
-              </Box>
-            </Box>
+            <Stack direction="row" gap={1}>
+              <Button color="secondary" variant="contained" onClick={handleEndAttention}>
+                Terminar Atención
+              </Button>
+              <Button color="error" variant="contained" onClick={handleCancelModal}>  
+                Cancelar
+              </Button>
+            </Stack>
           </Stack>
         </Container>
-      </DialogContent>
+      </Box>
 
-      <DialogActions>
-        <Button color="error" variant="contained" onClick={handleEndAttention}>
-          Terminar Atención
-        </Button>
-      </DialogActions>
+      {/* Body */}
+      <DialogContent sx={{ px: 0 }}>
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          {/* Identificación */}
+          <Paper elevation={4}  sx={{ p: 2, mb: 2, /*bgcolor: theme => theme.palette.primary.main*/ }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+              Identificación del Usuario/Paciente
+            </Typography>
+
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InputLabel>N° de HC</InputLabel>
+                <TextField variant="outlined" size="small" fullWidth value={historial?._id || ''} slotProps={{ input: { readOnly: true } }} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InputLabel>Nombres y Apellidos</InputLabel>
+                <TextField variant="outlined" size="small" fullWidth
+                  value={`${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`}
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <InputLabel>Edad</InputLabel>
+                <TextField variant="outlined" size="small" fullWidth
+                  value={dayjs().year() - dayjs(pacienteProfile?.paciente.fecha_nacimiento).year()}
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 6, md: 2 }}>
+                <InputLabel>F. Nacimiento</InputLabel>
+                <TextField variant="outlined" size="small" fullWidth
+                  value={dayjs(pacienteProfile?.paciente.fecha_nacimiento).format('DD/MM/YYYY')}
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InputLabel>C.I.</InputLabel>
+                <TextField variant="outlined" size="small" fullWidth value={pacienteProfile?.user.ci} slotProps={{ input: { readOnly: true } }} />
+              </Grid>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <InputLabel>Teléfono</InputLabel>
+                <TextField variant="outlined" size="small" fullWidth value={pacienteProfile?.user.phone} slotProps={{ input: { readOnly: true } }} />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          {/* Tabs estilo botones */}
+          <Stack direction="row" gap={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+            {HISTORIAL_TABS.map((tab) => {
+              const active = tab.name === selectedTab.name;
+              return (
+                <Button
+                  key={tab.name}
+                  onClick={() => setSelectedTab(tab)}
+                  variant={active ? "contained" : "outlined"}
+                  color={active ? "primary" : "inherit"}
+                  sx={{
+                    textTransform: 'capitalize',
+                    display: !historial && tab.name !== "anamnesis" ? "none" : "inline-flex",
+                  }}
+                >
+                  {tab.name}
+                </Button>
+              );
+            })}
+          </Stack>
+
+          {/* Contenido tab con marco de estado de dictado solo en anamnesis */}
+          <Paper
+            variant="outlined"
+            sx={(t) => ({
+              p: 2,
+              borderWidth: selectedTab.name === "anamnesis" ? 2 : 1,
+              borderColor:
+                selectedTab.name === "anamnesis"
+                  ? (dictationEnabled ? t.palette.success.main : t.palette.error.main)
+                  : t.palette.divider,
+            })}
+          >
+            <Typography variant="h6" fontWeight={600} gutterBottom textTransform="capitalize">
+              {selectedTab.name}
+            </Typography>
+            {selectedTab.component}
+          </Paper>
+        </Container>
+      </DialogContent>
     </Dialog>
   );
+
 }

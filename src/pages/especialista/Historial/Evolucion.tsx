@@ -6,7 +6,8 @@ import {
   Chip,
   ToggleButtonGroup,
   ToggleButton,
-  TextField
+  TextField,
+  Paper
 } from "@mui/material";
 import GenericTable, { type Column, type TableAction } from "../../../components/common/GenericTable";
 import dayjs from "dayjs";
@@ -547,6 +548,7 @@ async function handleOpenCam() {
       field: 'recursosTerapeuticos',
       headerName: 'Recursos Terapeuticos',
       align: 'center',
+      width: isMobile ? '100px' : undefined,
       render: (v) => (
           <Box maxHeight={'14vh'}>
             { v 
@@ -569,6 +571,7 @@ async function handleOpenCam() {
       field: 'evolucionText',
       headerName: 'Evolución del tratamiento',
       align: 'center',
+      width: isMobile ? '100px' : undefined,
       render: (v) => (
         <Box maxHeight={'14vh'}>
           { v 
@@ -635,74 +638,75 @@ async function handleOpenCam() {
 
 
   // +++ NUEVO: safe-highlight: usa offsets si existen; si no, busca por texto (case-insensitive)
-function highlightText(text: string, ents?: NerSpan[]) {
+// Reemplaza la función highlightText existente por esta:
+function highlightTextStrict(
+  text: string,
+  spans: { start?: number; end?: number; label?: string }[] = []
+) {
   if (!text) return text;
-  const spans = (ents || []).slice();
 
-  // a) si hay offsets válidos y dentro del rango, úsalos
-  const offsetSpans = spans
-    .filter(s => typeof s.start === "number" && typeof s.end === "number" && s.start! >= 0 && s.end! <= text.length && s.end! > s.start!)
-    .map(s => ({ start: s.start!, end: s.end!, label: s.label }));
-
-  // b) si no hay offsets, hacemos matching por texto (case-insensitive, prefiriendo spans largos)
-  let textLower = text.toLowerCase();
-  const byText: { start: number; end: number; label: string }[] = [];
-  if (offsetSpans.length === 0) {
-    const entsByLen = spans
-      .filter(s => s.text && s.text.trim().length > 0)
-      .sort((a,b) => (b.text.length - a.text.length));
-    const used: boolean[] = new Array(text.length).fill(false);
-
-    for (const e of entsByLen) {
-      const needle = e.text.toLowerCase();
-      let from = 0;
-      while (true) {
-        const idx = textLower.indexOf(needle, from);
-        if (idx === -1) break;
-        const j = idx + needle.length;
-        // evita solapados burdos
-        let free = true;
-        for (let k = idx; k < j; k++) if (used[k]) { free = false; break; }
-        if (free) {
-          for (let k = idx; k < j; k++) used[k] = true;
-          byText.push({ start: idx, end: j, label: e.label });
-        }
-        from = j;
-      }
-    }
-  }
-
-  const ranges = (offsetSpans.length ? offsetSpans : byText)
-    .sort((a,b) => a.start - b.start);
+  const ranges = spans
+    .filter(s =>
+      Number.isFinite(s.start) &&
+      Number.isFinite(s.end) &&
+      (s.start as number) >= 0 &&
+      (s.end as number) <= text.length &&
+      (s.end as number) > (s.start as number)
+    )
+    .map(s => ({ start: s.start as number, end: s.end as number, label: s.label || '' }))
+    .sort((a, b) => a.start - b.start);
 
   if (ranges.length === 0) return text;
 
-  const out: React.ReactNode[] = [];
-    let cursor = 0;
-    ranges.forEach((r, i) => {
-      if (r.start > cursor) {
-        out.push(<span key={`t-${i}-plain`}>{text.slice(cursor, r.start)}</span>);
-      }
-      out.push(
-        <mark
-          key={`t-${i}-hl`}
-          style={{ padding: "0 2px", background: "rgba(255,235,59,0.6)", borderRadius: 3 }}
-          title={r.label}
-        >
-          {text.slice(r.start, r.end)}
-        </mark>
-      );
-      cursor = r.end;
-    });
-    if (cursor < text.length) out.push(<span key="t-last">{text.slice(cursor)}</span>);
-    return <>{out}</>;
+  const parts: React.ReactNode[] = [];
+  let i = 0;
+  for (const [idx, r] of ranges.entries()) {
+    if (r.start > i) parts.push(<span key={`p-${idx}`}>{text.slice(i, r.start)}</span>);
+    parts.push(
+      <mark
+        key={`h-${idx}`}
+        style={{ padding: "0 2px", background: "rgba(255,235,59,0.6)", borderRadius: 3 }}
+        title={r.label}
+      >
+        {text.slice(r.start, r.end)}
+      </mark>
+    );
+    i = r.end;
   }
+  if (i < text.length) parts.push(<span key="tail">{text.slice(i)}</span>);
+  return <>{parts}</>;
+}
+function filterSpansForField(
+  all: (NerSpan | any)[] | undefined,
+  field: 'recursos' | 'evolucion',
+  textLen: number
+) {
+  if (!all) return [];
+  return all.filter(s => {
+    const tag = s.field ?? s.where ?? s.section ?? s.scope; // nombres posibles
+    if (tag && tag !== field) return false;
+    return Number.isFinite(s.start) &&
+           Number.isFinite(s.end) &&
+           s.start >= 0 && s.end <= textLen && s.end > s.start;
+  });
+}
 
+const nerText =
+  nerField === 'recursos'
+    ? (nerEntry?.recursosTerapeuticos || '')
+    : (nerEntry?.evolucionText || '');
+
+const nerSpansForField = filterSpansForField(
+  (nerEntry?.ner as unknown as NerSpan[]) || [],
+  nerField,
+  nerText.length
+);
 
   return (
     <>
-      <Box>
-        <Stack direction={'row'} justifyContent={'end'} mb={2}>
+      {/* Barra de acciones */}
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <Stack direction="row" justifyContent="flex-end">
           <Button
             startIcon={<AddCircleOutline />}
             fullWidth
@@ -713,18 +717,41 @@ function highlightText(text: string, ents?: NerSpan[]) {
             Agregar Entrada
           </Button>
         </Stack>
-        <GenericTable
-          columns={columns}
-          data={sortedRows}
-          actions={actions}
-        />
-      </Box>
+      </Paper>
 
-      {/* Modal: ver imágenes de la entrada (todas las keys firmadas) */}
+      {/* Tabla */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: { xs: 1, sm: 2 },
+          overflowX: 'auto',            // ← permite scroll horizontal
+        }}
+      >
+        <Box
+          sx={{
+            minWidth: 720,              // ← ancho mínimo “respirable”
+            '& .MuiTableCell-root': {
+              py: { xs: 0.75, sm: 1 },  // celdas más compactas en móvil
+              px: { xs: 1, sm: 2 },
+              fontSize: { xs: 12, sm: 14 },
+            },
+            '& .MuiTableHead-root .MuiTableCell-root': {
+              fontWeight: 700,
+            },
+            '& .MuiButton-root': {
+              minWidth: 0,              // botones “Leer” no desbordan
+            },
+          }}
+        >
+          <GenericTable columns={columns} data={sortedRows} actions={actions} />
+        </Box>
+      </Paper>
+
+      {/* Imágenes guardadas */}
       <Dialog maxWidth="md" fullWidth open={openImage} onClose={() => setOpenImage(false)}>
         <DialogTitle>Imágenes guardadas</DialogTitle>
-        <DialogContent>
-          <Stack direction="row" spacing={2} flexWrap="wrap" justifyContent={'space-around'}>
+        <DialogContent dividers>
+          <Stack direction="row" spacing={2} flexWrap="wrap" justifyContent="space-around">
             {imagePreviewUrls.length === 0 ? (
               <Typography variant="body2">Sin imágenes.</Typography>
             ) : imagePreviewUrls.map((u, i) => (
@@ -732,149 +759,104 @@ function highlightText(text: string, ents?: NerSpan[]) {
             ))}
           </Stack>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenImage(false)} variant="contained">Listo</Button>
+        </DialogActions>
       </Dialog>
 
-      {/* Diálogo para crear una entrada (SOLO TEXTO) */}
-      <Dialog maxWidth={"md"} fullWidth open={openAddEntry} onClose={() => setOpenAddEntry(false)}>
+      {/* Crear entrada (solo texto) */}
+      <Dialog maxWidth="md" fullWidth open={openAddEntry} onClose={() => setOpenAddEntry(false)}>
         <DialogTitle>Agregar Registro de Evolución</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            {/* Estado dictado */}
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} alignItems="center">
+                <Stack direction="row" gap={1} flex={1}>
+                  <Button
+                    fullWidth size="large" variant="contained" startIcon={<Mic />}
+                    onClick={() => {
+                      enableDictation();
+                      anchorsRef.current[active] = transcript.length;
+                      start({ language: 'es-BO' });
+                    }}
+                  >
+                    Iniciar Dictado
+                  </Button>
+                  <Button
+                    fullWidth size="large" variant="contained" color="secondary" startIcon={<MicOff />}
+                    onClick={() => { commitActive(); hardStop(); }}
+                  >
+                    Detener
+                  </Button>
+                </Stack>
 
-          {/* Estado del dictado */}
-          <Stack mb={2} direction="row" spacing={2} alignItems="center">
-            <div>
-              <InputLabel>Dictado (interim):</InputLabel>
-              <Typography>{interimTranscript}</Typography>
-            </div>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setStore(prev => ({
-                  recursos:  cleanCommandsLater(prev.recursos),
-                  evolucion: cleanCommandsLater(prev.evolucion),
-                }));
-              }}
-            >
-              Limpiar comandos (post)
-            </Button>
-          </Stack>
+                <Stack flex={2}>
+                  <InputLabel>Dictado (interim):</InputLabel>
+                  <Typography variant="body2" noWrap>{interimTranscript || '—'}</Typography>
+                </Stack>
 
-          <Box sx={{
-            border:4,
-            borderRadius:2,
-            p: 2,
-            borderColor: theme =>
-              listening && dictationEnabled
-                ?  theme.palette.success.main
-                : theme.palette.error.main
-          }}>
-            <Stack direction={'row'} mb={2} spacing={2}>
-              <Button
-                fullWidth
-                size="large"
-                variant="contained"
-                startIcon={<Mic />}
-                onClick={() => {
-                  enableDictation();
-                  anchorsRef.current[active] = transcript.length;
-                  start({ language: 'es-BO' })
-                }}
-              >
-                Iniciar Dictado
-              </Button>
-              <Button
-                fullWidth
-                size="large"
-                variant="contained"
-                color="secondary"
-                startIcon={<MicOff />}
-                onClick={() => {
-                  commitActive();
-                  hardStop();
-                }}
-              >
-                Detener Dictado
-              </Button>
-            </Stack>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setStore(prev => ({
+                      recursos:  cleanCommandsLater(prev.recursos),
+                      evolucion: cleanCommandsLater(prev.evolucion),
+                    }));
+                  }}
+                >
+                  Limpiar comandos (post)
+                </Button>
+              </Stack>
+            </Paper>
 
             <Grid container spacing={2}>
-              <Grid size={{xs: 12, md:6}}>
-                <Typography variant="h6">Recursos Terapéuticos</Typography>
-                {/* <Box sx={boxSx(active === 'recursos')}>
-                  {view.recursos}
-                </Box> */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
-                  multiline
-                  minRows={6}
-                  fullWidth
+                  label="Recursos Terapéuticos"
+                  multiline minRows={6} fullWidth
                   value={view.recursos}
                   onFocus={() => setActive('recursos')}
                   onChange={(e) => setStore((p) => ({ ...p, recursos: e.target.value }))}
                   sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-                  slotProps={{
-                    input:{
-                      readOnly: dictationEnabled
-                    }
-                  }}
+                  slotProps={{ input: { readOnly: dictationEnabled } }}
                 />
               </Grid>
 
-              <Grid size={{xs: 12, md:6}}>
-                <Typography variant="h6">Evolución del Tratamiento</Typography>
-                {/* <Box sx={boxSx(active === 'evolucion')}>
-                  {view.evolucion}
-                </Box> */}
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
-                  multiline
-                  minRows={6}
-                  fullWidth
+                  label="Evolución del Tratamiento"
+                  multiline minRows={6} fullWidth
                   value={view.evolucion}
                   onFocus={() => setActive('evolucion')}
                   onChange={(e) => setStore((p) => ({ ...p, evolucion: e.target.value }))}
                   sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-                  slotProps={{
-                    input:{
-                      readOnly: dictationEnabled
-                    }
-                  }}
+                  slotProps={{ input: { readOnly: dictationEnabled } }}
                 />
               </Grid>
             </Grid>
-          </Box>
+          </Stack>
         </DialogContent>
-
         <DialogActions>
-          <Button variant="contained" color="success" onClick={onGrabarEntrada}>
-            Grabar
-          </Button>
-          <Button variant="contained" color="error" onClick={() => {
-              hardStop();
-              setOpenAddEntry(false);
-            }}>
-            Cancelar
-          </Button>
+          <Button variant="contained" color="success" onClick={onGrabarEntrada}>Grabar</Button>
+          <Button variant="contained" color="error" onClick={() => { hardStop(); setOpenAddEntry(false); }}>Cancelar</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Diálogo: Agregar imágenes a una entrada (desde acción de tabla) */}
+      {/* Agregar imágenes a entrada */}
       <Dialog maxWidth="sm" fullWidth open={imageModalOpen} onClose={closeImageModal}>
-        <DialogTitle>
-          Agregar imágenes {targetEntry ? `a la entrada #${targetEntry.id}` : ""}
-        </DialogTitle>
-        <DialogContent>
+        <DialogTitle>Agregar imágenes {targetEntry ? `a la entrada #${targetEntry.id}` : ""}</DialogTitle>
+        <DialogContent dividers>
           <Stack direction="row" spacing={2} flexWrap="wrap" mb={1}>
             <Button variant="outlined" component="label">
               Adjuntar imágenes
               <input hidden accept="image/*" multiple type="file" onChange={onPickImagesForEntry} />
             </Button>
-
             <Button variant="outlined" component="label">
               Cámara (sistema móvil)
               <input hidden accept="image/*" capture="environment" type="file" onChange={onPickImagesForEntry} />
             </Button>
-
-            <Button variant="outlined" onClick={handleOpenCam}>
-              Cámara en la app
-            </Button>
+            <Button variant="outlined" onClick={handleOpenCam}>Cámara en la app</Button>
           </Stack>
 
           {imagePreviewUrls.length > 0 && (
@@ -890,18 +872,12 @@ function highlightText(text: string, ents?: NerSpan[]) {
         </DialogActions>
       </Dialog>
 
-      {/* Sub-diálogo: Cámara en la app (invocado desde el modal de imágenes) */}
+      {/* Cámara en la app */}
       <Dialog open={openCam} onClose={handleCloseCam} fullWidth maxWidth="sm">
         <DialogTitle>Tomar foto</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Box sx={{ position: "relative" }}>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ width: "100%", borderRadius: 8, background: "#000" }}
-            />
+            <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", borderRadius: 8, background: "#000" }} />
             <canvas ref={canvasRef} style={{ display: "none" }} />
           </Box>
         </DialogContent>
@@ -911,30 +887,21 @@ function highlightText(text: string, ents?: NerSpan[]) {
         </DialogActions>
       </Dialog>
 
-      {/* Detalle para móviles (mostrar textos largos) */}
-      <Dialog
-        maxWidth={'md'}
-        fullWidth
-        open={openDetailDialog}
-        onClose={() => {setOpenDetailDialog(false); setDetailText('')}}
-      >
+      {/* Detalle móviles */}
+      <Dialog maxWidth="md" fullWidth open={openDetailDialog} onClose={() => { setOpenDetailDialog(false); setDetailText(''); }}>
         <DialogTitle>Detalle</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <DialogContentText>
             {detailText ? `${detailText.charAt(0).toUpperCase()}${detailText.toLowerCase().slice(1)}.` : 'Sin información.'}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={() => {setOpenDetailDialog(false); setDetailText('')}}
-          >
+          <Button variant="contained" color="error" onClick={() => { setOpenDetailDialog(false); setDetailText(''); }}>
             Cerrar
           </Button>
         </DialogActions>
       </Dialog>
-      {/* +++ NUEVO: Diálogo NER por entrada */}
+
       <Dialog
         maxWidth="md"
         fullWidth
@@ -987,10 +954,7 @@ function highlightText(text: string, ents?: NerSpan[]) {
                   lineHeight: 1.6,
                 }}
               >
-                {highlightText(
-                  nerField === 'recursos' ? (nerEntry?.recursosTerapeuticos || '') : (nerEntry?.evolucionText || ''),
-                  nerEntry?.ner as unknown as NerSpan[] || []
-                )}
+                {highlightTextStrict(nerText, nerSpansForField)}
               </Box>
             </>
           ) : (
@@ -1001,7 +965,8 @@ function highlightText(text: string, ents?: NerSpan[]) {
           <Button variant="contained" onClick={closeNer}>Cerrar</Button>
         </DialogActions>
       </Dialog>
-
     </>
   );
+
 }
+
