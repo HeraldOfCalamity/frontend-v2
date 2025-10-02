@@ -327,7 +327,11 @@ export default function Anamnesis({
     if (canEdit && historial) setActive("condicion");
   }, [canEdit, historial]);
 
-  const startDictation = () => start({ language: "es-BO" });
+  const startDictation = () => {
+    enableDictation();
+    anchorsRef.current[active] = transcript.length;
+    start({ language: "es-BO" })
+  };
 
   const nerRaw = (historial as any)?.ner_sections;
   const groupedSections = useMemo(() => groupNer(nerRaw), [nerRaw])
@@ -366,7 +370,7 @@ export default function Anamnesis({
               variant="contained"
               startIcon={<MicOff />}
               disabled={!isMicrophoneAvailable}
-              onClick={() => { commitActive(); hardStop(); }}
+              onClick={() => { commitActive(); disableDictation(); hardStop(); }}
             >
               Detener
             </Button>
