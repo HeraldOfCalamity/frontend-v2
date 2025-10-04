@@ -437,6 +437,7 @@ async function handleOpenCam() {
 
       // 3) Registrar en backend (ahora empuja la KEY y puede devolver historial)
       const reg = await registrarImagen({
+        tratamientoId: tratamientoId || '',
         pacienteId,
         historialId,
         entradaId: entryId,
