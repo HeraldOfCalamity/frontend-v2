@@ -26,11 +26,11 @@ export interface RegisterImageReq {
 
 export interface CreateHistorialReq {
   paciente_id: string;
-  cita_id?: string;
-  antfamiliares?: string;
-  antPersonales?: string;
-  condActual?: string;
-  intervencionClinica?: string;
+  // cita_id?: string;
+  // antfamiliares?: string;
+  // antPersonales?: string;
+  // condActual?: string;
+  // intervencionClinica?: string;
 }
 
 export interface AddEntradaReq {
@@ -39,16 +39,23 @@ export interface AddEntradaReq {
   imageIds: string[]; // ids de ImageAsset
 }
 
-export interface HistorialClinico {
-  _id: string;
-  paciente_id: string;
-//   cita_id?: string;
+export interface Tratamiento {
+  id: string;
+  motivo: string;
   antfamiliares: string;
   antPersonales: string;
   condActual: string;
   intervencionClinica: string;
   entradas: Entrada[];
   ner_sections: any;
+  created_at: string;
+}
+
+export interface HistorialClinico {
+  _id: string;
+  paciente_id: string;
+  tratamientos: Tratamiento[]
+//   cita_id?: string;
   createdAt: string;
 }
 
@@ -136,14 +143,14 @@ export async function crearHistorial(data: CreateHistorialReq) {
   }
 }
 
-export async function getHistorial(id: string) {
-  try {
-    const res = await api.get(`${HISTORIAL_ROUTE}${id}`);
-    return res.data as HistorialClinico;
-  } catch (err: any) {
-    handleError(err, "Error al obtener historial clínico");
-  }
-}
+// export async function getHistorial(id: string) {
+//   try {
+//     const res = await api.get(`${HISTORIAL_ROUTE}${id}`);
+//     return res.data as HistorialClinico;
+//   } catch (err: any) {
+//     handleError(err, "Error al obtener historial clínico");
+//   }
+// }
 
 export async function getHistorialesPorPaciente(pacienteId: string) {
   try {
@@ -155,30 +162,30 @@ export async function getHistorialesPorPaciente(pacienteId: string) {
 }
 
 /** ===== Entradas ===== */
-export async function agregarEntrada(historialId: string, data: AddEntradaReq) {
+export async function agregarEntrada(historialId: string, tratamiento_id: string, data: AddEntradaReq) {
   try {
-    const res = await api.post(`${HISTORIAL_ROUTE}${historialId}/entradas`, data);
+    const res = await api.post(`${HISTORIAL_ROUTE}${historialId}/entradas/${tratamiento_id}`, data);
     return res.data
   } catch (err: any) {
     handleError(err, "Error al agregar entrada al historial");
   }
 }
 
-export async function adjuntarImagenesAEntrada(
-  historialId: string,
-  entradaId: string,
-  imageIds: string[]
-) {
-  try {
-    const res = await api.post(
-      `${HISTORIAL_ROUTE}${historialId}/entradas/${entradaId}/attach-images`,
-      { imageIds }
-    );
-    return res.data as { ok: boolean; count: number };
-  } catch (err: any) {
-    handleError(err, "Error al adjuntar imágenes a la entrada");
-  }
-}
+// export async function adjuntarImagenesAEntrada(
+//   historialId: string,
+//   entradaId: string,
+//   imageIds: string[]
+// ) {
+//   try {
+//     const res = await api.post(
+//       `${HISTORIAL_ROUTE}${historialId}/entradas/${entradaId}/attach-images`,
+//       { imageIds }
+//     );
+//     return res.data as { ok: boolean; count: number };
+//   } catch (err: any) {
+//     handleError(err, "Error al adjuntar imágenes a la entrada");
+//   }
+// }
 
 /** ===== Subida de imágenes (R2) ===== */
 export async function presignUploadImagen(params: {
@@ -225,5 +232,43 @@ export async function actualizarAnamnesis(histId: string, data: {
     return res.data;
   } catch (err: any) {
     handleError(err, "Error al actualizar anamnesis");
+  }
+}
+
+interface AddTratamiento{
+  motivo: string;
+  antFamiliares: string;
+  antPersonales: string;
+  condActual: string;
+  intervencionClinica: string;
+}
+export async function addTratamiento(historial_id: string, body: AddTratamiento){
+  try {
+    const res = await api.post(`${HISTORIAL_ROUTE}${historial_id}/tratamientos`, body);
+    return res.data;
+  } catch (err: any) {
+    handleError(err, "Error al agregar tratamiento");
+  }
+}
+
+export async function setAnamnesisOnce(
+  historialId: string,
+  tratamientoId: string,
+  body: {
+    motivo: string;
+    antPersonales: string;
+    antFamiliares: string;
+    condActual: string;
+    intervencionClinica: string;
+  }
+) {
+  try {
+    const res = await api.post(
+      `${HISTORIAL_ROUTE}${historialId}/tratamientos/${tratamientoId}/anamnesis:set-once`,
+      body
+    );
+    return res.data as HistorialClinico;
+  } catch (err: any) {
+    handleError(err, "No se pudo guardar la anamnesis (solo una vez)");
   }
 }

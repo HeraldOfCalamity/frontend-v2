@@ -19,6 +19,7 @@ export interface Cita {
         descripcion: string;
     }
     motivo: string;
+    cancel_motivo: string;
 }
 
 export interface CreateCita{
@@ -85,9 +86,9 @@ export async function confirmCita(id: string){
     }
 }
 
-export async function cancelCita(id: string){
+export async function cancelCita(id: string, motivo: string){
     try{
-        const res = await api.put(`${CITA_ROUTE}cancelar/${id}`);
+        const res = await api.put(`${CITA_ROUTE}cancelar/${id}/${motivo}`);
         return res.data;
     }catch(err: any){
         handleError(err, 'Error al confirmar cita')

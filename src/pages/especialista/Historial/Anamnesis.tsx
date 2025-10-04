@@ -10,7 +10,7 @@ import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import type { HistorialClinico, NerSpan } from "../../../api/historialService";
 import { Mic, MicOff } from "@mui/icons-material";
 import Swal from "sweetalert2";
-import { actualizarAnamnesis, groupNer, NER_COLORS } from "../../../api/historialService";
+import { actualizarAnamnesis, groupNer, NER_COLORS, setAnamnesisOnce } from "../../../api/historialService";
 import { labelEs } from "../../../utils/nerLabels";
 
 /** Claves de los 4 campos */
@@ -88,22 +88,14 @@ function mapCampo(str: string): FieldKey {
 /* ====== Props ====== */
 interface AnamnesisProps {
   historial: HistorialClinico;
-  handleClickGuardar: (data: {
-    personales: string;
-    familiares: string;
-    condicion: string;
-    intervencion: string;
-  }) => void;
-  handleClickEditar: (data: {
-    condActual: string;
-    intervencionClinica: string;
-  }) => void
+  tratamientoId?: string;
+  onSaved?: (h: HistorialClinico) => void;
 }
 
 export default function Anamnesis({
   historial,
-  handleClickGuardar = () => {},
-  handleClickEditar = () => {},
+  tratamientoId,
+  onSaved
 }: AnamnesisProps) {
   const {
     transcript,
@@ -113,13 +105,11 @@ export default function Anamnesis({
     resetAllTranscripts,
     enableDictation,
     disableDictation,
-    stop,
     start,
     hardStop
   } = useSpeech();
 
   const execFinal = useExecuteWhenFinal(interimTranscript, 450);
-  const [canEdit, setCanEdit] = useState(false);
   const theme = useTheme();
   useEffect(() => {
     try {
@@ -230,7 +220,7 @@ export default function Anamnesis({
         });
       }),
     },
-  ]), [active, canEdit, disableDictation, enableDictation, execFinal, historial, resetAllTranscripts, selectField, stopDictationSafely, transcript.length]);
+  ]), [active, disableDictation, enableDictation, execFinal, historial, resetAllTranscripts, selectField, stopDictationSafely, transcript.length]);
 
   useSpeechCommands(commands, [commands]);
 
@@ -245,87 +235,102 @@ export default function Anamnesis({
     overflowY: 'auto'
   });
 
-  const onGuardarHistorialClick = () => {
-    handleClickGuardar({
-      personales: view.personales,
-      familiares: view.familiares,
-      condicion: view.condicion,
-      intervencion: view.intervencion,
+  // const onGuardarHistorialClick = () => {
+  //   handleClickGuardar({
+  //     personales: view.personales,
+  //     familiares: view.familiares,
+  //     condicion: view.condicion,
+  //     intervencion: view.intervencion,
+  //   });
+  // };
+
+  // Cargar valores desde tratamiento seleccionado (o ultimo)
+  useEffect(() => {
+    if (!historial) return;
+    const trats: any[] = Array.isArray((historial as any).tratamientos) ? (historial as any).tratamientos : [];
+    const last = trats.length ? trats[trats.length - 1] : undefined;
+    const t = (tratamientoId && trats.find(x => x.id === tratamientoId)) || last;
+    setStore({
+      condicion: t?.condActual || "",
+      // backend guarda 'antfamiliares' en el documento; DTO usa 'antFamiliares'
+      familiares: t?.antFamiliares ?? t?.antfamiliares ?? "",
+      personales: t?.antPersonales || "",
+      intervencion: t?.intervencionClinica || "",
     });
-  };
+  }, [historial, tratamientoId]);
 
-  // Guardar cambios (PUT)
-  const onEditHistorialClick = async () => {
+  // Tratamiento y estado de bloqueo (si ya tiene algún campo con contenido, queda bloqueado)
+  const currentTrat = useMemo(() => {
+    const trats: any[] = Array.isArray((historial as any)?.tratamientos) ? (historial as any).tratamientos : [];
+    if (!trats.length) return undefined;
+    return (tratamientoId && trats.find((x: any) => x.id === tratamientoId)) || trats[trats.length - 1];
+  }, [historial, tratamientoId]);
+
+  const isLocked = useMemo(() => {
+    if (!currentTrat) return false;
+    const p = (currentTrat.antPersonales ?? "").trim();
+    const f = (currentTrat.antfamiliares ?? "").trim();
+    const c = (currentTrat.condActual ?? "").trim();
+    const i = (currentTrat.intervencionClinica ?? "").trim();
+    return Boolean(p || f || c || i);
+  }, [currentTrat]);
+
+  const canSave = useMemo(() => {
+    // Solo se puede guardar si NO está bloqueado y hay al menos un campo con texto
+    if (isLocked) return false;
+    const { personales, familiares, condicion, intervencion } = view;
+    return [personales, familiares, condicion, intervencion].every(s => (s ?? "").trim().length > 0);
+  }, [isLocked, view]);
+
+  const onSaveOnce = async () => {
     try {
-      commitActive(); // consolida en memoria local
+      if (!historial?._id || !currentTrat?.id) {
+        await Swal.fire("Atención", "Falta historial o tratamiento.", "info");
+        return;
+    }
       const result = await Swal.fire({
-        title: "Confirmar modificación",
-        text: "¿Está seguro de guardar los cambios? La operación no se puede deshacer.",
+        title: 'Guardar Información',
+        text: 'Está seguro de la información a guardar? Después del guardado no se podrá cambiar.',
+        icon: 'warning',
         showCancelButton: true,
-        cancelButtonText: "No",
-        cancelButtonColor: theme.palette.error.main,
-        confirmButtonText: "Sí, guardar cambios",
-        confirmButtonColor: theme.palette.success.main,
-        icon: "question",
-      });
-      if (!result.isConfirmed || !historial?._id) return;
+        showConfirmButton: true,
+        confirmButtonText: 'Si, Guardar',
+        cancelButtonText: 'No',
+        cancelButtonColor: theme.palette.error.main
+      })
 
-      // limpiamos comandos y preparamos payload
-      const payload = {
-        condActual: cleanCommandsLater(view.condicion),
+      if(!result.isConfirmed) return;
+
+      // cierra dictado y consolida texto visible
+      commitActive();
+      hardStop();
+
+      const res = await setAnamnesisOnce(historial._id, currentTrat.id, {
+        motivo: currentTrat.motivo,
         antPersonales: cleanCommandsLater(view.personales),
         antFamiliares: cleanCommandsLater(view.familiares),
-        intervencionClinica: cleanCommandsLater(view.intervencion),        
-      };
-
-      // detener dictado si estaba activo
-      if (dictationEnabled) stopDictationSafely();
-
-      handleClickEditar(payload)
-      
-      // if (!res?.ok) throw new Error("No se pudo actualizar el historial");
-
-      setCanEdit(false);
-
-      // opcional: sincroniza el store con lo guardado
-      setStore(prev => ({
-        ...prev,
-        condicion: payload.condActual,
-        intervencion: payload.intervencionClinica,
-      }));
+        condActual: cleanCommandsLater(view.condicion),
+        intervencionClinica: cleanCommandsLater(view.intervencion),
+      });
+      if (res) {
+        // refrescar UI desde respuesta del backend
+        const updated: any = res;
+        const trats: any[] = Array.isArray(updated?.tratamientos) ? updated.tratamientos : [];
+        const t = trats.find((x: any) => x.id === currentTrat.id);
+        setStore({
+          personales: t?.antPersonales || "",
+          familiares: t?.antFamiliares ?? t?.antfamiliares ?? "",
+          condicion: t?.condActual || "",
+          intervencion: t?.intervencionClinica || "",
+        });
+        onSaved?.(res);
+        await Swal.fire("Éxito", "Anamnesis guardada. Ya no será editable.", "success");
+      }
     } catch (err: any) {
-      Swal.fire("Error", `${err?.message || err}`, "error");
+      // si backend retorna 409, significa que ya estaba guardada
+      await Swal.fire("Aviso", err?.message || `${err}`, "error");
     }
   };
-
-  const onDiscardChangesClick = () => {
-    if (!historial) return;
-    setStore({
-      personales: historial.antPersonales,
-      familiares: historial.antfamiliares,
-      condicion: historial.condActual,
-      intervencion: historial.intervencionClinica,
-    });
-    setCanEdit(false);
-    // si había dictado en curso, lo detenemos
-    if (dictationEnabled) stopDictationSafely();
-  };
-
-  // Cargar valores iniciales desde historial
-  useEffect(() => {
-    if (!historial) return;
-    setStore({
-      condicion: historial.condActual || "",
-      familiares: historial.antfamiliares || "",
-      personales: historial.antPersonales || "",
-      intervencion: historial.intervencionClinica || "",
-    });
-  }, [historial]);
-
-  // Al activar edición enfocamos “condición”
-  useEffect(() => {
-    if (canEdit && historial) setActive("condicion");
-  }, [canEdit, historial]);
 
   const startDictation = () => {
     enableDictation();
@@ -333,13 +338,41 @@ export default function Anamnesis({
     start({ language: "es-BO" })
   };
 
-  const nerRaw = (historial as any)?.ner_sections;
+
+
+  const nerRaw = useMemo(() => {
+    const trats: any[] = Array.isArray((historial as any)?.tratamientos) ? (historial as any)?.tratamientos : [];
+    const last = trats.length ? trats[trats.length - 1] : undefined;
+    const t = (tratamientoId && trats.find(x => x.id === tratamientoId)) || last;
+    return t?.ner_sections;
+  }, [historial, tratamientoId]);
   const groupedSections = useMemo(() => groupNer(nerRaw), [nerRaw])
   const hasNer = Object.keys(groupedSections).length > 0;
 
   return (
     <Box>
       {/* Barra de dictado */}
+      {/* Motivo del tratamiento (NUEVO) */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2,
+          mb: 2,
+          bgcolor: (t) => t.palette.background.default,
+        }}
+      >
+        
+          <Box display={'flex'} justifyContent={'center'} alignItems={'center'}>
+            <Typography mr={1} fontSize={'1.2rem'} fontWeight={'bold'}>
+              Motivo de la consulta:
+            </Typography>
+            
+            <Typography fontSize={'1.2rem'}>
+              {`${(currentTrat?.motivo ?? "")[0]?.toUpperCase()}${(currentTrat?.motivo ?? '').trim().slice(1)}` || "—" }
+            </Typography>
+          </Box>
+        
+      </Paper>
       <Paper 
         variant="outlined" 
         sx={{
@@ -358,7 +391,7 @@ export default function Anamnesis({
               size="small"
               variant="contained"
               startIcon={<Mic />}
-              disabled={!isMicrophoneAvailable}
+              disabled={!isMicrophoneAvailable || isLocked}
               onClick={startDictation}
             >
               Iniciar Dictado
@@ -369,7 +402,7 @@ export default function Anamnesis({
               color="secondary"
               variant="contained"
               startIcon={<MicOff />}
-              disabled={!isMicrophoneAvailable}
+              disabled={!isMicrophoneAvailable || isLocked}
               onClick={() => { commitActive(); disableDictation(); hardStop(); }}
             >
               Detener
@@ -398,6 +431,11 @@ export default function Anamnesis({
               {!isMicrophoneAvailable && (
                 <Alert severity="error" sx={{ py: 0, alignItems: 'center' }}>
                   El micrófono no está disponible o sin permisos.
+                </Alert>
+              )}
+              {isLocked && (
+                <Alert severity="info" sx={{ py: 0, alignItems: 'center' }}>
+                  La anamnesis de este tratamiento ya fue guardada y no es editable.
                 </Alert>
               )}
             </Stack>
@@ -439,9 +477,9 @@ export default function Anamnesis({
             value={view.personales}
             onFocus={() => setActive('personales')}
             onChange={(e) => setStore((p) => ({ ...p, personales: e.target.value }))}
-            helperText={canEdit ? "Editable" : "Activa edición para editar"}
+            helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || !canEdit } }}
+            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -451,9 +489,9 @@ export default function Anamnesis({
             value={view.familiares}
             onFocus={() => setActive('familiares')}
             onChange={(e) => setStore((p) => ({ ...p, familiares: e.target.value }))}
-            helperText={canEdit ? "Editable" : "Activa edición para editar"}
+            helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || !canEdit } }}
+            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -463,9 +501,9 @@ export default function Anamnesis({
             value={view.condicion}
             onFocus={() => setActive('condicion')}
             onChange={(e) => setStore((p) => ({ ...p, condicion: e.target.value }))}
-            helperText={canEdit ? "Editable" : "Activa edición para editar"}
+            helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || !canEdit } }}
+            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -475,37 +513,27 @@ export default function Anamnesis({
             value={view.intervencion}
             onFocus={() => setActive('intervencion')}
             onChange={(e) => setStore((p) => ({ ...p, intervencion: e.target.value }))}
-            helperText={canEdit ? "Editable" : "Activa edición para editar"}
+            helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || !canEdit } }}
+            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
           />
         </Grid>
       </Grid>
 
       {/* Acciones */}
-      <Stack mt={2} spacing={1}>
-        {!historial ? (
-          <Button variant="contained" fullWidth color="success" onClick={onGuardarHistorialClick}>
-            Guardar Información
+      {!isLocked && (
+        <Stack mt={2} spacing={1}>
+          <Button
+            variant="contained"
+            fullWidth
+            color="success"
+            disabled={!canSave}
+            onClick={onSaveOnce}
+          >
+            Guardar Información (una sola vez)
           </Button>
-        ) : (
-          <>
-            <Button
-              variant="contained"
-              color={canEdit ? "success" : "warning"}
-              fullWidth
-              onClick={() => (canEdit ? onEditHistorialClick() : setCanEdit(true))}
-            >
-              {canEdit ? "Guardar Cambios" : "Activar Edición"}
-            </Button>
-            {canEdit && (
-              <Button variant="outlined" color="error" onClick={onDiscardChangesClick}>
-                Cancelar
-              </Button>
-            )}
-          </>
-        )}
-      </Stack>
+        </Stack>
+      )}
     </Box>
   );
 

@@ -4,7 +4,7 @@ import { cancelCita, confirmCita, getCitasByPaciente, type Cita } from "../../ap
 import Swal from "sweetalert2";
 import type { Paciente, PacienteWithUser } from "../../api/pacienteService";
 import dayjs from "dayjs";
-import { Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography, useTheme } from "@mui/material";
 import { useUserProfile } from "../../context/userProfileContext";
 import { ReplayOutlined } from "@mui/icons-material";
 
@@ -18,6 +18,9 @@ export default function MisCitasPaciente({
     const {profile} = useUserProfile();
     const [citas, setCitas] = useState<Cita[]>([]);
     const [loading, setLoading] = useState(false);
+    const [openCancelMotivo, setOpenCancelMotivo] = useState(false);
+    const [cancelMotivo, setCancelMotivo] = useState('');
+    const [selectedCita, setSelectedCita] = useState<Cita>()
     const theme = useTheme();
 
     const obtenerCitasPaciente = async () => {
@@ -77,13 +80,14 @@ export default function MisCitasPaciente({
         });
 
         if(!confirm.isConfirmed) return;
-        try{
-            await cancelCita(cita.id);
-            await obtenerCitasPaciente()
-            Swal.fire("Cita cancelada", "La cita fue cancelada exitosamente.", "success");
-        }catch(err: any){
-            Swal.fire('Error', `${err}`, 'error');
-        }
+
+        await Swal.fire(
+            'Atención',
+            'Es necesario proporcionar un motivo de cancelación.',
+            'warning'
+        )
+        setSelectedCita(cita)
+        setOpenCancelMotivo(true);
     };
     const handleConfirmar = async (cita: Cita) => {
         const confirm = await Swal.fire({
@@ -108,6 +112,28 @@ export default function MisCitasPaciente({
             Swal.fire('Error', `${err}`, 'error');
         }
     };
+
+    const cancelarCita = async () => {
+        if(cancelMotivo.trim() === '' || !selectedCita){
+            await Swal.fire(
+                'Atención',
+                'Debe ingresar un motivo válido, el campo es requerido.',
+                'warning'
+            )
+            return;
+        }
+        
+        try{
+            await cancelCita(selectedCita.id, cancelMotivo);
+            await obtenerCitasPaciente()
+            Swal.fire("Cita cancelada", "La cita fue cancelada exitosamente.", "success");
+            setOpenCancelMotivo(false)
+            setCancelMotivo('')
+            setSelectedCita(undefined)
+        }catch(err: any){
+            Swal.fire('Error', `${err}`, 'error');
+        }
+    }
 
     return(
         <Box sx={{maxHeight: '70vh', overflowY: 'auto', pr: 1}} flexGrow={1}>
@@ -146,6 +172,11 @@ export default function MisCitasPaciente({
                                             {cita.motivo && (
                                                 <Typography variant="body2" color="text.secondary">
                                                     Motivo: {cita.motivo}
+                                                </Typography>
+                                            )}
+                                            {cita.estado.nombre === 'cancelada' && cita.cancel_motivo && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Motivo Cancelación: {cita.cancel_motivo}
                                                 </Typography>
                                             )}
                                         </Box>
@@ -187,6 +218,41 @@ export default function MisCitasPaciente({
                     </Stack>
                 </>
             )}
+            <Dialog
+                open={openCancelMotivo}
+                onClose={() => {setOpenCancelMotivo(false); setCancelMotivo(''); setSelectedCita(undefined)}}
+            >
+                <DialogTitle>
+                    Agregar motivo de cancelación
+                </DialogTitle>
+                <DialogContent>
+                    <TextField
+                        value={cancelMotivo}
+                        onChange={e => setCancelMotivo(e.target.value)}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        label={'Ingrese el motivo de cancelación'}
+                        sx={{mt:1}}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        color="warning"
+                        variant="contained"
+                        onClick={() => cancelarCita() }
+                    >
+                        Confirmar Cancelación
+                    </Button>
+                    <Button
+                        color="error"
+                        variant="contained"
+                        onClick={() => {setOpenCancelMotivo(false); setCancelMotivo(''); setSelectedCita(undefined)}}
+                    >
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     )
 }

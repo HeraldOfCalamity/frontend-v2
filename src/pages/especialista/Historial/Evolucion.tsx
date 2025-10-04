@@ -113,6 +113,7 @@ const LABEL_COLOR: Record<string, "default"|"primary"|"secondary"|"success"|"war
 
 interface EvolucionProps{
   historial: HistorialClinico;
+  tratamientoId?: string;
   onAddEntry: (hist: HistorialClinico) => void;
   onAddImage: (hist: HistorialClinico) => void;
 }
@@ -120,7 +121,8 @@ interface EvolucionProps{
 export default function Evolucion({
   historial,
   onAddEntry,
-  onAddImage
+  onAddImage,
+  tratamientoId
 }: EvolucionProps){
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -141,7 +143,17 @@ export default function Evolucion({
   }
 
   // Estado tabla (partimos de las entradas del historial)
-  const [rows, setRows] = useState<Entrada[]>(historial?.entradas ?? []);
+  const tratamientos = useMemo(() => Array.isArray((historial as any)?.tratamientos) ? (historial as any).tratamientos : [], [historial]);
+  const activeTrat = useMemo(() => {
+    if (!tratamientos.length) return undefined;
+    const byId = tratamientoId ? tratamientos.find((t: any) => t.id === tratamientoId) : undefined;
+    return byId || tratamientos[tratamientos.length - 1];
+  }, [tratamientos, tratamientoId]);
+  
+  const [rows, setRows] = useState<Entrada[]>(activeTrat?.entradas ?? []);
+  useEffect(() => {
+    setRows(activeTrat?.entradas ?? []);
+  }, [activeTrat?.id, activeTrat?.entradas]);
   const sortedRows = useMemo(
     () => [...rows].sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()),
     [rows]
@@ -438,8 +450,9 @@ async function handleOpenCam() {
       if (!reg?.ok) { alert("No se pudo registrar la imagen"); return; }
 
       // a) Si el backend devuelve el historial, refrescamos desde ahí
-      if (reg.historial?.entradas) {
-        setRows(reg.historial.entradas as Entrada[]);
+      if (reg.historial?.tratamientos && activeTrat?.id) {
+        const t = (reg.historial as any).tratamientos.find((x: any) => x.id === activeTrat.id);
+        setRows(t?.entradas ?? []);
         onAddImage?.(reg.historial as HistorialClinico);
       } else {
         // b) Si no, actualizamos localmente empujando la KEY
@@ -491,7 +504,7 @@ async function handleOpenCam() {
   /* ============ Guardar entrada (texto) ============ */
   async function onGrabarEntrada() {
     try{
-      if (!historialId) return;
+      if (!historialId || !activeTrat?.id) return;
       commitActive();
 
       const payload = {
@@ -500,13 +513,17 @@ async function handleOpenCam() {
         imageIds: [], // ← ahora las imágenes se agregan a posteriori por acción de tabla
       };
 
-      const res = await agregarEntradaService(historialId, payload);
+      const res = await agregarEntradaService(historialId, activeTrat.id, payload);
       if (res) {
         await Swal.fire('Éxito','Se agregó una nueva entrada al historial','success');
         setStore({ recursos: "", evolucion: "" });
         anchorsRef.current.recursos = transcript.length;
         anchorsRef.current.evolucion = transcript.length;
 
+        if (Array.isArray((res as any)?.tratamientos)) {
+          const t = (res as any).tratamientos.find((x: any) => x.id === activeTrat.id);
+          setRows(t?.entradas ?? []);
+        }
         onAddEntry(res);
         setOpenAddEntry(false);
       }
@@ -630,11 +647,6 @@ async function handleOpenCam() {
     p: 1,
     whiteSpace: 'pre-wrap',
   });
-
-  useEffect(() => {
-    if (!historial) return;
-    setRows(historial?.entradas || [])
-  }, [historial])
 
 
   // +++ NUEVO: safe-highlight: usa offsets si existen; si no, busca por texto (case-insensitive)

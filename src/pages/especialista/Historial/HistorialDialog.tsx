@@ -26,6 +26,7 @@ import Evolucion from "./Evolucion";
 import type { PacienteWithUser } from "../../../api/pacienteService";
 import {
   actualizarAnamnesis,
+  addTratamiento,
   crearHistorial,
   getHistorialesPorPaciente,
   type HistorialClinico,
@@ -70,15 +71,13 @@ export default function HistorialDialog({
   );
 
   const [historial, setHistorial] = useState<HistorialClinico | undefined>();
+  const [uiMode, setUiMode] = useState<'list' | 'detail'>('list');
+  const [selectedTratamientoId, setSelectedTratamientoId] = useState<string | null>(null);
+  const tratamientos = useMemo(() => historial?.tratamientos ?? [], [historial]);
   const theme = useTheme()
 
   const handleCrearHistorial = useCallback(
-    async (data: {
-      personales: string;
-      familiares: string;
-      condicion: string;
-      intervencion: string;
-    }) => {
+    async () => {
       try {
         if (!pacienteId) {
           Swal.fire("Atención", "No se encontró el ID del paciente.", "warning");
@@ -87,10 +86,6 @@ export default function HistorialDialog({
 
         const payload = {
           paciente_id: pacienteId,
-          antfamiliares: data.familiares,
-          antPersonales: data.personales,
-          condActual: data.condicion,
-          intervencionClinica: data.intervencion,
         };
 
         const created = await crearHistorial(payload);
@@ -118,35 +113,36 @@ export default function HistorialDialog({
         setHistorial(hist);
         return;
       }
-      Swal.fire(
+      await Swal.fire(
         "Paciente Nuevo",
-        "El paciente no tiene un historial asociado; al guardar se creará automáticamente.",
+        "Se creará un historial para el paciente.",
         "info"
       );
+      await handleCrearHistorial();
     } catch (err: any) {
       Swal.fire("Error", `${err}`, "error");
     }
   }, [pacienteId]);
 
-  const handleEditarHistorial = async (payload: {
-    condActual: string,
-    intervencionClinica: string
-  }) => {
-    try{
-      const res = await actualizarAnamnesis(historial?._id || '', payload);
-      if(res){
-        setHistorial(res)
-        await Swal.fire("Éxito", "Cambios guardados correctamente", "success");
-      }
+  // const handleEditarHistorial = async (payload: {
+  //   condActual: string,
+  //   intervencionClinica: string
+  // }) => {
+  //   try{
+  //     const res = await actualizarAnamnesis(historial?._id || '', payload);
+  //     if(res){
+  //       setHistorial(res)
+  //       await Swal.fire("Éxito", "Cambios guardados correctamente", "success");
+  //     }
 
-    }catch(err: any){
-      Swal.fire(
-        'Error',
-        `${err}`,
-        'error'
-      )
-    }
-  }
+  //   }catch(err: any){
+  //     Swal.fire(
+  //       'Error',
+  //       `${err}`,
+  //       'error'
+  //     )
+  //   }
+  // }
 
   const HISTORIAL_TABS: Tab[] = useMemo(
     () => [
@@ -154,22 +150,23 @@ export default function HistorialDialog({
         name: "anamnesis",
         component: (
           <Anamnesis
-            handleClickEditar={handleEditarHistorial}
-            handleClickGuardar={handleCrearHistorial}
+            tratamientoId={selectedTratamientoId || undefined}
             historial={historial as HistorialClinico}
+            onSaved={(h) => setHistorial(h)}
           />
         ),
       },
       {
         name: "evolución",
         component: <Evolucion 
+          tratamientoId={selectedTratamientoId || undefined}
           onAddImage={(hist) => setHistorial(hist)}
           onAddEntry={(hist) => setHistorial(hist)}
           historial={historial as HistorialClinico} 
         />,
       },
     ],
-    [handleCrearHistorial, historial]
+    [historial, selectedTratamientoId]
   );
 
   const [selectedTab, setSelectedTab] = useState<Tab>(HISTORIAL_TABS[0]);
@@ -182,8 +179,6 @@ export default function HistorialDialog({
     });
   }, [HISTORIAL_TABS]);
 
-  const handleStartDictaphone = () => start({ language: "es-BO" });
-  const handlePauseDictaphone = () => stop();
 
   useEffect(() => {
     if (!open) return;
@@ -191,9 +186,61 @@ export default function HistorialDialog({
       Swal.fire("Atención", "El navegador no soporta el dictado!", "warning");
       return;
     }
-    obtenerHistorialByPacienteId();
-    console.log("pacienteId (estable):", pacienteId);
+    obtenerHistorialByPacienteId();    
   }, [open, browserSupportsSpeechRecognition, obtenerHistorialByPacienteId, pacienteId]);
+
+  // useEffect(() => {
+  //   if(!historial?._id){setUiMode('list'); return;}
+  //   setUiMode(tratamientos.length ? 'list' : 'detail');
+  // }, [historial?._id, tratamientos.length]);
+
+  const [openNewTrat, setOpenNewTrat] = useState(false);
+  const [motivoNew, setMotivoNew] = useState('');
+
+  const doAddTratamiento = useCallback(async () => {
+    try{
+      if(!historial?._id){
+        const created = await crearHistorial({paciente_id: pacienteId});
+        if(!created?._id) throw new Error('No se pudo crear el historial');
+        setHistorial(created);
+      }
+      const hId = (historial?._id) || (await getHistorialesPorPaciente(pacienteId))?._id;
+      if(!hId) throw new Error('No se encotró el historial');
+
+      await addTratamiento(hId, {
+        motivo: motivoNew || '',
+        antFamiliares: '',
+        antPersonales: '',
+        condActual: '',
+        intervencionClinica: ''
+      });
+
+      const fresh = await getHistorialesPorPaciente(pacienteId);
+      setHistorial(fresh)
+      setOpenNewTrat(false)
+      setMotivoNew('');
+      Swal.fire('Exito', 'Tratamiento agregado', 'success');
+    }catch (err: any){
+      Swal.fire('Error', `${err}`, 'error');
+    }
+  }, [historial?._id, pacienteId, motivoNew]);
+
+  const handleVolverTratamientos = async () => {
+    const result = await Swal.fire({
+      title: 'Volver a tratamientos',
+      text: 'Esta seguro de volver? La información no guardada se perderá.',
+      icon: 'warning',
+      showCancelButton: true,
+      showConfirmButton: true,
+      confirmButtonText: 'Si, volver',
+      cancelButtonText: 'No',
+    })
+
+    if(!result.isConfirmed) return;
+
+    setUiMode('list'); 
+    setSelectedTratamientoId(null);
+  }
 
   const marcarCitaAtendida = async () => {
     try{
@@ -253,128 +300,208 @@ export default function HistorialDialog({
   }, [])
 
   return (
-    <Dialog open={open} onClose={handleEndAttention} fullWidth fullScreen>
-      {/* Header fijo */}
-      <Box
-        component="header"
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: (t) => t.zIndex.drawer + 1,
-          bgcolor: 'background.paper',
-          borderBottom: (t) => `1px solid ${t.palette.divider}`,
-        }}
-      >
-        <Container maxWidth="lg" sx={{ py: 1.5 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
-            <Stack gap={0.5}>
-              <Typography variant="h5" fontWeight={700}>Historial Clínico</Typography>
-              <Stack direction="row" gap={1} flexWrap="wrap">
-                <Chip label={`Paciente: ${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`} size="small" />
-                {historial?._id && <Chip label={`HC: ${historial?._id}`} size="small" color="info" />}
-                {pacienteProfile?.user?.phone && <Chip label={`Tel: ${pacienteProfile?.user.phone}`} size="small" variant="outlined" />}
+    <>
+      <Dialog open={open} onClose={handleEndAttention} fullWidth fullScreen>
+        {/* Header fijo */}
+        <Box
+          component="header"
+          sx={{
+            position: 'sticky',
+            top: 0,
+            zIndex: (t) => t.zIndex.drawer + 1,
+            bgcolor: 'background.paper',
+            borderBottom: (t) => `1px solid ${t.palette.divider}`,
+          }}
+        >
+          <Container maxWidth="lg" sx={{ py: 1.5 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" gap={2} flexWrap="wrap">
+              <Stack gap={0.5}>
+                <Typography variant="h5" fontWeight={700}>Historial Clínico</Typography>
+                <Stack direction="row" gap={1} flexWrap="wrap">
+                  <Chip label={`Paciente: ${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`} size="small" />
+                  {historial?._id && <Chip label={`HC: ${historial?._id}`} size="small" color="info" />}
+                  {pacienteProfile?.user?.phone && <Chip label={`Tel: ${pacienteProfile?.user.phone}`} size="small" variant="outlined" />}
+                </Stack>
+              </Stack>
+
+              <Stack direction="row" spacing={1} justifyContent="flex-start" sx={{ mb: 1 }}>
+                {/* Botón volver en modo detalle */}
+                {uiMode === 'detail' && (
+                  <Button variant="contained" onClick={() => handleVolverTratamientos()}>
+                    ← Volver a tratamientos
+                  </Button>
+                )}
+                <Button color="secondary" variant="contained" onClick={handleEndAttention}>
+                  Terminar Atención
+                </Button>
+                <Button color="error" variant="contained" onClick={handleCancelModal}>  
+                  Cancelar
+                </Button>
               </Stack>
             </Stack>
+          </Container>
+        </Box>
 
-            <Stack direction="row" gap={1}>
-              <Button color="secondary" variant="contained" onClick={handleEndAttention}>
-                Terminar Atención
-              </Button>
-              <Button color="error" variant="contained" onClick={handleCancelModal}>  
-                Cancelar
-              </Button>
+        {/* Body */}
+        <DialogContent sx={{ px: 0 }}>
+          <Container maxWidth="lg" sx={{ py: 2 }}>
+            {/* Identificación */}
+            <Paper elevation={4}  sx={{ p: 2, mb: 2, /*bgcolor: theme => theme.palette.primary.main*/ }}>
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                Identificación del Usuario/Paciente
+              </Typography>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <InputLabel>N° de HC</InputLabel>
+                  <TextField variant="outlined" size="small" fullWidth value={historial?._id || ''} slotProps={{ input: { readOnly: true } }} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <InputLabel>Nombres y Apellidos</InputLabel>
+                  <TextField variant="outlined" size="small" fullWidth
+                    value={`${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`}
+                    slotProps={{ input: { readOnly: true } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, md: 2 }}>
+                  <InputLabel>Edad</InputLabel>
+                  <TextField variant="outlined" size="small" fullWidth
+                    value={dayjs().year() - dayjs(pacienteProfile?.paciente.fecha_nacimiento).year()}
+                    slotProps={{ input: { readOnly: true } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 6, md: 2 }}>
+                  <InputLabel>F. Nacimiento</InputLabel>
+                  <TextField variant="outlined" size="small" fullWidth
+                    value={dayjs(pacienteProfile?.paciente.fecha_nacimiento).format('DD/MM/YYYY')}
+                    slotProps={{ input: { readOnly: true } }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <InputLabel>C.I.</InputLabel>
+                  <TextField variant="outlined" size="small" fullWidth value={pacienteProfile?.user.ci} slotProps={{ input: { readOnly: true } }} />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <InputLabel>Teléfono</InputLabel>
+                  <TextField variant="outlined" size="small" fullWidth value={pacienteProfile?.user.phone} slotProps={{ input: { readOnly: true } }} />
+                </Grid>
+              </Grid>
+            </Paper>
+            {/* LISTA DE TRATAMIENTOS */}
+            {uiMode === 'list' && (
+              <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+                <Stack direction={{ xs:'column', sm:'row' }} gap={1} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
+                  <Typography variant="h6" fontWeight={700}>Tratamientos</Typography>
+                  <Button
+                    variant="contained"
+                    onClick={() => setOpenNewTrat(true)}
+                    disabled={!historial?._id && !pacienteId}
+                  >
+                    Agregar tratamiento
+                  </Button>
+                </Stack>
+                <Stack mt={2} gap={1}>
+                  {tratamientos.length === 0 ? (
+                    <Alert severity="info">No hay tratamientos. Usa “Agregar tratamiento”.</Alert>
+                  ) : (
+                    tratamientos.map((t: any) => (
+                      <Paper key={t.id} variant="outlined" sx={{ p: 1.5 }}>
+                        <Grid container spacing={1} alignItems="center">
+                          <Grid size={{ xs:12, sm:4 }}>
+                            <InputLabel sx={{ fontSize: 12 }}>Fecha</InputLabel>
+                            <Typography variant="body2">
+                              {dayjs(t.created_at || t.createdAt).format('DD/MM/YYYY HH:mm')}
+                            </Typography>
+                          </Grid>
+                          <Grid size={{ xs:12, sm:4 }}>
+                            <InputLabel sx={{ fontSize: 12 }}>Motivo</InputLabel>
+                            <Typography variant="body2">{t.motivo || "—"}</Typography>
+                          </Grid>
+                          <Grid size={{ xs:12, sm:2 }}>
+                            <InputLabel sx={{ fontSize: 12 }}>Entradas</InputLabel>
+                            <Typography variant="body2">{Array.isArray(t.entradas) ? t.entradas.length : 0}</Typography>
+                          </Grid>
+                          <Grid size={{ xs:12, sm:2 }}>
+                            <Stack direction="row" gap={1} justifyContent={{ xs:'flex-start', sm:'flex-end' }} flexWrap="wrap">
+                              <Button size="small" variant="contained" onClick={() => {
+                                setSelectedTratamientoId(t.id);
+                                setUiMode('detail');
+                                setSelectedTab(HISTORIAL_TABS[0]); // abre en Anamnesis
+                              }}>
+                                Ver detalles
+                              </Button>
+                            </Stack>
+                          </Grid>
+                        </Grid>
+                      </Paper>
+                    ))
+                  )}
+                </Stack>
+              </Paper>
+            )}
+
+            {/* Tabs estilo botones (solo detalle) */}
+            {uiMode === 'detail' && (
+            <Stack direction="row" gap={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+              {HISTORIAL_TABS.map((tab) => {
+                const active = tab.name === selectedTab.name;
+                return (
+                  <Button
+                    key={tab.name}
+                    onClick={() => setSelectedTab(tab)}
+                    variant={active ? "contained" : "outlined"}
+                    color={active ? "primary" : "inherit"}
+                    sx={{
+                      textTransform: 'capitalize',
+                      display: !historial && tab.name !== "anamnesis" ? "none" : "inline-flex",
+                    }}
+                  >
+                    {tab.name}
+                  </Button>
+                );
+              })}
             </Stack>
-          </Stack>
-        </Container>
-      </Box>
+            )}
 
-      {/* Body */}
-      <DialogContent sx={{ px: 0 }}>
-        <Container maxWidth="lg" sx={{ py: 2 }}>
-          {/* Identificación */}
-          <Paper elevation={4}  sx={{ p: 2, mb: 2, /*bgcolor: theme => theme.palette.primary.main*/ }}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
-              Identificación del Usuario/Paciente
-            </Typography>
-
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <InputLabel>N° de HC</InputLabel>
-                <TextField variant="outlined" size="small" fullWidth value={historial?._id || ''} slotProps={{ input: { readOnly: true } }} />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <InputLabel>Nombres y Apellidos</InputLabel>
-                <TextField variant="outlined" size="small" fullWidth
-                  value={`${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`}
-                  slotProps={{ input: { readOnly: true } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 6, md: 2 }}>
-                <InputLabel>Edad</InputLabel>
-                <TextField variant="outlined" size="small" fullWidth
-                  value={dayjs().year() - dayjs(pacienteProfile?.paciente.fecha_nacimiento).year()}
-                  slotProps={{ input: { readOnly: true } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 6, md: 2 }}>
-                <InputLabel>F. Nacimiento</InputLabel>
-                <TextField variant="outlined" size="small" fullWidth
-                  value={dayjs(pacienteProfile?.paciente.fecha_nacimiento).format('DD/MM/YYYY')}
-                  slotProps={{ input: { readOnly: true } }}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <InputLabel>C.I.</InputLabel>
-                <TextField variant="outlined" size="small" fullWidth value={pacienteProfile?.user.ci} slotProps={{ input: { readOnly: true } }} />
-              </Grid>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <InputLabel>Teléfono</InputLabel>
-                <TextField variant="outlined" size="small" fullWidth value={pacienteProfile?.user.phone} slotProps={{ input: { readOnly: true } }} />
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Tabs estilo botones */}
-          <Stack direction="row" gap={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
-            {HISTORIAL_TABS.map((tab) => {
-              const active = tab.name === selectedTab.name;
-              return (
-                <Button
-                  key={tab.name}
-                  onClick={() => setSelectedTab(tab)}
-                  variant={active ? "contained" : "outlined"}
-                  color={active ? "primary" : "inherit"}
-                  sx={{
-                    textTransform: 'capitalize',
-                    display: !historial && tab.name !== "anamnesis" ? "none" : "inline-flex",
-                  }}
-                >
-                  {tab.name}
-                </Button>
-              );
-            })}
-          </Stack>
-
-          {/* Contenido tab con marco de estado de dictado solo en anamnesis */}
-          <Paper
-            variant="outlined"
-            sx={(t) => ({
-              p: 2,
-              borderWidth: selectedTab.name === "anamnesis" ? 2 : 1,
-              borderColor:
-                selectedTab.name === "anamnesis"
-                  ? (dictationEnabled ? t.palette.success.main : t.palette.error.main)
-                  : t.palette.divider,
-            })}
-          >
-            <Typography variant="h6" fontWeight={600} gutterBottom textTransform="capitalize">
-              {selectedTab.name}
-            </Typography>
-            {selectedTab.component}
-          </Paper>
-        </Container>
-      </DialogContent>
-    </Dialog>
+            {/* Contenido tab (solo en detalle) con marco de estado de dictado solo en anamnesis */}
+            {uiMode === 'detail' && (
+            <Paper
+              variant="outlined"
+              sx={(t) => ({
+                p: 2,
+                borderWidth: selectedTab.name === "anamnesis" ? 2 : 1,
+                borderColor:
+                  selectedTab.name === "anamnesis"
+                    ? (dictationEnabled ? t.palette.success.main : t.palette.error.main)
+                    : t.palette.divider,
+              })}
+            >
+              <Typography variant="h6" fontWeight={600} gutterBottom textTransform="capitalize">
+                {selectedTab.name}
+              </Typography>
+              {selectedTab.component}
+            </Paper>
+            )}
+          </Container>
+        </DialogContent>
+      </Dialog>
+      {/* Nuevo Tratamiento */}
+      <Dialog open={openNewTrat} onClose={() => setOpenNewTrat(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Nuevo tratamiento</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            label="Motivo (opcional)"
+            fullWidth
+            value={motivoNew}
+            onChange={(e) => setMotivoNew(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenNewTrat(false)}>Cancelar</Button>
+          <Button variant="contained" onClick={doAddTratamiento}>Crear</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 
 }

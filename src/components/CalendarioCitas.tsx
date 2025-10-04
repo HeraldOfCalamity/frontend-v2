@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cancelCita, confirmCita, getCitas, getCitasByEspecialista, getCitasByPaciente, type Cita } from "../api/citaService";
 import dayjs from "dayjs";
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, TextField, Typography, useTheme } from "@mui/material";
 import { Calendar, Views, type View } from "react-big-calendar";
 import { localizer } from "../utils/calendarLocalazer";
 import Swal from "sweetalert2";
@@ -43,6 +43,8 @@ export default function CalendarioCitas({
     const theme = useTheme()
     const {getParam} = useConfig()
     const [canAttend, setCanAttend] = useState(false);
+    const [openCancelMotivo, setOpenCancelMotivo] = useState(false)
+    const [cancelMotivo, setCancelMotivo] = useState('')
 
     
 
@@ -117,7 +119,7 @@ export default function CalendarioCitas({
 
 
 
-    const handleCancelCitaClick = async (cita: Cita) => {
+    const handleCancelCitaClick = async () => {
         try{
             const isConfirmed = await Swal.fire({
                 title: 'Cancelar Cita',
@@ -130,17 +132,12 @@ export default function CalendarioCitas({
             })
 
             if(isConfirmed.isConfirmed){
-                const canceled = await cancelCita(cita.id);
-                if(onCancelCita){
-                    await onCancelCita(cita);
-                }
-                // await getEvents();
-                Swal.fire(
-                    'Operacion Exitosa',
-                    'Cita cancelada con exito, en un momento recibira un correo de confirmación.',
-                    'success'
+                await Swal.fire(
+                    'Atención',
+                    'Es necesario proporcionar un motivo de cancelación.',
+                    'warning'
                 )
-                console.log('cita, cancelada', canceled);
+                setOpenCancelMotivo(true)
             }
 
         }catch(err: any){
@@ -150,6 +147,31 @@ export default function CalendarioCitas({
                 'error'
             )
         }
+    }
+    const cancelarCita = async () => {
+        if(cancelMotivo.trim() === '' || !selectedEvent){
+            await Swal.fire(
+                'Atención',
+                'Debe ingresar un motivo válido, el campo es requerido.',
+                'warning'
+            )
+            return;
+        }
+
+        const canceled = await cancelCita(selectedEvent.id as string, cancelMotivo);
+        if(onCancelCita){
+            await onCancelCita(selectedEvent);
+        }
+
+        await Swal.fire(
+            'Operacion Exitosa',
+            'Cita cancelada con exito, en un momento recibira un correo de confirmación.',
+            'success'
+        )
+
+        setOpenCancelMotivo(false)
+        setOpenDialog(false)
+        setCancelMotivo('')
     }
     const handleConfirmCitaClick = async (cita: Cita) => {
         try{
@@ -309,6 +331,9 @@ export default function CalendarioCitas({
                             <p><b>Fin:</b> {dayjs(selectedEvent.fecha_fin).format('DD/MM/YYYY HH:mm')}</p>
                             <p><b>Estado:</b> {selectedEvent.estado.nombre}</p>
                             <p><b>Paciente:</b> {selectedEvent.pacienteName}</p>
+                            {selectedEvent.estado.nombre === 'cancelada' && selectedEvent.cancel_motivo && (
+                                <p><b>Motivo de cancelación:</b> {selectedEvent.cancel_motivo}</p>
+                            )}
                         </>
                     )}
                 </DialogContent>
@@ -317,7 +342,7 @@ export default function CalendarioCitas({
                         <Button
                             variant="outlined"
                             color="error"
-                            onClick={async () => await handleCancelCitaClick(selectedEvent)}
+                            onClick={async () => await handleCancelCitaClick()}
                         >
                             Cancelar Cita
                         </Button>
@@ -353,6 +378,41 @@ export default function CalendarioCitas({
                             setSelectedSlot(null); 
                             setSelectedEvent(null)
                         }}
+                    >
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={openCancelMotivo}
+                onClose={() => {setOpenCancelMotivo(false); setCancelMotivo('')}}
+            >
+                <DialogTitle>
+                    Agregar motivo de cancelación
+                </DialogTitle>
+                <DialogContent>
+                    <TextField
+                        value={cancelMotivo}
+                        onChange={e => setCancelMotivo(e.target.value)}
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        label={'Ingrese el motivo de cancelación'}
+                        sx={{mt:1}}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        color="warning"
+                        variant="contained"
+                        onClick={() => cancelarCita() }
+                    >
+                        Confirmar Cancelación
+                    </Button>
+                    <Button
+                        color="error"
+                        variant="contained"
+                        onClick={() => {setOpenCancelMotivo(false); setCancelMotivo('')}}
                     >
                         Cerrar
                     </Button>
