@@ -409,7 +409,10 @@ async function handleOpenCam() {
   // Subida + registro al backend
   async function processAndUploadToEntry(fileOrBlob: File | Blob, filename = "photo.jpg", entryId?: string) {
     try {
-      if (!historialId || !pacienteId || !entryId) { alert("Falta historial, paciente o entrada"); return; }
+      if (!historialId || !pacienteId || !entryId || !activeTrat?.id) { 
+        await Swal.fire("Atención","Falta historial, paciente, entrada o tratamiento.","info");
+        return; 
+      }
 
       const file = fileOrBlob instanceof File
         ? fileOrBlob
@@ -437,7 +440,7 @@ async function handleOpenCam() {
 
       // 3) Registrar en backend (ahora empuja la KEY y puede devolver historial)
       const reg = await registrarImagen({
-        tratamientoId: tratamientoId || '',
+        tratamientoId: activeTrat?.id || tratamientoId || '',
         pacienteId,
         historialId,
         entradaId: entryId,
