@@ -485,9 +485,6 @@ export default function HistorialDialog({
                     : t.palette.divider,
               })}
             >
-              <Typography variant="h6" fontWeight={600} gutterBottom textTransform="capitalize">
-                {selectedTab.name}
-              </Typography>
               {selectedTab.component}
             </Paper>
             )}

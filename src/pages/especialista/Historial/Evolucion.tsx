@@ -1,4 +1,4 @@
-import { AddCircleOutline, AddPhotoAlternate, AttachFile, EditNote, Mic, MicOff, PictureAsPdf } from "@mui/icons-material";
+import { AddCircleOutline, AddPhotoAlternate, AttachFile, Compare, EditNote, Mic, MicOff, PictureAsPdf } from "@mui/icons-material";
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   Grid, Stack, Typography, useMediaQuery, useTheme, InputLabel,
@@ -7,7 +7,8 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   TextField,
-  Paper
+  Paper,
+  CircularProgress
 } from "@mui/material";
 import GenericTable, { type Column, type TableAction } from "../../../components/common/GenericTable";
 import dayjs from "dayjs";
@@ -675,6 +676,70 @@ async function handleOpenCam() {
     }
   }
 
+   // --- Modal Antes/Después ---
+   const [baOpen, setBaOpen] = useState(false);
+   const [baLoading, setBaLoading] = useState(false);
+   const [baBeforeUrl, setBaBeforeUrl] = useState<string | null>(null);
+   const [baAfterUrl, setBaAfterUrl] = useState<string | null>(null);
+   const [baBeforeDate, setBaBeforeDate] = useState<string | null>(null);
+   const [baAfterDate, setBaAfterDate] = useState<string | null>(null);
+
+  async function openBeforeAfter() {
+    try {
+      if (!activeTrat?.entradas?.length) {
+        await Swal.fire("Sin imágenes", "Este tratamiento no tiene entradas con imágenes.", "info");
+        return;
+      }
+      // ordenar entradas por fecha ascendente
+      const entriesAsc = [...activeTrat.entradas].sort(
+        (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
+      );
+      // primera imagen encontrada
+      let beforeKey: string | undefined;
+      let beforeDate: string | undefined;
+      for (const e of entriesAsc) {
+        if (Array.isArray(e.imagenes) && e.imagenes.length > 0) {
+          beforeKey = e.imagenes[0];
+          beforeDate = e.createdAt;
+          break;
+        }
+      }
+      // última imagen encontrada
+      let afterKey: string | undefined;
+      let afterDate: string | undefined;
+      for (let i = entriesAsc.length - 1; i >= 0; i--) {
+        const e = entriesAsc[i];
+        if (Array.isArray(e.imagenes) && e.imagenes.length > 0) {
+          afterKey = e.imagenes[e.imagenes.length - 1];
+          afterDate = e.createdAt;
+          break;
+        }
+      }
+      if (!beforeKey && !afterKey) {
+        await Swal.fire("Sin imágenes", "No se encontraron imágenes en las entradas de este tratamiento.", "info");
+        return;
+      }
+      setBaLoading(true);
+      setBaBeforeUrl(null); setBaAfterUrl(null);
+      setBaBeforeDate(beforeDate || null);
+      setBaAfterDate(afterDate || null);
+      // firmar URLs
+      if (beforeKey) {
+        const u1 = await getSignedImageUrl(beforeKey);
+        setBaBeforeUrl(u1?.url || null);
+      }
+      if (afterKey) {
+        const u2 = await getSignedImageUrl(afterKey);
+        setBaAfterUrl(u2?.url || null);
+      }
+      setBaOpen(true);
+    } catch (err: any) {
+      await Swal.fire("Error", `${err?.message || err}`, "error");
+    } finally {
+      setBaLoading(false);
+    }
+  }
+
   /* ===== UI ===== */
 
   function EntitiesView({ner}: {ner?: Record<string, string[]>}){
@@ -892,21 +957,37 @@ const nerSpansForField = filterSpansForField(
   return (
     <>
       {/* Barra de acciones */}
-      {!readonly && (
         <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-          <Stack direction="row" justifyContent="flex-end">
+          <Stack direction={'row'}>
+            <Typography variant="h6" fontWeight={600} gutterBottom textTransform="capitalize">
+              {'evolución'}
+            </Typography>
+
+            <Stack direction="row" justifyContent="flex-end" spacing={1} flexGrow={1}>
+              {!readonly && (   
+                <Button
+                  startIcon={<AddCircleOutline />}
+                  color="secondary"
+                  variant="contained"
+                  onClick={() => setOpenAddEntry(true)}
+                >
+                  Agregar Entrada
+                </Button>
+              )}
+              {/* Antes / Después (tratamiento activo) */}
               <Button
-                startIcon={<AddCircleOutline />}
-                fullWidth
-                color="secondary"
                 variant="contained"
-                onClick={() => setOpenAddEntry(true)}
+                size="small"
+                startIcon={<Compare />}
+                onClick={openBeforeAfter}
               >
-                Agregar Entrada
+                Antes / Después
               </Button>
+            </Stack>
           </Stack>
         </Paper>
-      )}
+
+
 
       {/* Tabla */}
       <Paper
@@ -1211,6 +1292,56 @@ const nerSpansForField = filterSpansForField(
           <Button variant="contained" onClick={onSaveRecomendaciones}>Guardar</Button>
         </DialogActions>
       </Dialog>
+      {/* Modal Antes / Después */}
+      <Dialog open={baOpen} onClose={() => setBaOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Comparación: Antes / Después</DialogTitle>
+        <DialogContent dividers>
+          {baLoading ? (
+            <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 200 }}>
+              <CircularProgress />
+            </Stack>
+          ) : (
+            <Grid container spacing={2}>
+              <Grid size={{xs: 12, md: 6}}>
+                <Paper variant="outlined" sx={{ p: 1 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Antes {baBeforeDate ? `· ${dayjs(baBeforeDate).format("DD/MM/YYYY HH:mm")}` : ""}
+                  </Typography>
+                  {baBeforeUrl ? (
+                    <img
+                      src={baBeforeUrl}
+                      alt="Antes"
+                      style={{ width: "100%", maxHeight: "70vh", objectFit: "contain", borderRadius: 8 }}
+                    />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">Sin imagen</Typography>
+                  )}
+                </Paper>
+              </Grid>
+              <Grid size={{xs: 12, md: 6}}>
+                <Paper variant="outlined" sx={{ p: 1 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Después {baAfterDate ? `· ${dayjs(baAfterDate).format("DD/MM/YYYY HH:mm")}` : ""}
+                  </Typography>
+                  {baAfterUrl ? (
+                    <img
+                      src={baAfterUrl}
+                      alt="Después"
+                      style={{ width: "100%", maxHeight: "70vh", objectFit: "contain", borderRadius: 8 }}
+                    />
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">Sin imagen</Typography>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBaOpen(false)} variant="contained">Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+
     </>
   );
 

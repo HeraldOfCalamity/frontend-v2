@@ -374,16 +374,20 @@ export default function Anamnesis({
           bgcolor: (t) => t.palette.background.default,
         }}
       >
-        
-          <Box display={'flex'} justifyContent={'center'} alignItems={'center'}>
+        <Stack direction={'row'} alignItems={'center'}>
+          <Typography variant="h6" fontWeight={600} textTransform="capitalize">
+            {'anamnesis'}
+          </Typography>
+          <Stack direction={'row'} flexGrow={1} justifyContent={'center'}>
             <Typography mr={1} fontSize={'1.2rem'} fontWeight={'bold'}>
-              Motivo de la consulta:
+              Motivo de consulta:
             </Typography>
             
             <Typography fontSize={'1.2rem'}>
               {`${(currentTrat?.motivo ?? "")[0]?.toUpperCase()}${(currentTrat?.motivo ?? '').trim().slice(1)}` || "—" }
             </Typography>
-          </Box>
+          </Stack>
+        </Stack>
         
       </Paper>
       {!readOnly && (
