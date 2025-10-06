@@ -1,4 +1,4 @@
-import { AddCircleOutline, AddPhotoAlternate, AttachFile, Mic, MicOff, PictureAsPdf } from "@mui/icons-material";
+import { AddCircleOutline, AddPhotoAlternate, AttachFile, EditNote, Mic, MicOff, PictureAsPdf } from "@mui/icons-material";
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   Grid, Stack, Typography, useMediaQuery, useTheme, InputLabel,
@@ -22,6 +22,7 @@ import {
   groupNer,
   NER_COLORS,
   registrarAnexo,
+  setRecomendaciones,
 } from "../../../api/historialService";
 import { compressToWebp } from "../../../utils/evoImage";
 import Swal from "sweetalert2";
@@ -641,6 +642,39 @@ async function handleOpenCam() {
     }
   }
 
+  // Modal Recomendaciones
+  const [recoOpen, setRecoOpen] = useState(false);
+  const [recoEntry, setRecoEntry] = useState<Entrada | null>(null);
+  const [recoText, setRecoText] = useState<string>("");
+  function openRecoModalFor(entry: Entrada) {
+    setRecoEntry(entry);
+    setRecoText(entry.recomendaciones || "");
+    setRecoOpen(true);
+  }
+  function closeRecoModal() {
+    setRecoOpen(false);
+    setRecoEntry(null);
+    setRecoText("");
+  }
+
+  async function onSaveRecomendaciones(){
+    try{
+      if (!recoEntry || !activeTrat?.id || !historial?._id) return;
+      const updated = await setRecomendaciones(historial._id, activeTrat.id, recoEntry.id, recoText);
+      if (updated && Array.isArray((updated as any).tratamientos)) {
+        const t = (updated as any).tratamientos.find((x: any) => x.id === activeTrat.id);
+        setRows(t?.entradas ?? []);
+      } else {
+        // fallback local
+        setRows(prev => prev.map(e => e.id === (recoEntry?.id) ? ({ ...e, recomendaciones: recoText }) : e));
+      }
+      closeRecoModal();
+      await Swal.fire("Éxito", "Recomendaciones guardadas", "success");
+    } catch (err: any) {
+      await Swal.fire("Error", `${err?.message || err}`, "error");
+    }
+  }
+
   /* ===== UI ===== */
 
   function EntitiesView({ner}: {ner?: Record<string, string[]>}){
@@ -716,6 +750,26 @@ async function handleOpenCam() {
         </Box>
       )
     },
+    {
+      field: 'recomendaciones',
+      headerName: 'Recomendaciones',
+      align: 'center',
+      width: isMobile ? '100px' : undefined,
+      render: (v, row) => (
+        <Box maxHeight={'14vh'}>
+          { v && String(v).trim()
+            ? (isMobile
+                ? <Button size="small" variant="text" onClick={() => {
+                    setDetailText(v);
+                    setOpenDetailDialog(true)
+                  }}>Leer</Button>
+                : <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{String(v)}</Typography>
+              )
+            : '—'
+          }
+        </Box>
+      )
+    },
     // 👇 Importante: el campo ahora es 'imagenes' (array de KEYS)
     {
       field: 'imagenes',
@@ -745,6 +799,12 @@ async function handleOpenCam() {
       label: 'Anexos',
       color: 'secondary',
       onClick: (entry) => openAttachModalFor(entry),
+    },
+    {
+      icon: <EditNote />,
+      label: 'Recomendaciones y Recetas',
+      color: 'info',
+      onClick: (entry) => openRecoModalFor(entry),
     },
     {
       icon: <MicOff />,
@@ -903,7 +963,7 @@ const nerSpansForField = filterSpansForField(
               <Stack direction={{ xs: 'column', sm: 'row' }} gap={2} alignItems="center">
                 <Stack direction="row" gap={1} flex={1}>
                   <Button
-                    fullWidth size="large" variant="contained" startIcon={<Mic />}
+                    fullWidth size="small" variant="contained" startIcon={<Mic />}
                     onClick={() => {
                       enableDictation();
                       anchorsRef.current[active] = transcript.length;
@@ -913,7 +973,7 @@ const nerSpansForField = filterSpansForField(
                     Iniciar Dictado
                   </Button>
                   <Button
-                    fullWidth size="large" variant="contained" color="secondary" startIcon={<MicOff />}
+                    fullWidth size="small" variant="contained" color="secondary" startIcon={<MicOff />}
                     onClick={() => { commitActive(); hardStop(); }}
                   >
                     Detener
@@ -943,7 +1003,7 @@ const nerSpansForField = filterSpansForField(
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Recursos Terapéuticos"
-                  multiline minRows={6} fullWidth
+                  multiline minRows={2} fullWidth
                   value={view.recursos}
                   onFocus={() => setActive('recursos')}
                   onChange={(e) => setStore((p) => ({ ...p, recursos: e.target.value }))}
@@ -955,7 +1015,7 @@ const nerSpansForField = filterSpansForField(
               <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   label="Evolución del Tratamiento"
-                  multiline minRows={6} fullWidth
+                  multiline minRows={2} fullWidth
                   value={view.evolucion}
                   onFocus={() => setActive('evolucion')}
                   onChange={(e) => setStore((p) => ({ ...p, evolucion: e.target.value }))}
@@ -1131,6 +1191,24 @@ const nerSpansForField = filterSpansForField(
         </DialogContent>
         <DialogActions>
           <Button onClick={closeAttachModal} variant="contained">Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+      {/** modal recomendaciones */}
+      <Dialog maxWidth="sm" fullWidth open={recoOpen} onClose={closeRecoModal}>
+        <DialogTitle>Recomendaciones {recoEntry ? `de la entrada #${recoEntry.id}` : ""}</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            label="Recomendaciones"
+            multiline
+            minRows={2}
+            fullWidth
+            value={recoText}
+            onChange={(e) => setRecoText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeRecoModal}>Cancelar</Button>
+          <Button variant="contained" onClick={onSaveRecomendaciones}>Guardar</Button>
         </DialogActions>
       </Dialog>
     </>

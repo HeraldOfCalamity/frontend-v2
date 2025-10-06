@@ -130,6 +130,7 @@ export interface Entrada {
   evolucionText: string;
   imagenes: string[]; // ids de ImageAsset
   anexos: string[];
+  recomendaciones?: string;
   ner: any
 }
 
@@ -282,5 +283,22 @@ export async function setAnamnesisOnce(
     return res.data as HistorialClinico;
   } catch (err: any) {
     handleError(err, "No se pudo guardar la anamnesis (solo una vez)");
+  }
+}
+
+export async function setRecomendaciones(
+  historialId: string,
+  tratamientoId: string,
+  entradaId: string,
+  recomendaciones: string
+) {
+  try {
+    const res = await api.put(
+      `/historiales/${historialId}/tratamientos/${tratamientoId}/entradas/${entradaId}/recomendaciones`,
+      { recomendaciones }
+    );
+    return res.data as HistorialClinico;
+  } catch (err: any) {
+    handleError(err, "No se pudo guardar las recomendaciones");
   }
 }
