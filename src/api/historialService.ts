@@ -129,6 +129,7 @@ export interface Entrada {
   recursosTerapeuticos: string;
   evolucionText: string;
   imagenes: string[]; // ids de ImageAsset
+  anexos: string[];
   ner: any
 }
 
@@ -213,6 +214,15 @@ export async function registrarImagen(data: RegisterImageReq) {
   }
 }
 
+export async function registrarAnexo(data: RegisterImageReq){
+  try {
+    const res = await api.post(`${HISTORIAL_ROUTE}upload/register-attach`, data);
+    return res.data;
+  } catch (err: any) {
+    handleError(err, "Error al registrar anexo del historial");
+  }  
+}
+
 export async function getSignedImageUrl(key: string) {
   try {
     const res = await api.get(`${HISTORIAL_ROUTE}images/signed-get`, {
@@ -261,6 +271,7 @@ export async function setAnamnesisOnce(
     antFamiliares: string;
     condActual: string;
     intervencionClinica: string;
+    diagnostico: string;
   }
 ) {
   try {

@@ -1,4 +1,4 @@
-import { AddCircleOutline, AddPhotoAlternate, Mic, MicOff } from "@mui/icons-material";
+import { AddCircleOutline, AddPhotoAlternate, AttachFile, Mic, MicOff, PictureAsPdf } from "@mui/icons-material";
 import {
   Box, Button, Dialog, DialogActions, DialogContent, DialogTitle,
   Grid, Stack, Typography, useMediaQuery, useTheme, InputLabel,
@@ -21,6 +21,7 @@ import {
   agregarEntrada as agregarEntradaService,
   groupNer,
   NER_COLORS,
+  registrarAnexo,
 } from "../../../api/historialService";
 import { compressToWebp } from "../../../utils/evoImage";
 import Swal from "sweetalert2";
@@ -266,6 +267,108 @@ export default function Evolucion({
   // Modal para “Agregar imagen” a una entrada concreta
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [targetEntry, setTargetEntry] = useState<Entrada | null>(null);
+
+  // Modal de anexos
+  const [attachModalOpen, setAttachModalOpen] = useState(false);
+  const [targetEntryAttach, setTargetEntryAttach] = useState<Entrada | null>(null);
+  const [attachPreviewUrls, setAttachPreviewUrls] = useState<string[]>([]); 
+
+  function openAttachModalFor(entry: Entrada){
+    setTargetEntryAttach(entry);
+    setAttachModalOpen(true);
+    const keys = Array.isArray(entry.anexos) ? entry.anexos : [];
+    loadAttachPreviewUrls(keys);
+  }
+
+  function closeAttachModal(){
+    setAttachModalOpen(false)
+    setTargetEntryAttach(null);
+    setAttachPreviewUrls([]);
+  }
+
+  async function loadAttachPreviewUrls(keys: string[]){
+    const urls: string[] = [];
+    for(const k of keys){
+      try{
+        const u = await getSignedImageUrl(k);
+        urls.push(u?.url as string);
+      }catch{}
+    }
+    setAttachPreviewUrls(urls)
+  }
+
+  async function processAndUploadAttachment(file: File, entryId: string){
+    try {
+      if (readonly || !historialId || !pacienteId || !entryId || !activeTrat?.id) {
+        await Swal.fire("Atención","Falta historial, paciente, entrada o tratamiento.","info");
+        return;
+      }
+      let blob: Blob = file;
+      let width: number | undefined;
+      let height: number | undefined;
+      let type = (file.type || "").toLowerCase();
+      // Si es imagen → conviértela a WebP (mantiene peso bajo)
+      if (type.startsWith("image/")) {
+        const c = await compressToWebp(file);
+        blob = c.blob; type = c.type; width = c.width; height = c.height;
+      } else if (type !== "application/pdf") {
+        // cualquier otro → octet-stream
+        type = "application/octet-stream";
+      }
+
+      const pres = await presignUploadImagen({
+        paciente_id: pacienteId,
+        historial_id: historialId,
+        entrada_id: entryId,
+        filename: file.name,
+        content_type: type,
+      });
+      if (!pres?.url || !pres.key) { alert("No se pudo obtener URL firmada"); return; }
+
+      const put = await fetch(pres.url, { method: "PUT", headers: { "Content-Type": type }, body: blob });
+      if (!put.ok) { alert("Error subiendo a R2"); return; }
+
+      const reg = await registrarAnexo({
+        tratamientoId: activeTrat?.id || tratamientoId || '',
+        pacienteId, historialId, entradaId: entryId,
+        key: pres.key,
+        width, height, size: blob.size,
+        originalName: file.name, originalType: type,
+      });
+      if (!reg?.ok) { alert("No se pudo registrar el anexo"); return; }
+
+      // refrescar la fila objetivo (anexos)
+      if (Array.isArray((reg as any)?.historial?.tratamientos)) {
+        const t = (reg as any).historial.tratamientos.find((x: any) => x.id === activeTrat?.id);
+        setRows(t?.entradas ?? []);
+      } else {
+        setRows(prev => prev.map(e =>
+          e.id === entryId
+            ? ({ ...e, anexos: Array.isArray(e.anexos) ? [ ...e.anexos, pres.key ] : [ pres.key ] })
+            : e
+        ));
+      }
+      // actualizar previews del modal
+      const sg = await getSignedImageUrl(pres.key);
+      if (sg?.url) setAttachPreviewUrls(prev => [...prev, sg.url]);
+    } catch (err: any) {
+      await Swal.fire('Error', `${err}`, 'error');
+    }    
+  }
+
+  async function onPickPdfsForAttach(e: React.ChangeEvent<HTMLInputElement>){
+    if(!targetEntryAttach) return;
+    const files = Array.from(e.target.files || []);
+    for (const f of files) await processAndUploadAttachment(f, targetEntryAttach.id);
+    e.target.value = ''
+  }
+
+  async function onPickImagesForAttach(e: React.ChangeEvent<HTMLInputElement>){
+    if (!targetEntryAttach) return;
+    const files = Array.from(e.target.files || []);
+    for (const f of files) await processAndUploadAttachment(f, targetEntryAttach.id);
+    e.target.value = "";    
+  }
 
   // Caché de URLs firmadas
   const signedUrlCacheRef = useRef<Record<string, string>>({});
@@ -638,6 +741,12 @@ async function handleOpenCam() {
       onClick: (entry) => openImageModalFor(entry),
     },
     {
+      icon: <AttachFile />,
+      label: 'Anexos',
+      color: 'secondary',
+      onClick: (entry) => openAttachModalFor(entry),
+    },
+    {
       icon: <MicOff />,
       label: 'Ver entidades',
       color: 'primary',
@@ -985,6 +1094,43 @@ const nerSpansForField = filterSpansForField(
         </DialogContent>
         <DialogActions>
           <Button variant="contained" onClick={closeNer}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Anexos (modal separado del de imágenes) */}
+      <Dialog maxWidth="sm" fullWidth open={attachModalOpen} onClose={closeAttachModal}>
+        <DialogTitle>
+          Anexos {targetEntryAttach ? `de la entrada #${targetEntryAttach.id}` : ""}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack direction="row" spacing={2} flexWrap="wrap" mb={2}>
+            <Button variant="outlined" component="label" startIcon={<AttachFile />}>
+              Adjuntar imágenes
+              <input hidden accept="image/*" multiple type="file" onChange={onPickImagesForAttach} />
+            </Button>
+            <Button variant="outlined" component="label" startIcon={<PictureAsPdf />}>
+              Adjuntar PDF
+              <input hidden accept="application/pdf" multiple type="file" onChange={onPickPdfsForAttach} />
+            </Button>
+          </Stack>
+
+          <Typography variant="subtitle2" gutterBottom>Anexos actuales</Typography>
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            {attachPreviewUrls.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">Sin anexos.</Typography>
+            ) : attachPreviewUrls.map((u, i) => {
+                const isPdf = /\.pdf(\?|$)/i.test(u) || /application%2Fpdf/i.test(u);
+                return isPdf ? (
+                  <Button key={i} startIcon={<PictureAsPdf />} href={u} target="_blank" rel="noreferrer">
+                    Ver PDF
+                  </Button>
+                ) : (
+                  <img key={i} src={u} alt="" style={{ width: 140, height: 100, objectFit: "cover", borderRadius: 8 }} />
+                );
+              })}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeAttachModal} variant="contained">Cerrar</Button>
         </DialogActions>
       </Dialog>
     </>

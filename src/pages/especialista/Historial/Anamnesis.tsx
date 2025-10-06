@@ -14,7 +14,7 @@ import { actualizarAnamnesis, groupNer, NER_COLORS, setAnamnesisOnce } from "../
 import { labelEs } from "../../../utils/nerLabels";
 
 /** Claves de los 4 campos */
-type FieldKey = "personales" | "familiares" | "condicion" | "intervencion";
+type FieldKey = "personales" | "familiares" | "condicion" | "intervencion" | "diagnostico";
 
 /** Texto consolidado por campo */
 type Store = Record<FieldKey, string>;
@@ -72,6 +72,7 @@ const RE_DICTAR = new RegExp(
   String.raw`antecedentes\s+familiares|` +
   String.raw`condici(?:o|ó)n(?:\s+actual)?|` +
   String.raw`intervenci(?:o|ó)n(?:\s+cl[ií]nica)?|` +
+  String.raw`diagn[oó]stico|` +
   String.raw`cl[ií]nica|personales|familiares` +
   String.raw`)` + END,
   "i"
@@ -79,6 +80,7 @@ const RE_DICTAR = new RegExp(
 
 function mapCampo(str: string): FieldKey {
   const s = str.toLowerCase();
+  if (s.includes('diagnost')) return 'diagnostico';
   if (s.includes("famil")) return "familiares";
   if (s.includes("condici")) return "condicion";
   if (s.includes("intervenc") || s.includes("clínica") || s.includes("clinica")) return "intervencion";
@@ -131,6 +133,7 @@ export default function Anamnesis({
     familiares: "",
     condicion: "",
     intervencion: "",
+    diagnostico: ""
   });
 
   // Anclas por campo
@@ -139,6 +142,7 @@ export default function Anamnesis({
     familiares: transcript.length,
     condicion: transcript.length,
     intervencion: transcript.length,
+    diagnostico: transcript.length
   });
 
   const prevDictRef = useRef(dictationEnabled);
@@ -176,6 +180,7 @@ export default function Anamnesis({
       familiares:  active === "familiares"  ? (store.familiares  + slice) : store.familiares,
       condicion:   active === "condicion"   ? (store.condicion   + slice) : store.condicion,
       intervencion:active === "intervencion"? (store.intervencion+ slice) : store.intervencion,
+      diagnostico: active === "diagnostico" ? (store.diagnostico + slice) : store.diagnostico,
     } as Store;
   }, [store, active, dictationEnabled, transcript]);
 
@@ -216,7 +221,7 @@ export default function Anamnesis({
       command: "limpiar dictado", matchInterim: false,
       callback: () => execFinal.schedule(() => {
         resetAllTranscripts();
-        setStore({ personales: "", familiares: "", condicion: "", intervencion: "" });
+        setStore({ personales: "", familiares: "", condicion: "", intervencion: "", diagnostico: "" });
         (Object.keys(anchorsRef.current) as FieldKey[]).forEach(k => {
           anchorsRef.current[k] = transcript.length;
         });
@@ -258,6 +263,7 @@ export default function Anamnesis({
       familiares: t?.antFamiliares ?? t?.antfamiliares ?? "",
       personales: t?.antPersonales || "",
       intervencion: t?.intervencionClinica || "",
+      diagnostico: t?.diagnostico || "",
     });
   }, [historial, tratamientoId]);
 
@@ -274,7 +280,8 @@ export default function Anamnesis({
     const f = (currentTrat.antfamiliares ?? "").trim();
     const c = (currentTrat.condActual ?? "").trim();
     const i = (currentTrat.intervencionClinica ?? "").trim();
-    return Boolean(p || f || c || i);
+    const d = (currentTrat.diagnostico ?? "").trim();
+    return Boolean(p || f || c || i || d);
   }, [currentTrat]);
 
   const readOnly = Boolean(forceReadonly || isLocked)
@@ -282,8 +289,8 @@ export default function Anamnesis({
   const canSave = useMemo(() => {
     // Solo se puede guardar si NO está bloqueado y hay al menos un campo con texto
     if (isLocked) return false;
-    const { personales, familiares, condicion, intervencion } = view;
-    return [personales, familiares, condicion, intervencion].every(s => (s ?? "").trim().length > 0);
+    const { personales, familiares, condicion, intervencion, diagnostico } = view;
+    return [personales, familiares, condicion, intervencion, diagnostico].every(s => (s ?? "").trim().length > 0);
   }, [isLocked, view]);
 
   const onSaveOnce = async () => {
@@ -315,6 +322,7 @@ export default function Anamnesis({
         antFamiliares: cleanCommandsLater(view.familiares),
         condActual: cleanCommandsLater(view.condicion),
         intervencionClinica: cleanCommandsLater(view.intervencion),
+        diagnostico: cleanCommandsLater(view.diagnostico),
       });
       if (res) {
         // refrescar UI desde respuesta del backend
@@ -326,6 +334,7 @@ export default function Anamnesis({
           familiares: t?.antFamiliares ?? t?.antfamiliares ?? "",
           condicion: t?.condActual || "",
           intervencion: t?.intervencionClinica || "",
+          diagnostico: t?.diagnostico || "",
         });
         onSaved?.(res);
         await Swal.fire("Éxito", "Anamnesis guardada. Ya no será editable.", "success");
@@ -428,6 +437,7 @@ export default function Anamnesis({
                       familiares: cleanCommandsLater(prev.familiares),
                       condicion: cleanCommandsLater(prev.condicion),
                       intervencion: cleanCommandsLater(prev.intervencion),
+                      diagnostico: cleanCommandsLater(prev.diagnostico),
                     }))
                   }
                 >
@@ -527,6 +537,18 @@ export default function Anamnesis({
             value={view.intervencion}
             onFocus={() => setActive('intervencion')}
             onChange={(e) => setStore((p) => ({ ...p, intervencion: e.target.value }))}
+            helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
+            sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
+            slotProps={{ input: { readOnly: dictationEnabled || readOnly} }}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            label="Diagnóstico"
+            multiline fullWidth
+            value={view.diagnostico}
+            onFocus={() => setActive('diagnostico')}
+            onChange={(e) => setStore((p) => ({ ...p, diagnostico: e.target.value }))}
             helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
             slotProps={{ input: { readOnly: dictationEnabled || readOnly} }}
