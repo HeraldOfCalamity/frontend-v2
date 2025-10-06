@@ -74,7 +74,7 @@ export default function ReservarCitaPaso2({
     const targetDate = date.date();
     
     return citas.some(c => 
-      c.pacienteProfile?.paciente.id === paciente.paciente?.id &&
+      c.paciente === paciente.paciente?.id &&
       c.estado.nombre !== 'cancelada' && 
       c.estado.nombre !== 'atendida' &&
       dayjs(c.fecha_inicio).date() === targetDate
@@ -103,7 +103,10 @@ export default function ReservarCitaPaso2({
 
       const diaActual = fecha.format('YYYY-MM-DD');
 
-      const citasEseDia = citas.filter(c => dayjs(c.fecha_inicio).format('YYYY-MM-DD') === diaActual);
+      const citasEseDia = citas.filter(c => 
+        dayjs(c.fecha_inicio).format('YYYY-MM-DD') === diaActual &&
+        (c.estado.nombre === 'pendiente' || c.estado.nombre === 'confirmada')
+      );
       const intervalosOcupados = citasEseDia.map(c => ({
         inicio: dayjs(c.fecha_inicio),
         fin: dayjs(c.fecha_fin)

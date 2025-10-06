@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cancelCita, confirmCita, getCitas, getCitasByEspecialista, getCitasByPaciente, type Cita } from "../api/citaService";
 import dayjs from "dayjs";
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Paper, Stack, Switch, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { Calendar, Views, type View } from "react-big-calendar";
 import { localizer } from "../utils/calendarLocalazer";
 import Swal from "sweetalert2";
@@ -23,6 +23,25 @@ interface CalendarioCitaProps {
     onAtenderCita?: (cita?: Cita) => Promise<void>| void;
 }
 
+function LegendItem({color, label, strike = false, note,}: {color: string; label: string; strike?: boolean; note?: string}){
+    return(
+        <Stack direction={'row'} alignItems={'center'} spacing={1} sx={{pr: 1}}>
+            <Box sx={{width:14, height: 14, borderRadius: 1, bgcolor: color, border: '1px solid rgba(0,0,0,0.18)'}}/>
+            <Typography variant="body2" sx={{fontWeight:600, textDecoration: strike ? 'line-through' : 'none', opacity: strike ? 0.9 : 1}}>
+                {label}
+                {note && (
+                    <Typography
+                        component={'span'}
+                        variant="caption"
+                        sx={{ml: 0.5, opacity: 0.7, fontWeight: 400}}
+                    >
+                        • {note}
+                    </Typography>
+                )}
+            </Typography>
+        </Stack>
+    )
+}
 
 export default function CalendarioCitas({
     defaultView = 'month',
@@ -45,6 +64,13 @@ export default function CalendarioCitas({
     const [canAttend, setCanAttend] = useState(false);
     const [openCancelMotivo, setOpenCancelMotivo] = useState(false)
     const [cancelMotivo, setCancelMotivo] = useState('')
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const calendarViews = isMobile ? (['day','agenda'] as View[]) : (['month', 'week', 'day', 'agenda'] as View[]);
+    const formats = useMemo(() => ({
+        timeGutterFormat: 'HH:mm',
+        eventTimeRangeFormat: ({ start, end }: { start: Date; end: Date }, culture: any, loc: any) =>
+            `${loc.format(start, 'HH:mm', culture)} - ${loc.format(end, 'HH:mm', culture)}`,
+    }), [])
 
     
 
@@ -54,6 +80,7 @@ export default function CalendarioCitas({
     const eventPropGetter = (event: Cita) => {
         let bg = '#90caf9';
         let tc = theme.palette.text.primary;
+        let extra: React.CSSProperties = {boxShadow: '0 7px 7px rgba(0,0,0,0.15)', padding: '2px 6px'};
 
         if (event.estado.nombre === 'confirmada') {
             bg = theme.palette.success.main;
@@ -63,20 +90,28 @@ export default function CalendarioCitas({
             bg = theme.palette.warning.main;
             tc = theme.palette.warning.contrastText;
         }
+        if (event.estado.nombre === 'atendida') {
+            bg = theme.palette.info.main;
+            tc = theme.palette.info.contrastText;
+        }
         if (event.estado.nombre === 'cancelada') {
             bg = theme.palette.error.main;
             tc = theme.palette.error.contrastText;
+            extra = {
+                opacity: 0.45,
+                textDecoration: 'line-through',
+                filter: 'greyscale(0.2)'
+            }
         }
 
         return {
             style: {
                 backgroundColor: bg, 
                 borderRadius: 8, 
-                border:'1px solid #fff',
+                border:'1px solid #777',
                 color: tc, 
-                fontSize: '0.9rem'
-                // marginBottom: 0, 
-                // display: 'block'
+                fontSize: '0.9rem',
+                ...extra
             }
         };
     }
@@ -158,7 +193,7 @@ export default function CalendarioCitas({
             return;
         }
 
-        const canceled = await cancelCita(selectedEvent.id as string, cancelMotivo);
+    const canceled = await cancelCita(selectedEvent.id as string, cancelMotivo);
         if(onCancelCita){
             await onCancelCita(selectedEvent);
         }
@@ -246,55 +281,114 @@ export default function CalendarioCitas({
         }
     }, [selectedEvent, user]);
 
+    const [hideCanceled, setHideCanceled] = useState(false)
+
     return(
         <>
             <Paper 
                 variant="outlined"
                 sx={{
 
-                    bgcolor: theme => theme.palette.background.paper, 
+                    bgcolor: theme => theme.palette.background.default, 
                     p: 2, 
                     borderRadius: 2,
                     border: `1px solid ${theme.palette.divider}`,
                     overflowY: 'auto',
                     fontSize: '1.2em'
                 }}>
-                <Stack direction={'row'} mb={1}>
-                    {/* {addCitaForPaciente && <Button 
-                        variant="contained" 
-                        color="primary" 
-                        startIcon={<AddCircleOutline />}
-                        onClick={() => setOpenSearchEspecialidad(true)}
-                    >
-                        Reservar Cita
-                    </Button>} */}
-                    <Typography variant="h4">
-                        Citas del consultorio
-                    </Typography>
-                </Stack>
                 <Box
                     sx={{
-                        height: '70vh', 
-                        bgcolor: theme.palette.background.paper, 
-                        p: 2
+                        mb: 2,
+                        p: 1.5,
+                        borderRadius: 2,
+                        border: (t) => `1px solid ${t.palette.divider}`,
+                        bgcolor: (t) => t.palette.mode === 'light' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.25)',
+                        backdropFilter: 'blur(3px)',
+                    }}
+                >
+                    <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        alignItems={{ xs: 'flex-start', sm: 'center' }}
+                        justifyContent="space-between"
+                        spacing={1.5}
+                    >
+                        {/* Título */}
+                        <Stack spacing={0}>
+                        <Typography variant="h5" sx={{ lineHeight: 1.2 }}>Citas del consultorio</Typography>
+                        <Typography variant="caption" sx={{ opacity: .75 }}>Vista del calendario y agenda</Typography>
+                        </Stack>
+
+                        {/* Toggle Ocultar canceladas */}
+                        <FormControlLabel
+                        control={
+                            <Switch
+                                checked={hideCanceled}
+                                onChange={() => setHideCanceled(v => !v)}
+                                size="small"
+                            />
+                        }
+                        label={hideCanceled ? 'Mostrar canceladas' : 'Ocultar canceladas'}
+                        sx={{
+                            m: 0,
+                            '& .MuiFormControlLabel-label': { fontSize: 13, opacity: .9 }
+                        }}
+                        />
+                    </Stack>
+
+                    {/* Leyenda */}
+                    <Stack
+                        direction="row"
+                        flexWrap="wrap"
+                        rowGap={1}
+                        columnGap={2}
+                        mt={1.25}
+                    >
+                        <LegendItem color={theme.palette.success.main} label="Confirmada" />
+                        <LegendItem color={theme.palette.warning.main} label="Pendiente" />
+                        <LegendItem color={theme.palette.info.main} label="Atendida" />
+                        <LegendItem
+                        color={theme.palette.error.main}
+                        label="Cancelada"
+                        strike
+                        note="no bloquea cupos"
+                        />
+                    </Stack>
+                    </Box>
+
+                <Box
+                    sx={{
+                        height: isMobile ? '75vh' : '70vh',
+                        bgcolor: theme.palette.background.default, 
+                        p: isMobile ? 1 : 2,
+                        borderRadius: 2,
+                        '& .rbc-toolbar': { gap: 1, flexWrap: 'wrap' },
+                        '& .rbc-toolbar .rbc-btn-group button': { px: 1 },
+                        '& .rbc-toolbar-label': { fontWeight: 600 },
+                        '& .rbc-event': { borderRadius: 1.5 },
+                        '& .rbc-time-view': { borderRadius: 2 },
+                        '& .rbc-timeslot-group': { minHeight: 40 },
+                        '& .rbc-day-slot .rbc-time-slot': { borderTopStyle: 'dashed' },
+                        '& .rbc-today': { backgroundColor: 'rgba(0, 172, 193, 0.08)' }, 
                     }}  
                 >
-
                     <Calendar
                         localizer={localizer}
                         date={date}
                         onNavigate={setDate}
                         view={view as View}
                         onView={setView}
-                        events={citas}
+                        events={hideCanceled ? citas.filter(c => c.estado.nombre !== 'cancelada') : citas}
                         startAccessor={cita => new Date(cita.fecha_inicio)}
                         endAccessor={cita => new Date(cita.fecha_fin)}
                         titleAccessor={getEventTitleFromCita}
-                        defaultView={defaultView}
-                        views={['month', 'week', 'day', 'agenda']}
+                        defaultView={isMobile ? 'agenda' : defaultView}
+                        views={calendarViews}
                         step={15}
                         timeslots={2}
                         selectable
+                        popup
+                        tooltipAccessor={(ev) => `${ev.especialidad} • ${ev.pacienteName ?? ''} • ${dayjs(ev.fecha_inicio).format('DD/MM HH:mm')}`}
+                        formats={formats}
                         // onSelecting={onSelecting}
                         onSelectEvent={handleSelectEvent}
                         onSelectSlot={handleSelectSlot}

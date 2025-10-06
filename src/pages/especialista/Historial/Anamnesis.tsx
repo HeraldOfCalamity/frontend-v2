@@ -368,27 +368,45 @@ export default function Anamnesis({
       {/* Motivo del tratamiento (NUEVO) */}
       <Paper
         variant="outlined"
-        sx={{
-          p: 2,
-          mb: 2,
-          bgcolor: (t) => t.palette.background.default,
-        }}
+        sx={{ p: 2, mb: 2, bgcolor: (t) => t.palette.background.default }}
       >
-        <Stack direction={'row'} alignItems={'center'}>
-          <Typography variant="h6" fontWeight={600} textTransform="capitalize">
-            {'anamnesis'}
-          </Typography>
-          <Stack direction={'row'} flexGrow={1} justifyContent={'center'}>
-            <Typography mr={1} fontSize={'1.2rem'} fontWeight={'bold'}>
-              Motivo de consulta:
+        <Grid container spacing={1} alignItems="center">
+          {/* Título */}
+          <Grid size={{xs: 12}}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{ letterSpacing: .2 }}
+            >
+              Anamnesis
             </Typography>
-            
-            <Typography fontSize={'1.2rem'}>
-              {`${(currentTrat?.motivo ?? "")[0]?.toUpperCase()}${(currentTrat?.motivo ?? '').trim().slice(1)}` || "—" }
+          </Grid>
+          {/* Etiqueta */}
+          <Grid size={{xs:12, sm:5}}>
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              sx={{ opacity: 0.85 }}
+            >
+              Motivo de consulta
             </Typography>
-          </Stack>
-        </Stack>
-        
+          </Grid>
+          {/* Valor */}
+          <Grid size={{xs: 12, sm:7}}>
+            <Typography
+              variant="body2"
+              sx={{
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {(() => {
+                const raw = (currentTrat?.motivo ?? "").trim();
+                return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : "—";
+              })()}
+            </Typography>
+          </Grid>
+        </Grid>
       </Paper>
       {!readOnly && (
         <Paper 

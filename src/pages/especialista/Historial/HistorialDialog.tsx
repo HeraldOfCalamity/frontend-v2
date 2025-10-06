@@ -229,9 +229,9 @@ export default function HistorialDialog({
 
   const handleVolverTratamientos = async () => {
     if(!readonly){
-        const result = await Swal.fire({
+      const result = await Swal.fire({
         title: 'Volver a tratamientos',
-        text: 'Esta seguro de volver? La información no guardada se perderá.',
+        text: 'Está seguro de volver? La información no guardada se perderá.',
         icon: 'warning',
         showCancelButton: true,
         showConfirmButton: true,

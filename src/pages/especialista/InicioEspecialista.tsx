@@ -119,6 +119,8 @@ const InicioEspecialista: React.FC = () => {
           open={openAtencion}
           pacienteProfile={selectedPacienteProfile as PacienteWithUser}
           citaId={selectedCitaId}
+          readonly={false}
+          showEndAttention={true}
         />
       </SpeechProvider>
     </Box>

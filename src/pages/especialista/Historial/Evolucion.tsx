@@ -943,49 +943,65 @@ function filterSpansForField(
   });
 }
 
-const nerText =
-  nerField === 'recursos'
-    ? (nerEntry?.recursosTerapeuticos || '')
-    : (nerEntry?.evolucionText || '');
+  const nerText =
+    nerField === 'recursos'
+      ? (nerEntry?.recursosTerapeuticos || '')
+      : (nerEntry?.evolucionText || '');
 
-const nerSpansForField = filterSpansForField(
-  (nerEntry?.ner as unknown as NerSpan[]) || [],
-  nerField,
-  nerText.length
-);
+  const nerSpansForField = filterSpansForField(
+    (nerEntry?.ner as unknown as NerSpan[]) || [],
+    nerField,
+    nerText.length
+  );
+
+  const pillBtnSx = (key: 'secondary' | 'info') => ({
+    borderRadius: 3,
+    px: { xs: 1.75, sm: 2.25 },
+    py: { xs: 1, sm: 1.25 },
+    boxShadow: '0 6px 16px rgba(0,0,0,.08)',
+    textTransform: 'none',
+    fontWeight: 700,
+    lineHeight: 1.1,
+    bgcolor: (t: any) => t.palette[key].light,
+    color: (t: any) => t.palette.getContrastText(t.palette[key].light),
+    '&:hover': {
+      bgcolor: (t: any) => t.palette[key].main,
+    }
+  })
 
   return (
     <>
       {/* Barra de acciones */}
-        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-          <Stack direction={'row'}>
-            <Typography variant="h6" fontWeight={600} gutterBottom textTransform="capitalize">
-              {'evolución'}
-            </Typography>
+      {/* Encabezado Evolución */}
+      <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, mb: 2 }}>
+        <Grid container spacing={1} alignItems="center">
+          {/* Título */}
+          <Grid size={{xs:'auto'}}>
+            <Typography variant="h6" fontWeight={700}>Evolución</Typography>
+          </Grid>
 
-            <Stack direction="row" justifyContent="flex-end" spacing={1} flexGrow={1}>
-              {!readonly && (   
-                <Button
-                  startIcon={<AddCircleOutline />}
-                  color="secondary"
-                  variant="contained"
-                  onClick={() => setOpenAddEntry(true)}
-                >
-                  Agregar Entrada
-                </Button>
-              )}
-              {/* Antes / Después (tratamiento activo) */}
+          {/* Acciones */}
+          <Grid sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 1.25, flexWrap: 'wrap' }}>
+            {!readonly && (
               <Button
-                variant="contained"
-                size="small"
-                startIcon={<Compare />}
-                onClick={openBeforeAfter}
+                startIcon={<AddCircleOutline />}
+                onClick={() => setOpenAddEntry(true)}
+                sx={pillBtnSx('secondary')}
               >
-                Antes / Después
+                Agregar<br/>Entrada
               </Button>
-            </Stack>
-          </Stack>
-        </Paper>
+            )}
+            <Button
+              startIcon={<Compare />}
+              onClick={openBeforeAfter}
+              sx={pillBtnSx('info')}
+            >
+              Antes /<br/>Después
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
 
 
 
