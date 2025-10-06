@@ -30,7 +30,29 @@ export interface CreateCita{
     motivo: string;
 }
 
+export interface PacienteCitaResumen {
+    paciente_id: string;
+    nombre?: string | null;
+    telefono?: string | null;
+    last_cita?: string | null;
+    last_estado?: string | null;
+    total: number;
+}
+
 const CITA_ROUTE = 'citas/';
+
+export async function getPacientesConCitasDelEspecialista(
+    especialistaId: string,
+    estados: string[] = ['confirmada', 'pendiente']
+){
+    try{
+        const params = new URLSearchParams({estados: estados.join(',')});
+        const res = await api.get(`/citas/especialista/${especialistaId}/pacientes?${params}`);
+        return res.data as {items: PacienteCitaResumen[]; count: number};
+    }catch(err: any){
+        handleError(err, 'Error al obtener mis pacientes.')
+    }
+}
 
 export async function reservarCita(data: CreateCita){
     try{

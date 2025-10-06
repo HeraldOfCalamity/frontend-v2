@@ -90,12 +90,14 @@ interface AnamnesisProps {
   historial: HistorialClinico;
   tratamientoId?: string;
   onSaved?: (h: HistorialClinico) => void;
+  forceReadonly?: boolean;
 }
 
 export default function Anamnesis({
   historial,
   tratamientoId,
-  onSaved
+  onSaved,
+  forceReadonly
 }: AnamnesisProps) {
   const {
     transcript,
@@ -275,6 +277,8 @@ export default function Anamnesis({
     return Boolean(p || f || c || i);
   }, [currentTrat]);
 
+  const readOnly = Boolean(forceReadonly || isLocked)
+
   const canSave = useMemo(() => {
     // Solo se puede guardar si NO está bloqueado y hay al menos un campo con texto
     if (isLocked) return false;
@@ -373,75 +377,85 @@ export default function Anamnesis({
           </Box>
         
       </Paper>
-      <Paper 
-        variant="outlined" 
-        sx={{
-          p:2, mb:2,
-          position: 'sticky',
-          top: 0,
-          zIndex: (t) => t.zIndex.drawer + 1,
-          bgcolor: theme.palette.background.default,
-          borderBottom: (t) => `1px solid ${t.palette.divider}`,
-        }}
-      >
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
-          <Stack direction="row" spacing={1} flex={1}>
-            <Button
-              fullWidth
-              size="small"
-              variant="contained"
-              startIcon={<Mic />}
-              disabled={!isMicrophoneAvailable || isLocked}
-              onClick={startDictation}
-            >
-              Iniciar Dictado
-            </Button>
-            <Button
-              fullWidth
-              size="small"
-              color="secondary"
-              variant="contained"
-              startIcon={<MicOff />}
-              disabled={!isMicrophoneAvailable || isLocked}
-              onClick={() => { commitActive(); disableDictation(); hardStop(); }}
-            >
-              Detener
-            </Button>
-          </Stack>
-
-          <Stack flex={2} spacing={0.5}>
-            <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
-              <InputLabel sx={{ mb: 0 }}>Dictado (interim):</InputLabel>
-              <Typography variant="body2" noWrap>{interimTranscript || '—'}</Typography>
-            </Stack>
-            <Stack direction="row" gap={1}>
+      {!readOnly && (
+        <Paper 
+          variant="outlined" 
+          sx={{
+            p:2, mb:2,
+            position: 'sticky',
+            top: 0,
+            zIndex: (t) => t.zIndex.drawer + 1,
+            bgcolor: theme.palette.background.default,
+            borderBottom: (t) => `1px solid ${t.palette.divider}`,
+          }}
+        >
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
+            <Stack direction="row" spacing={1} flex={1}>
               <Button
-                variant="outlined"
-                onClick={() =>
-                  setStore((prev) => ({
-                    personales: cleanCommandsLater(prev.personales),
-                    familiares: cleanCommandsLater(prev.familiares),
-                    condicion: cleanCommandsLater(prev.condicion),
-                    intervencion: cleanCommandsLater(prev.intervencion),
-                  }))
-                }
+                fullWidth
+                size="small"
+                variant="contained"
+                startIcon={<Mic />}
+                disabled={!isMicrophoneAvailable || isLocked}
+                onClick={startDictation}
               >
-                Limpiar comandos (post)
+                Iniciar Dictado
               </Button>
-              {!isMicrophoneAvailable && (
-                <Alert severity="error" sx={{ py: 0, alignItems: 'center' }}>
-                  El micrófono no está disponible o sin permisos.
-                </Alert>
-              )}
-              {isLocked && (
-                <Alert severity="info" sx={{ py: 0, alignItems: 'center' }}>
-                  La anamnesis de este tratamiento ya fue guardada y no es editable.
-                </Alert>
-              )}
+              <Button
+                fullWidth
+                size="small"
+                color="secondary"
+                variant="contained"
+                startIcon={<MicOff />}
+                disabled={!isMicrophoneAvailable || isLocked}
+                onClick={() => { commitActive(); disableDictation(); hardStop(); }}
+              >
+                Detener
+              </Button>
+            </Stack>
+
+            <Stack flex={2} spacing={0.5}>
+              <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+                <InputLabel sx={{ mb: 0 }}>Dictado (interim):</InputLabel>
+                <Typography variant="body2" noWrap>{interimTranscript || '—'}</Typography>
+              </Stack>
+              <Stack direction="row" gap={1}>
+                <Button
+                  variant="outlined"
+                  onClick={() =>
+                    setStore((prev) => ({
+                      personales: cleanCommandsLater(prev.personales),
+                      familiares: cleanCommandsLater(prev.familiares),
+                      condicion: cleanCommandsLater(prev.condicion),
+                      intervencion: cleanCommandsLater(prev.intervencion),
+                    }))
+                  }
+                >
+                  Limpiar comandos (post)
+                </Button>
+                {!isMicrophoneAvailable && (
+                  <Alert severity="error" sx={{ py: 0, alignItems: 'center' }}>
+                    El micrófono no está disponible o sin permisos.
+                  </Alert>
+                )}
+              </Stack>
             </Stack>
           </Stack>
-        </Stack>
-      </Paper>
+        </Paper>
+      )}
+      {isLocked && (
+        <Paper
+          variant="outlined"
+          sx={{
+            bgcolor: theme.palette.background.default,
+            mb:2,
+          }}
+        >
+          <Alert severity="info" sx={{ py: 0, alignItems: 'center' }}>
+            La anamnesis de este tratamiento ya fue guardada y no es editable.
+          </Alert>
+        </Paper>
+      )}
 
       {/* Entidades NER */}
       {hasNer && (
@@ -479,7 +493,7 @@ export default function Anamnesis({
             onChange={(e) => setStore((p) => ({ ...p, personales: e.target.value }))}
             helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
+            slotProps={{ input: { readOnly: dictationEnabled || readOnly} }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -491,7 +505,7 @@ export default function Anamnesis({
             onChange={(e) => setStore((p) => ({ ...p, familiares: e.target.value }))}
             helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
+            slotProps={{ input: { readOnly: dictationEnabled || readOnly} }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -503,7 +517,7 @@ export default function Anamnesis({
             onChange={(e) => setStore((p) => ({ ...p, condicion: e.target.value }))}
             helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
+            slotProps={{ input: { readOnly: dictationEnabled || readOnly} }}
           />
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
@@ -515,13 +529,13 @@ export default function Anamnesis({
             onChange={(e) => setStore((p) => ({ ...p, intervencion: e.target.value }))}
             helperText={isLocked ? 'Bloqueado' : (dictationEnabled ? "Dictado en curso, no se puede editar" : "Editable")}
             sx={{ "& .MuiInputBase-input": { maxHeight: "24vh", overflowY: "auto" } }}
-            slotProps={{ input: { readOnly: dictationEnabled || isLocked} }}
+            slotProps={{ input: { readOnly: dictationEnabled || readOnly} }}
           />
         </Grid>
       </Grid>
 
       {/* Acciones */}
-      {!isLocked && (
+      {!isLocked && !readOnly && (
         <Stack mt={2} spacing={1}>
           <Button
             variant="contained"

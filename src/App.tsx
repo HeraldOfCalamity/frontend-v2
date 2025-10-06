@@ -24,6 +24,8 @@ import TratamientosPage from './pages/admin/TratamientosPage';
 import { AuthProvider } from './context/AuthContext';
 import ImageUploadTest from './pages/especialista/Historial/ImageUploadTest';
 import DashboardCitas from './pages/admin/DashboardCitas';
+import MisPacientes from './pages/especialista/MisPacientes';
+import PacientesConCitas from './pages/especialista/MisPacientes';
 
 
 
@@ -49,7 +51,7 @@ function App() {
                     <Route element={<ProtectedRoute roles={['admin', 'especialista']} />}>
                       <Route path='/especialista/inicio' element={<InicioEspecialista />} />
                       <Route path='/especialista/perfil' element={<PerfilEspecialista />} />
-                      <Route path='/especialista/pacientes' element={<PerfilEspecialista />} />
+                      <Route path='/especialista/pacientes' element={<PacientesConCitas />} />
                     </Route>
 
                     <Route element={<ProtectedRoute roles={['admin']} />}>
@@ -63,7 +65,6 @@ function App() {
                       <Route path='/admin/roles' element={<RolesPage />} />
                       <Route path='/admin/configuracion' element={<ConfiguracionPage />} />
                     </Route>
-                    <Route path='/image/test' element={<ImageUploadTest />} />
                   </Routes>
                 </AppLayout>
               </UserProfileProvider>

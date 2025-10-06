@@ -38,7 +38,9 @@ interface HistorialDialogProps {
   open: boolean;
   onClose: () => void;
   pacienteProfile: PacienteWithUser;
-  citaId: string;
+  citaId?: string;
+  showEndAttention?: boolean;
+  readonly?: boolean;
 }
 interface Tab {
   name: string;
@@ -49,7 +51,9 @@ export default function HistorialDialog({
   onClose,
   open,
   pacienteProfile,
-  citaId
+  citaId,
+  showEndAttention,
+  readonly=false
 }: HistorialDialogProps) {
   const {
     listening,
@@ -153,6 +157,7 @@ export default function HistorialDialog({
             tratamientoId={selectedTratamientoId || undefined}
             historial={historial as HistorialClinico}
             onSaved={(h) => setHistorial(h)}
+            forceReadonly={readonly}
           />
         ),
       },
@@ -163,10 +168,11 @@ export default function HistorialDialog({
           onAddImage={(hist) => setHistorial(hist)}
           onAddEntry={(hist) => setHistorial(hist)}
           historial={historial as HistorialClinico} 
+          readonly={readonly}
         />,
       },
     ],
-    [historial, selectedTratamientoId]
+    [historial, selectedTratamientoId, readonly]
   );
 
   const [selectedTab, setSelectedTab] = useState<Tab>(HISTORIAL_TABS[0]);
@@ -182,17 +188,13 @@ export default function HistorialDialog({
 
   useEffect(() => {
     if (!open) return;
-    if (!browserSupportsSpeechRecognition) {
+    if (!readonly && !browserSupportsSpeechRecognition) {
       Swal.fire("Atención", "El navegador no soporta el dictado!", "warning");
       return;
     }
     obtenerHistorialByPacienteId();    
-  }, [open, browserSupportsSpeechRecognition, obtenerHistorialByPacienteId, pacienteId]);
+  }, [open, readonly, browserSupportsSpeechRecognition, obtenerHistorialByPacienteId, pacienteId]);
 
-  // useEffect(() => {
-  //   if(!historial?._id){setUiMode('list'); return;}
-  //   setUiMode(tratamientos.length ? 'list' : 'detail');
-  // }, [historial?._id, tratamientos.length]);
 
   const [openNewTrat, setOpenNewTrat] = useState(false);
   const [motivoNew, setMotivoNew] = useState('');
@@ -226,23 +228,26 @@ export default function HistorialDialog({
   }, [historial?._id, pacienteId, motivoNew]);
 
   const handleVolverTratamientos = async () => {
-    const result = await Swal.fire({
-      title: 'Volver a tratamientos',
-      text: 'Esta seguro de volver? La información no guardada se perderá.',
-      icon: 'warning',
-      showCancelButton: true,
-      showConfirmButton: true,
-      confirmButtonText: 'Si, volver',
-      cancelButtonText: 'No',
-    })
+    if(!readonly){
+        const result = await Swal.fire({
+        title: 'Volver a tratamientos',
+        text: 'Esta seguro de volver? La información no guardada se perderá.',
+        icon: 'warning',
+        showCancelButton: true,
+        showConfirmButton: true,
+        confirmButtonText: 'Si, volver',
+        cancelButtonText: 'No',
+      })
 
-    if(!result.isConfirmed) return;
+      if(!result.isConfirmed) return;
+    }
 
     setUiMode('list'); 
     setSelectedTratamientoId(null);
   }
 
   const marcarCitaAtendida = async () => {
+    if(!citaId) return;
     try{
       const cita = await attendCita(citaId)
       if(cita){
@@ -331,9 +336,11 @@ export default function HistorialDialog({
                     ← Volver a tratamientos
                   </Button>
                 )}
-                <Button color="secondary" variant="contained" onClick={handleEndAttention}>
-                  Terminar Atención
-                </Button>
+                {showEndAttention && citaId && (
+                  <Button color="secondary" variant="contained" onClick={handleEndAttention}>
+                    Terminar Atención
+                  </Button>
+                )}
                 <Button color="error" variant="contained" onClick={handleCancelModal}>  
                   Cancelar
                 </Button>
@@ -392,13 +399,15 @@ export default function HistorialDialog({
               <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                 <Stack direction={{ xs:'column', sm:'row' }} gap={1} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
                   <Typography variant="h6" fontWeight={700}>Tratamientos</Typography>
-                  <Button
-                    variant="contained"
-                    onClick={() => setOpenNewTrat(true)}
-                    disabled={!historial?._id && !pacienteId}
-                  >
-                    Agregar tratamiento
-                  </Button>
+                  {!readonly && (
+                    <Button
+                      variant="contained"
+                      onClick={() => setOpenNewTrat(true)}
+                      disabled={!historial?._id && !pacienteId}
+                    >
+                      Agregar tratamiento
+                    </Button>
+                  )}
                 </Stack>
                 <Stack mt={2} gap={1}>
                   {tratamientos.length === 0 ? (

@@ -116,13 +116,15 @@ interface EvolucionProps{
   tratamientoId?: string;
   onAddEntry: (hist: HistorialClinico) => void;
   onAddImage: (hist: HistorialClinico) => void;
+  readonly?: boolean;
 }
 
 export default function Evolucion({
   historial,
   onAddEntry,
   onAddImage,
-  tratamientoId
+  tratamientoId,
+  readonly
 }: EvolucionProps){
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -409,7 +411,7 @@ async function handleOpenCam() {
   // Subida + registro al backend
   async function processAndUploadToEntry(fileOrBlob: File | Blob, filename = "photo.jpg", entryId?: string) {
     try {
-      if (!historialId || !pacienteId || !entryId || !activeTrat?.id) { 
+      if (readonly || !historialId || !pacienteId || !entryId || !activeTrat?.id) { 
         await Swal.fire("Atención","Falta historial, paciente, entrada o tratamiento.","info");
         return; 
       }
@@ -721,19 +723,21 @@ const nerSpansForField = filterSpansForField(
   return (
     <>
       {/* Barra de acciones */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-        <Stack direction="row" justifyContent="flex-end">
-          <Button
-            startIcon={<AddCircleOutline />}
-            fullWidth
-            color="secondary"
-            variant="contained"
-            onClick={() => setOpenAddEntry(true)}
-          >
-            Agregar Entrada
-          </Button>
-        </Stack>
-      </Paper>
+      {!readonly && (
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Stack direction="row" justifyContent="flex-end">
+              <Button
+                startIcon={<AddCircleOutline />}
+                fullWidth
+                color="secondary"
+                variant="contained"
+                onClick={() => setOpenAddEntry(true)}
+              >
+                Agregar Entrada
+              </Button>
+          </Stack>
+        </Paper>
+      )}
 
       {/* Tabla */}
       <Paper
@@ -759,7 +763,7 @@ const nerSpansForField = filterSpansForField(
             },
           }}
         >
-          <GenericTable columns={columns} data={sortedRows} actions={actions} />
+          <GenericTable columns={columns} data={sortedRows} actions={!readonly ? actions : actions.slice(1)} />
         </Box>
       </Paper>
 
@@ -854,7 +858,9 @@ const nerSpansForField = filterSpansForField(
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" color="success" onClick={onGrabarEntrada}>Grabar</Button>
+          {!readonly && (
+            <Button variant="contained" color="success" onClick={onGrabarEntrada}>Grabar</Button>
+          )}
           <Button variant="contained" color="error" onClick={() => { hardStop(); setOpenAddEntry(false); }}>Cancelar</Button>
         </DialogActions>
       </Dialog>
