@@ -71,6 +71,7 @@ export default function CalendarioCitas({
         eventTimeRangeFormat: ({ start, end }: { start: Date; end: Date }, culture: any, loc: any) =>
             `${loc.format(start, 'HH:mm', culture)} - ${loc.format(end, 'HH:mm', culture)}`,
     }), [])
+    const [loading, setLoading] = useState(false);
 
     
 
@@ -173,6 +174,7 @@ export default function CalendarioCitas({
                     'warning'
                 )
                 setOpenCancelMotivo(true)
+                setOpenDialog(false)
             }
 
         }catch(err: any){
@@ -184,31 +186,43 @@ export default function CalendarioCitas({
         }
     }
     const cancelarCita = async () => {
-        if(cancelMotivo.trim() === '' || !selectedEvent){
+        setLoading(true)
+        try{
+            if(cancelMotivo.trim() === '' || !selectedEvent){
+                await Swal.fire(
+                    'Atención',
+                    'Debe ingresar un motivo válido, el campo es requerido.',
+                    'warning'
+                )
+                return;
+            }
+    
+            const canceled = await cancelCita(selectedEvent.id as string, cancelMotivo);
+            if(onCancelCita){
+                await onCancelCita(selectedEvent);
+            }
+    
             await Swal.fire(
-                'Atención',
-                'Debe ingresar un motivo válido, el campo es requerido.',
-                'warning'
+                'Operacion Exitosa',
+                'Cita cancelada con exito, en un momento recibira un correo de confirmación.',
+                'success'
             )
-            return;
+    
+            setOpenCancelMotivo(false)
+            setOpenDialog(false)
+            setCancelMotivo('')
+        }catch(err: any){
+            Swal.fire(
+                'Error',
+                `${err}`,
+                'error'
+            )
+        }finally{
+            setLoading(false)
         }
-
-    const canceled = await cancelCita(selectedEvent.id as string, cancelMotivo);
-        if(onCancelCita){
-            await onCancelCita(selectedEvent);
-        }
-
-        await Swal.fire(
-            'Operacion Exitosa',
-            'Cita cancelada con exito, en un momento recibira un correo de confirmación.',
-            'success'
-        )
-
-        setOpenCancelMotivo(false)
-        setOpenDialog(false)
-        setCancelMotivo('')
     }
     const handleConfirmCitaClick = async (cita: Cita) => {
+        setLoading(true)
         try{
             const isConfirmed = await Swal.fire({
                 title: 'Confirmar Cita',
@@ -231,7 +245,6 @@ export default function CalendarioCitas({
                     'Cita confirmada con exito, en un momento recibira un correo de verificacion.',
                     'success'
                 )
-                console.log('cita, confirmada', confirmed);
             }
 
         }catch(err: any){
@@ -240,6 +253,9 @@ export default function CalendarioCitas({
                 `${err}`,
                 'error'
             )
+        }finally{
+            setLoading(false)
+            setOpenDialog(false)
         }
     }
 
@@ -248,7 +264,7 @@ export default function CalendarioCitas({
             if(onAtenderCita){
                 onAtenderCita(cita);
             }
-            console.log('atendiendo cita', cita)
+            
             
         }catch(err: any){
             Swal.fire(
@@ -257,7 +273,7 @@ export default function CalendarioCitas({
                 'error'
             )
         }finally{
-
+            setOpenDialog(false)
         }
     }
 
@@ -437,6 +453,7 @@ export default function CalendarioCitas({
                             variant="outlined"
                             color="error"
                             onClick={async () => await handleCancelCitaClick()}
+                            loading={loading}
                         >
                             Cancelar Cita
                         </Button>
@@ -446,6 +463,7 @@ export default function CalendarioCitas({
                             variant="contained"
                             color="primary"
                             onClick={async () => await handleConfirmCitaClick(selectedEvent)}
+                            loading={loading}
                         >
                             Confirmar Cita
                         </Button>
@@ -472,6 +490,7 @@ export default function CalendarioCitas({
                             setSelectedSlot(null); 
                             setSelectedEvent(null)
                         }}
+                        loading={loading}
                     >
                         Cerrar
                     </Button>
@@ -500,6 +519,7 @@ export default function CalendarioCitas({
                         color="warning"
                         variant="contained"
                         onClick={() => cancelarCita() }
+                        loading={loading}
                     >
                         Confirmar Cancelación
                     </Button>
@@ -507,6 +527,7 @@ export default function CalendarioCitas({
                         color="error"
                         variant="contained"
                         onClick={() => {setOpenCancelMotivo(false); setCancelMotivo('')}}
+                        loading={loading}
                     >
                         Cerrar
                     </Button>

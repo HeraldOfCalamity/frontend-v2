@@ -342,7 +342,7 @@ export default function HistorialDialog({
                   </Button>
                 )}
                 <Button color="error" variant="contained" onClick={handleCancelModal}>  
-                  Cancelar
+                  Cerrar
                 </Button>
               </Stack>
             </Stack>

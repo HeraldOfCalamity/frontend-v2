@@ -1304,8 +1304,10 @@ function filterSpansForField(
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeRecoModal}>Cancelar</Button>
-          <Button variant="contained" onClick={onSaveRecomendaciones}>Guardar</Button>
+          {!readonly && (
+            <Button variant="contained" onClick={onSaveRecomendaciones}>Guardar</Button>
+          )}
+          <Button variant="contained" color="error" onClick={closeRecoModal}>Cancelar</Button>
         </DialogActions>
       </Dialog>
       {/* Modal Antes / Después */}
