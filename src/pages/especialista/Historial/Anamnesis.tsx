@@ -542,7 +542,7 @@ export default function Anamnesis({
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
-            label="Condición Actual"
+            label="Condición Actual (Examen Físico)"
             multiline fullWidth
             value={view.condicion}
             onFocus={() => setActive('condicion')}
@@ -554,7 +554,7 @@ export default function Anamnesis({
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
           <TextField
-            label="Intervención Clínica"
+            label="Intervención/Procedimiento Clínico"
             multiline fullWidth
             value={view.intervencion}
             onFocus={() => setActive('intervencion')}

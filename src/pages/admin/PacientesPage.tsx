@@ -1,4 +1,4 @@
-import { AddCircleOutline, Circle, Delete, Edit } from "@mui/icons-material";
+import { AddCircleOutline, Circle, Delete, Edit, HistoryEduOutlined } from "@mui/icons-material";
 import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography, useTheme } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
@@ -15,6 +15,8 @@ import BuscarEspecialidad from "../../components/admin/BuscarEspecialidad";
 import type { Especialidad } from "../../api/especialidadService";
 import type { Especialista } from "../../api/especialistaService";
 import CalendarioCitas from "../../components/CalendarioCitas";
+import { SpeechProvider } from "../../context/SpeechContext";
+import HistorialDialog from "../especialista/Historial/HistorialDialog";
 
 
 export default function PacientesPage(){
@@ -29,6 +31,8 @@ export default function PacientesPage(){
     const [pacientes, setPacientes] = useState<PacienteWithUser[]>([]);
     const [disabledFields, setDisabledFields] = useState<PacienteFormField[]>([]);
     const [citasPaciente, setCitasPaciente] = useState<Cita[]>([])
+    const [openHistorialDialog, setOpenHistorialDialog] = useState(false)
+    const [selectedPacienteHist,setSelectedPacienteHist] = useState<PacienteWithUser | null>(null)
     const [refetchCalendar, setRefetchCalendar] = useState(false);
     const theme = useTheme();
 
@@ -49,6 +53,12 @@ export default function PacientesPage(){
     const handleAddPacienteClick = () => {
         setOpenPacienteForm(true);
     }
+
+    const handleVerHistorial = (row: any) => {
+      const pac = pacientes.find(p => p.paciente.id === row.id) || null;
+      setSelectedPacienteHist(pac);
+      setOpenHistorialDialog(true);
+    };
 
     const handlePacienteFormSubmit = async (data: Partial<PacienteWithUser>) => {
         setLoading(true);
@@ -165,6 +175,11 @@ export default function PacientesPage(){
             icon: <VisibilityOutlinedIcon color="primary"/>,
             label: 'Ver',
             onClick: (userRow) => handleShowPaciente(userRow)
+        },
+        {
+            icon: <HistoryEduOutlined color="warning"/>,
+            label: 'Ver Historial',
+            onClick: (userRow) => handleVerHistorial(userRow)
         },
         {
             icon: <EditCalendarOutlinedIcon color="secondary"/>,
@@ -329,6 +344,17 @@ export default function PacientesPage(){
                     }}
                     paciente={selectedPaciente || {}}
                 />
+                {selectedPacienteHist && (
+                    <SpeechProvider>
+                        <HistorialDialog
+                            open={openHistorialDialog}
+                            onClose={() => {setOpenHistorialDialog(false); setSelectedPacienteHist(null);}}
+                            pacienteProfile={selectedPacienteHist}
+                            showEndAttention={false}
+                            readonly
+                        />
+                    </SpeechProvider>
+                )}
         </Box>
     )
 }

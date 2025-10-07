@@ -232,10 +232,6 @@ export default function ReservaCita({
         }
     }, [completed, shouldGoNext]);
 
-    useEffect(() => {
-        console.log('createCita paciente', paciente);
-    }, [paciente])
-
     const handleReset = () => {
         setShouldGoNext(false);
         setCreateCita({

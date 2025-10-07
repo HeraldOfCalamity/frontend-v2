@@ -33,6 +33,7 @@ import {
 } from "../../../api/historialService";
 import dayjs from "dayjs";
 import { attendCita } from "../../../api/citaService";
+import { fmt, makeClinicHeaderHTML, openPrintWindow } from "../../../utils/printUtils";
 
 interface HistorialDialogProps {
   open: boolean;
@@ -47,6 +48,15 @@ interface Tab {
   component: React.ReactNode;
 }
 
+const CLINIC_INFO = {
+  logoUrl: "/benedetta-bellezza.svg",
+  name: "Benedetta Bellezza",
+  phone: "",
+  // usando \n para forzar multilínea
+  address: "Av. América #459 entre Av. Santa Cruz y Calle Pantaleón Dalence.\n Edif. Torre Montreal piso 1, of. 3. Frente al Paseo Aranjuez.",
+  city: "Cochabamba - Bolivia",
+  // sub1 y sub2 pueden omitirse; vienen por defecto con los textos que pediste
+};
 export default function HistorialDialog({
   onClose,
   open,
@@ -112,17 +122,19 @@ export default function HistorialDialog({
     try {
       if (!pacienteId) return;
       const hist = await getHistorialesPorPaciente(pacienteId);
-      console.log("historial historialdialog", hist);
+      // console.log("historial historialdialog", hist);
       if (hist) {
         setHistorial(hist);
         return;
       }
-      await Swal.fire(
-        "Paciente Nuevo",
-        "Se creará un historial para el paciente.",
-        "info"
-      );
-      await handleCrearHistorial();
+      if(!readonly){
+        await Swal.fire(
+          "Paciente Nuevo",
+          "Se creará un historial para el paciente.",
+          "info"
+        );
+        await handleCrearHistorial();
+      }
     } catch (err: any) {
       Swal.fire("Error", `${err}`, "error");
     }
@@ -303,6 +315,73 @@ export default function HistorialDialog({
 
     onClose();
   }, [])
+function buildHeaderPaciente() {
+  const u = pacienteProfile?.user;
+  const p = pacienteProfile?.paciente;
+
+  return `
+    ${makeClinicHeaderHTML(CLINIC_INFO)}
+
+    <div class="section">
+      <div class="section-head">Identificación del paciente</div>
+      <div class="section-body">
+        <div class="kv small">
+          <div>Nombre completo</div><div>${u?.name ?? ""} ${u?.lastname ?? ""}</div>
+          <div>C.I.</div><div>${u?.ci ?? "—"}</div>
+          <div>Teléfono</div><div>${u?.phone ?? "—"}</div>
+          <div>Fecha nac.</div><div>${fmt(p?.fecha_nacimiento)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function buildTablaTratamientos() {
+  const trats = Array.isArray(historial?.tratamientos) ? historial!.tratamientos : [];
+  const rows = trats.map((t: any, i: number) => {
+    const entradas = Array.isArray(t.entradas) ? t.entradas : [];
+    const fInicio = entradas[0]?.createdAt || t.created_at || historial?.createdAt;
+    const fFin = entradas[entradas.length - 1]?.createdAt || fInicio;
+    return `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${t.motivo || "—"}</td>
+        <td>${fmt(t.created_at || historial?.createdAt)}</td>
+        <td class="right">${entradas.length}</td>
+        <td>${fmt(fInicio)} – ${fmt(fFin)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <div class="section">
+      <div class="section-head">Tratamientos realizados</div>
+      <div class="section-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th><th>Motivo</th><th>Creado</th><th class="right">Entradas</th><th>Rango de fechas</th>
+            </tr>
+          </thead>
+          <tbody>${rows || `<tr><td colspan="5">Sin tratamientos.</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+
+  function handlePrintResumen() {
+    try {
+      const html = `${buildHeaderPaciente()}${buildTablaTratamientos()}`;
+      if (!html || !html.trim()) throw new Error("Documento vacío");
+      openPrintWindow(html, "Historial - Resumen");
+    } catch (e: any) {
+      Swal.fire("Error al preparar la impresión", e?.message || String(e), "error");
+    }
+  }
+
+
 
   return (
     <>
@@ -324,7 +403,7 @@ export default function HistorialDialog({
                 <Typography variant="h5" fontWeight={700}>Historial Clínico</Typography>
                 <Stack direction="row" gap={1} flexWrap="wrap">
                   <Chip label={`Paciente: ${pacienteProfile?.user.name} ${pacienteProfile?.user.lastname}`} size="small" />
-                  {historial?._id && <Chip label={`HC: ${historial?._id}`} size="small" color="info" />}
+                  <Chip label={`HC: ${historial ? historial._id : 'Paciente Nuevo: sin historial'}`} size="small" color="info" />
                   {pacienteProfile?.user?.phone && <Chip label={`Tel: ${pacienteProfile?.user.phone}`} size="small" variant="outlined" />}
                 </Stack>
               </Stack>
@@ -361,7 +440,7 @@ export default function HistorialDialog({
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <InputLabel>N° de HC</InputLabel>
-                  <TextField variant="outlined" size="small" fullWidth value={historial?._id || ''} slotProps={{ input: { readOnly: true } }} />
+                  <TextField variant="outlined" size="small" fullWidth value={historial?._id || 'Paciente Nuevo: Sin Historial'} slotProps={{ input: { readOnly: true } }} />
                 </Grid>
                 <Grid size={{ xs: 12, md: 4 }}>
                   <InputLabel>Nombres y Apellidos</InputLabel>
@@ -399,6 +478,7 @@ export default function HistorialDialog({
               <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                 <Stack direction={{ xs:'column', sm:'row' }} gap={1} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
                   <Typography variant="h6" fontWeight={700}>Tratamientos</Typography>
+                  <Button color="secondary" variant="outlined" onClick={handlePrintResumen}>Imprimir resumen</Button>
                   {!readonly && (
                     <Button
                       variant="contained"
