@@ -286,13 +286,17 @@ export default function ReservaCita({
             </DialogContent>
             <DialogActions>
                 <Button disabled={activeStep === 0} onClick={handleBack}>Atras</Button>
-                <Button onClick={() => {
-                    handleReset();
-                    onClose();
-                }}>Cancelar</Button>
                 <Button onClick={allStepsCompleted() ? crearCita : isLastStep() ? handleComplete : handleNext}>
                     {allStepsCompleted() ? 'Reservar' : isLastStep() ? 'Confirmar' : 'Siguiente'}
                 </Button>
+                <Button 
+                    color="error"
+                    variant="contained"
+                    onClick={() => {
+                        handleReset();
+                        onClose();
+                    }}
+                >Cancelar</Button>
             </DialogActions>
         </Dialog>
     )

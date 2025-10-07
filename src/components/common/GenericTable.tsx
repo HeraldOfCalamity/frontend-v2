@@ -289,9 +289,9 @@ export default function GenericTable<T extends {id: string | number}>({
                                 ))}
                                 {actions.length > 0 && (
                                     <TableCell align="center">
-                                        {actions.map(action => (
+                                        {actions.map((action, i) => (
                                             <IconButton
-                                                key={action.label}
+                                                key={`${action.label}${row.id}${i}`}
                                                 title={action.label}
                                                 color={action.color || 'primary'}
                                                 onClick={() => action.onClick(row)}

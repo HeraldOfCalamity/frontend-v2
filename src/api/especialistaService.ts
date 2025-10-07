@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import api from "../config/benedetta.api.config";
 import { handleError } from "../utils/errorHandler";
 import type { User } from "./userService";
@@ -8,6 +9,20 @@ export interface Especialista{
     especialidad_ids: string[];
     disponibilidades: Disponibilidad[];
     informacion?: string;
+    inactividades?: Inactividad[]
+}
+
+type CrearInactividadResp = {
+  inactividad: any;
+  citas_en_rango: number;
+  citas_canceladas?: number;
+  citas_caceladas?: number;    
+}
+
+export interface Inactividad{
+    desde: string;
+    hasta: string;
+    motivo?: string;
 }
 
 export interface Disponibilidad{
@@ -103,4 +118,65 @@ export async function getEspecialistasWithUser(){
     }catch(err: any){
         handleError(err, 'Ocurrio un error al obtener especialistas con usuario')
     }
+}
+
+export async function crearInactividad(
+  especialistaId: string,
+  inactividad: Inactividad,
+  cancelar = false
+): Promise<CrearInactividadResp> {
+  try {
+    const body = {
+      desde: new Date(inactividad.desde).toISOString(),
+      hasta: new Date(inactividad.hasta).toISOString(),
+      motivo: inactividad.motivo ?? ""
+    };
+    const { data } = await api.post(
+      `${ESPECIALISTA_ROUTE}${especialistaId}/inactividades?cancelar=${cancelar}`,
+      body
+    );
+    return data;
+  } catch (err: any) {
+    handleError(err, 'Error al crear inactividad');
+    throw err;
+  }
+}
+
+/** Re-verifica cuántas citas siguen dentro del rango antes de cancelar */
+export async function reverificarInactividad(
+  especialistaId: string,
+  rango: Pick<Inactividad, 'desde' | 'hasta'>
+): Promise<{ citas_en_rango: number }> {
+  try {
+    const qs = new URLSearchParams({
+      desde: new Date(rango.desde).toISOString(),
+      hasta: new Date(rango.hasta).toISOString(),
+    });
+    const { data } = await api.get(
+      `${ESPECIALISTA_ROUTE}${especialistaId}/inactividades/reverificar?${qs.toString()}`
+    );
+    return data;
+  } catch (err: any) {
+    handleError(err, 'Error al re-verificar inactividad');
+    throw err;
+  }
+}
+
+export async function eliminarInactividad(
+  especialistaId: string,
+  inactividad: Inactividad
+): Promise<{ removed: number }> {
+  try {
+    const params = new URLSearchParams({
+        desde: dayjs(inactividad.desde).format("YYYY-MM-DDTHH:mm:ss"),
+        hasta: dayjs(inactividad.hasta).format("YYYY-MM-DDTHH:mm:ss"),
+    });
+    const { data } = await api.delete(
+      `${ESPECIALISTA_ROUTE}${especialistaId}/inactividades?${params.toString()}`
+    );
+    return data;
+  } catch (err: any) {
+    handleError(err, "Error al eliminar inactividad");
+    throw err;
+  }
 }

@@ -2,11 +2,12 @@ import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitl
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Swal from "sweetalert2";
-import { AddCircleOutline, Delete } from "@mui/icons-material";
-import type { Disponibilidad, EspecialistaWithUser } from "../../api/especialistaService";
+import { AddCircleOutline, Block, Delete } from "@mui/icons-material";
+import { crearInactividad, eliminarInactividad, reverificarInactividad, type Disponibilidad, type EspecialistaWithUser, type Inactividad } from "../../api/especialistaService";
 import { getEspecialidades, type Especialidad } from "../../api/especialidadService";
 import InputFileUpload from "../InputFileUpload";
 import { BASE_URL } from "../../config/benedetta.api.config";
+import dayjs from "dayjs";
 
 export type EspecialistaFormField = "name"
  | "lastname"
@@ -53,6 +54,21 @@ export default function ({
     const [disponibilidades, setDisponibilidades] = useState<Disponibilidad[]>(initialData?.especialista?.disponibilidades || []);
     const [disponibilidadError, setDisponibilidadError] = useState('');
     const [openImagePreviewDialog, setOpenImagePreviewDialog] = useState(false);
+    
+    
+    const fmtLocal = (d: string | Date) => dayjs(d).format('YYYY-MM-DDTHH:mm');
+    const [openInactividadDialog, setOpenInactividadDialog] = useState(false);
+    const initialInacts = (initialData?.especialista?.inactividades || []).map((ia: any) => ({
+        desde: fmtLocal(ia.desde),
+        hasta: fmtLocal(ia.hasta),
+        motivo: ia.motivo || ''
+    }));
+    const [inactTemp, setInactTemp] = useState<Inactividad>({
+        desde: fmtLocal(new Date()),
+        hasta: fmtLocal(dayjs().add(2, 'hour').toDate()),
+        motivo: ''
+    });
+    const [inactividades, setInactividades] = useState<Inactividad[]>(initialInacts);
 
     const defaultValues = initialData
     ? {
@@ -133,6 +149,15 @@ export default function ({
         setPreview(defaultValues?.image || '')
         reset(defaultValues);
     }, [initialData, reset, open])
+
+    useEffect(() => {
+        const mapped = (initialData?.especialista?.inactividades || []).map((ia: any) => ({
+            desde: fmtLocal(ia.desde),
+            hasta: fmtLocal(ia.hasta),
+            motivo: ia.motivo || ''
+        }));
+        setInactividades(mapped);
+    }, [initialData, open]);
 
     const handleAddDisponibilidad = () => {
         setDisponibilidades([...disponibilidades, { dia: 1, desde: "08:00", hasta: "12:00" }]);
@@ -522,6 +547,112 @@ export default function ({
                                         ))}
                                     </Box>
                                 </Stack>
+                                {/* -------- INACTIVIDAD -------- */}
+                                <Stack spacing={1} mt={3}>
+                                <Stack direction='row' alignItems='center' justifyContent='space-between'>
+                                    <InputLabel>Inactividad</InputLabel>
+                                    <Button
+                                    onClick={() => {
+                                        setInactTemp({
+                                            desde: fmtLocal(new Date()),
+                                            hasta: fmtLocal(dayjs().add(2, 'hour').toDate()),
+                                            motivo: ''
+                                        });
+                                        setOpenInactividadDialog(true);
+                                    }}
+                                        variant="outlined"
+                                        color="secondary"
+                                        endIcon={<Block />}
+                                        disabled={!initialData?.especialista?.id} // requiere especialista creado
+                                    >
+                                        Agregar inactividad
+                                    </Button>
+                                </Stack>
+
+                                <Box sx={{ maxHeight: 180, overflowY: 'auto', py: 1 }}>
+                                    {(!inactividades || inactividades.length === 0) ? (
+                                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                                        No hay periodos de inactividad registrados.
+                                    </Typography>
+                                    ) : (
+                                    inactividades.map((ia, idx) => (
+                                        <Grid container spacing={1} alignItems="center" key={`${ia.desde}-${ia.hasta}-${idx}`} mb={1}>
+                                        <Grid size={{ xs: 5 }}>
+                                            <TextField
+                                            label="Desde"
+                                            type="datetime-local"
+                                            size="small"
+                                            value={ia.desde}
+                                            fullWidth
+                                            InputLabelProps={{ shrink: true }}
+                                            onChange={(e) => {
+                                                const next = [...inactividades];
+                                                next[idx] = { ...ia, desde: e.target.value };
+                                                setInactividades(next);
+                                            }}
+                                            />
+                                        </Grid>
+                                        <Grid size={{ xs: 5 }}>
+                                            <TextField
+                                            label="Hasta"
+                                            type="datetime-local"
+                                            size="small"
+                                            value={ia.hasta}
+                                            fullWidth
+                                            InputLabelProps={{ shrink: true }}
+                                            onChange={(e) => {
+                                                const next = [...inactividades];
+                                                next[idx] = { ...ia, hasta: e.target.value };
+                                                setInactividades(next);
+                                            }}
+                                            />
+                                        </Grid>
+                                        <Grid size={{ xs: 2 }}>
+                                            <IconButton
+                                                color="error"
+                                                onClick={async () => {
+                                                const espId = initialData?.especialista?.id;
+                                                if (!espId) {
+                                                    // caso creación: aún sin especialista -> borra local
+                                                    setInactividades(inactividades.filter((_, i) => i !== idx));
+                                                    return;
+                                                }
+                                                const ok = await Swal.fire({
+                                                    icon: 'question',
+                                                    title: 'Eliminar inactividad',
+                                                    text: '¿Deseas quitar este periodo de inactividad?',
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Sí, eliminar',
+                                                    cancelButtonText: 'Cancelar'
+                                                });
+                                                if (!ok.isConfirmed) return;
+
+                                                try {
+                                                    const res = await eliminarInactividad(espId, ia);
+                                                    if ((res?.removed ?? 0) > 0) {
+                                                    setInactividades(inactividades.filter((_, i) => i !== idx));
+                                                    await Swal.fire('Listo', 'La inactividad fue eliminada.', 'success');
+                                                    } else {
+                                                    await Swal.fire('Sin cambios', 'No se encontró la inactividad a eliminar.', 'info');
+                                                    }
+                                                } catch (e: any) {
+                                                    Swal.fire('Error', String(e?.message || e), 'error');
+                                                }
+                                                }}
+                                            >
+                                                <Delete />
+                                            </IconButton>
+                                        </Grid>
+                                        {ia.motivo ? (
+                                            <Grid size={{ xs: 12 }}>
+                                            <Typography variant="caption">Motivo: {ia.motivo}</Typography>
+                                            </Grid>
+                                        ) : null}
+                                        </Grid>
+                                    ))
+                                    )}
+                                </Box>
+                                </Stack>
                             </Grid>
                         </Grid>
                     </DialogContent>
@@ -546,6 +677,128 @@ export default function ({
                 <DialogActions>
                     <Button color="error" variant="contained" onClick={() => setOpenImagePreviewDialog(false)}>Cerrar</Button>
                 </DialogActions>
+            </Dialog>
+            {/* Dialog Nueva Inactividad */}
+            <Dialog open={openInactividadDialog} onClose={() => setOpenInactividadDialog(false)} maxWidth="sm" fullWidth>
+            <DialogTitle>Agregar periodo de inactividad</DialogTitle>
+            <DialogContent>
+                <Grid container spacing={2} mt={0.5}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                    label="Desde"
+                    type="datetime-local"
+                    size="small"
+                    value={inactTemp.desde}
+                    onChange={(e)=> setInactTemp({...inactTemp, desde: e.target.value})}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <TextField
+                    label="Hasta"
+                    type="datetime-local"
+                    size="small"
+                    value={inactTemp.hasta}
+                    onChange={(e)=> setInactTemp({...inactTemp, hasta: e.target.value})}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                    <TextField
+                    label="Motivo (opcional)"
+                    size="small"
+                    value={inactTemp.motivo}
+                    onChange={(e)=> setInactTemp({...inactTemp, motivo: e.target.value})}
+                    fullWidth
+                    />
+                </Grid>
+                </Grid>
+            </DialogContent>
+            <DialogActions>
+                <Button color="inherit" onClick={() => setOpenInactividadDialog(false)}>Cerrar</Button>
+                <Button
+                variant="contained"
+                onClick={async () => {
+                    try {
+                    const espId = initialData?.especialista?.id;
+                    if(!espId){
+                        await Swal.fire('Primero guarda el especialista', 'Debes crear/guardar el especialista antes de registrar inactividades.', 'info');
+                        return;
+                    }
+
+                    // 1) Guardar inactividad y verificar citas sin cancelar aún
+                    const res = await crearInactividad(espId, inactTemp, false);
+                    const total = res?.citas_en_rango ?? 0;
+
+                    if (total > 0) {
+                        const r = await Swal.fire({
+                        icon: 'warning',
+                        title: 'Hay citas en el periodo',
+                        text: `Se encontraron ${total} cita(s) dentro del rango seleccionado. ¿Deseas cancelarlas ahora?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, cancelar ahora',
+                        cancelButtonText: 'No, más tarde'
+                        });
+
+                        if (r.isConfirmed) {
+                        const res2 = await crearInactividad(espId, inactTemp, true);
+                        const canceladas = res2?.citas_canceladas ?? res2?.citas_caceladas ?? 0;
+                        await Swal.fire('Listo', `Se cancelaron ${canceladas} cita(s).`, 'success');
+                        } else {
+                        // 2) Flujo "cancelar después" -> botón que re-verifica antes de cancelar
+                        await Swal.fire({
+                            icon: 'info',
+                            title: 'Cancelar más tarde',
+                            html: `
+                            <p>Podrás cancelar luego. Antes de cancelar, re-verificaremos cuántas citas siguen en el rango.</p>
+                            <button id="cancelar-despues" class="swal2-confirm swal2-styled" style="margin-top:12px">Re-verificar y cancelar ahora</button>
+                            `,
+                            showConfirmButton: false,
+                            didOpen: () => {
+                            const btn = document.getElementById('cancelar-despues');
+                            if(btn){
+                                btn.addEventListener('click', async () => {
+                                const rev = await reverificarInactividad(espId, inactTemp);
+                                if ((rev?.citas_en_rango ?? 0) > 0) {
+                                    const ok = await Swal.fire({
+                                    icon: 'question',
+                                    title: 'Confirmar cancelación',
+                                    text: `Aún hay ${rev.citas_en_rango} cita(s). ¿Cancelar ahora?`,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Sí',
+                                    cancelButtonText: 'No'
+                                    });
+                                    if (ok.isConfirmed) {
+                                    const res3 = await crearInactividad(espId, inactTemp, true);
+                                    const canceladas3 = res3?.citas_canceladas ?? res3?.citas_caceladas ?? 0;
+                                    await Swal.fire('Listo', `Se cancelaron ${canceladas3} cita(s).`, 'success');
+                                    }
+                                } else {
+                                    await Swal.fire('Sin cambios', 'Ya no hay citas en el rango.', 'info');
+                                }
+                                });
+                            }
+                            }
+                        });
+                        }
+                    } else {
+                        await Swal.fire('Listo', 'No se encontraron citas en el periodo. La inactividad fue registrada.', 'success');
+                    }
+
+                    // Actualiza la lista visible
+                    setInactividades(prev => [...prev, inactTemp]);
+                    setOpenInactividadDialog(false);
+
+                    } catch (err: any) {
+                    Swal.fire('Error', String(err?.message || err), 'error');
+                    }
+                }}
+                >
+                Guardar inactividad
+                </Button>
+            </DialogActions>
             </Dialog>
         </>
     )

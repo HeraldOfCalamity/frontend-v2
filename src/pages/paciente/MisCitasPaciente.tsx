@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography, useTheme } from "@mui/material";
 import { useUserProfile } from "../../context/userProfileContext";
 import { ReplayOutlined } from "@mui/icons-material";
+import CancelMotivoDialog from "../../components/common/CancelMotivoDialog";
 
 interface MisCitasPacienteProps{
     
@@ -19,7 +20,7 @@ export default function MisCitasPaciente({
     const [citas, setCitas] = useState<Cita[]>([]);
     const [loading, setLoading] = useState(false);
     const [openCancelMotivo, setOpenCancelMotivo] = useState(false);
-    const [cancelMotivo, setCancelMotivo] = useState('');
+    // const [cancelMotivo, setCancelMotivo] = useState('');
     const [selectedCita, setSelectedCita] = useState<Cita>()
     const theme = useTheme();
 
@@ -63,9 +64,6 @@ export default function MisCitasPaciente({
     }
 
     const puedeConfirmar = (cita: Cita) => {
-
-        console.log('cita',cita)
-        console.log('conditional', cita.estado?.nombre === 'pendiente')
         return cita.estado?.nombre === 'pendiente';
     }
 
@@ -113,7 +111,7 @@ export default function MisCitasPaciente({
         }
     };
 
-    const cancelarCita = async () => {
+    const cancelarCita =  async (cancelMotivo: string) => {
         if(cancelMotivo.trim() === '' || !selectedCita){
             await Swal.fire(
                 'Atención',
@@ -128,7 +126,6 @@ export default function MisCitasPaciente({
             await obtenerCitasPaciente()
             Swal.fire("Cita cancelada", "La cita fue cancelada exitosamente.", "success");
             setOpenCancelMotivo(false)
-            setCancelMotivo('')
             setSelectedCita(undefined)
         }catch(err: any){
             Swal.fire('Error', `${err}`, 'error');
@@ -218,41 +215,12 @@ export default function MisCitasPaciente({
                     </Stack>
                 </>
             )}
-            <Dialog
+            <CancelMotivoDialog
                 open={openCancelMotivo}
-                onClose={() => {setOpenCancelMotivo(false); setCancelMotivo(''); setSelectedCita(undefined)}}
-            >
-                <DialogTitle>
-                    Agregar motivo de cancelación
-                </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        value={cancelMotivo}
-                        onChange={e => setCancelMotivo(e.target.value)}
-                        fullWidth
-                        multiline
-                        minRows={2}
-                        label={'Ingrese el motivo de cancelación'}
-                        sx={{mt:1}}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button
-                        color="warning"
-                        variant="contained"
-                        onClick={() => cancelarCita() }
-                    >
-                        Confirmar Cancelación
-                    </Button>
-                    <Button
-                        color="error"
-                        variant="contained"
-                        onClick={() => {setOpenCancelMotivo(false); setCancelMotivo(''); setSelectedCita(undefined)}}
-                    >
-                        Cerrar
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                initial=""
+                onClose={() =>{ setOpenCancelMotivo(false); setSelectedCita(undefined);}}
+                onConfirm={(m) => cancelarCita(m)}
+            />
         </Box>
     )
 }

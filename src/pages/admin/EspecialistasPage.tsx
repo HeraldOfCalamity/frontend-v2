@@ -107,7 +107,7 @@ export default function EspecialistasPage(){
             render: (v) => {
                 return <Box>
                     {(v as string[]).map(item => 
-                        <Box textAlign={'left'} mb={1}>
+                        <Box key={item} textAlign={'left'} mb={1}>
                             {item}
                         </Box>
                     )}
@@ -122,8 +122,8 @@ export default function EspecialistasPage(){
                 const disp = v as Disponibilidad[];
                 return (
                     <Box display={'flex'} flexDirection={'column'}>
-                        {disp.map(dis => 
-                            <Box display={'flex'} textAlign={'left'} mb={1} alignItems={'center'}>
+                        {disp.map((dis, i) => 
+                            <Box key={`${disp}${i}`} display={'flex'} textAlign={'left'} mb={1} alignItems={'center'}>
                                 <CalendarMonth color="action" sx={{mr: 1}} /> {dis.dia}: {dis.desde} - {dis.hasta}
                             </Box>
                         )}
