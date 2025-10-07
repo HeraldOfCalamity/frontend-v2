@@ -40,6 +40,7 @@ const css = `
 
     .clinic-name{ font-weight:800; font-size: 16pt; line-height:1.15; }
     .clinic-sub{ font-size: 10pt; line-height:1.2; }
+    .clinic-id{ font-size: 10pt; line-height:1.2; margin-top: 2px; }
     .clinic-meta{
     font-size:10pt;
     white-space: pre-wrap; /* respeta saltos de línea en dirección */
@@ -109,12 +110,13 @@ export function makeClinicHeaderHTML(info: {
   city?: string;
   sub1?: string;
   sub2?: string;
+  historialId?: string;
 }) {
   const {
     logoUrl = "/benedetta-bellezza.svg",
-    name, address, phone, city,
-    sub1 = "Historial Clínico",
-    sub2 = "Ministerio de salud- resolución ministerial N°825 cap IV art. 44",
+    name, address, phone, city, historialId,
+    sub1 = "",
+    sub2 = "Ministerio de salud- resolución ministerial N°825 cap IV art. 44. Cochabamba - Bolivia.",
   } = info;
 
   const metaLines: string[] = [];
@@ -130,6 +132,7 @@ export function makeClinicHeaderHTML(info: {
       </div>
       <div class="clinic-col-body">
         <div class="clinic-name">${escapeHtml(name)}</div>
+        ${historialId ? `<div class="clinic-id">Historial Clínico: <span class="mono">${escapeHtml(historialId)}</span></div>` : ""}
         <div class="clinic-sub">${escapeHtml(sub1)}</div>
         <div class="clinic-sub">${escapeHtml(sub2)}</div>
         ${metaHtml ? `<div class="clinic-meta">${metaHtml}</div>` : ""}

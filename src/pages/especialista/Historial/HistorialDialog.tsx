@@ -54,7 +54,7 @@ const CLINIC_INFO = {
   phone: "",
   // usando \n para forzar multilínea
   address: "Av. América #459 entre Av. Santa Cruz y Calle Pantaleón Dalence.\n Edif. Torre Montreal piso 1, of. 3. Frente al Paseo Aranjuez.",
-  city: "Cochabamba - Bolivia",
+  city: "",
   // sub1 y sub2 pueden omitirse; vienen por defecto con los textos que pediste
 };
 export default function HistorialDialog({
@@ -320,7 +320,7 @@ function buildHeaderPaciente() {
   const p = pacienteProfile?.paciente;
 
   return `
-    ${makeClinicHeaderHTML(CLINIC_INFO)}
+    ${makeClinicHeaderHTML({ ...CLINIC_INFO, historialId: (historial as any)?._id || "" })}
 
     <div class="section">
       <div class="section-head">Identificación del paciente</div>
