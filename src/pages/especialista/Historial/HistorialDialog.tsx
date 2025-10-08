@@ -88,6 +88,7 @@ export default function HistorialDialog({
   const [historial, setHistorial] = useState<HistorialClinico | undefined>();
   const [uiMode, setUiMode] = useState<'list' | 'detail'>('list');
   const [selectedTratamientoId, setSelectedTratamientoId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const tratamientos = useMemo(() => historial?.tratamientos ?? [], [historial]);
   const theme = useTheme()
 
@@ -213,6 +214,7 @@ export default function HistorialDialog({
   const [motivoNew, setMotivoNew] = useState('');
 
   const doAddTratamiento = useCallback(async () => {
+    setLoading(true)
     try{
       if(!historial?._id){
         const created = await crearHistorial({paciente_id: pacienteId});
@@ -238,6 +240,8 @@ export default function HistorialDialog({
       Swal.fire('Exito', 'Tratamiento agregado', 'success');
     }catch (err: any){
       Swal.fire('Error', `${err}`, 'error');
+    }finally{
+      setLoading(false)
     }
   }, [historial?._id, pacienteId, motivoNew]);
 
@@ -601,8 +605,8 @@ function buildTablaTratamientos() {
           />
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={doAddTratamiento}>Agregar</Button>
-          <Button color="error" variant="contained" onClick={() => setOpenNewTrat(false)}>Cancelar</Button>
+          <Button loading={loading} variant="contained" onClick={doAddTratamiento}>Agregar</Button>
+          <Button loading={loading} color="error" variant="contained" onClick={() => setOpenNewTrat(false)}>Cancelar</Button>
         </DialogActions>
       </Dialog>
     </>
