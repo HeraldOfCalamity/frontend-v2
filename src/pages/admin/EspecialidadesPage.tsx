@@ -64,7 +64,17 @@ export default function EspecialidadesPage(){
         obtenerTratamientos();
         obtenerEspecialidades();
     }, []);
+    const resolveImageSrc = (val?: string) => {
+        if (!val) return "";
+        if (val.startsWith("data:")) return val;        // base64 del FileReader
+        if (val.startsWith("blob:")) return val;        // object URL local
+        if (/^https?:\/\//i.test(val)) return val;      // URL firmada absoluta (R2/S3/CDN)
+        if (val.startsWith("/")) return `${BASE_URL}${val}`; // ruta relativa tipo /static/...
+        // si te llega una KEY S3 (ej. "especialidades/uuid.webp"), pide URL firmada:
+        return `${BASE_URL}/especialidades/images/signed-get?key=${encodeURIComponent(val)}`;
+    };
 
+    
     const columns: Column<Especialidad>[] = [
         {field: 'nombre', headerName: 'Nombre', align: 'center'},
         {
@@ -103,8 +113,9 @@ export default function EspecialidadesPage(){
 //             }
 // },
         {field: 'image', headerName: 'Imagen', align: 'center', render: (image) => {
+            const src = resolveImageSrc(image);
             return image 
-                ? <img src={`${BASE_URL}${image}`} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
+                ? <img src={src} alt="imagen" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }} />
                 : 'Sin Imagen'
         }},
     ];
