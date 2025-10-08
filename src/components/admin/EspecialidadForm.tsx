@@ -65,6 +65,17 @@ export default function EspecialidadForm({
         reset(initialData || {nombre: '', descripcion: '', image: '', tratamientos: []});
         setPreview(initialData?.image || '')
     }, [initialData, reset, open]);
+    const resolveImageSrc = (val?: string) => {
+        if (!val) return "";
+        if (val.startsWith("data:")) return val;        // base64 del FileReader
+        if (val.startsWith("blob:")) return val;        // object URL local
+        if (/^https?:\/\//i.test(val)) return val;      // URL firmada absoluta (R2/S3/CDN)
+        if (val.startsWith("/")) return `${BASE_URL}${val}`; // ruta relativa tipo /static/...
+        // si te llega una KEY S3 (ej. "especialidades/uuid.webp"), pide URL firmada:
+        return `${BASE_URL}/especialidades/images/signed-get?key=${encodeURIComponent(val)}`;
+    };
+
+    const src = resolveImageSrc(preview ?? initialData?.image ?? "");
 
     return(
         <>
@@ -183,7 +194,7 @@ export default function EspecialidadForm({
             <ImagePreviewDialog
                 open={openImagePreviewDialog}
                 onClose={() => setOpenImagePreviewDialog(false)}
-                image={initialData?.image === preview ? `${BASE_URL}${preview}` : preview || ''}
+                image={src}
                 alt='Especialidad Image'
             />
         </>
