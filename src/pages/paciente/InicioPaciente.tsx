@@ -144,7 +144,16 @@ const InicioPaciente: React.FC<InicioPacienteProps> = ({
             obtenerEspecialidades();
         }
     }, []);
-
+    const resolveImageSrc = (val?: string) => {
+        if (!val) return "";
+        if (val.startsWith("data:")) return val;        // base64 del FileReader
+        if (val.startsWith("blob:")) return val;        // object URL local
+        if (/^https?:\/\//i.test(val)) return val;      // URL firmada absoluta (R2/S3/CDN)
+        if (val.startsWith("/")) return `${BASE_URL}${val}`; // ruta relativa tipo /static/...
+        // si te llega una KEY S3 (ej. "especialidades/uuid.webp"), pide URL firmada:
+        return `${BASE_URL}/especialidades/images/signed-get?key=${encodeURIComponent(val)}`;
+    };
+    
     return(
         <Box display={'flex'} flexDirection={'column'} flexGrow={1}>
             <Typography variant="h4" fontWeight={600} mb={7} textAlign='center'>
@@ -179,7 +188,7 @@ const InicioPaciente: React.FC<InicioPacienteProps> = ({
                                         <CardActionArea onClick={() => handleReservarCita(esp)}>
                                             <CardMedia
                                                 sx={{height:140}}
-                                                image={`${BASE_URL}${esp.image}`}
+                                                image={resolveImageSrc(esp.image)}
                                             >
                                                 {!esp.image && <Skeleton variant="rectangular" height={140} sx={{pb: 2}}/>}
                                             </CardMedia>
