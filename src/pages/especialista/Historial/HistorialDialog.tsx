@@ -34,6 +34,7 @@ import {
 import dayjs from "dayjs";
 import { attendCita } from "../../../api/citaService";
 import { fmt, makeClinicHeaderHTML, openPrintWindow } from "../../../utils/printUtils";
+import { BASE_URL } from "../../../config/benedetta.api.config";
 
 interface HistorialDialogProps {
   open: boolean;
@@ -382,6 +383,11 @@ function buildTablaTratamientos() {
   }
 
 
+  function handlePrintTreatment(){
+    if (!historial?._id || !selectedTratamientoId) return;
+    const url = `${BASE_URL}/historiales/${historial._id}/tratamientos/${selectedTratamientoId}/print`;
+    window.open(url, "?download=1");
+  }
 
   return (
     <>
@@ -549,6 +555,17 @@ function buildTablaTratamientos() {
                   </Button>
                 );
               })}
+              <Stack direction={'row'} flexGrow={1} justifyContent={'end'}>
+                <Button
+                  color={'secondary'}
+                  variant={'contained'}
+                  onClick={() => {
+                    handlePrintTreatment()
+                  }}
+                >
+                  Imprimir historia clínica
+                </Button>
+              </Stack>
             </Stack>
             )}
 
