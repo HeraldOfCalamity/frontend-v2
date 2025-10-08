@@ -253,6 +253,7 @@ interface AddTratamiento{
   antPersonales: string;
   condActual: string;
   intervencionClinica: string;
+  diagnostico: string;
 }
 export async function addTratamiento(historial_id: string, body: AddTratamiento){
   try {

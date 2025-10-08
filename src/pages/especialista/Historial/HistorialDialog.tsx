@@ -227,7 +227,8 @@ export default function HistorialDialog({
         antFamiliares: '',
         antPersonales: '',
         condActual: '',
-        intervencionClinica: ''
+        intervencionClinica: '',
+        diagnostico: ''
       });
 
       const fresh = await getHistorialesPorPaciente(pacienteId);
@@ -600,8 +601,8 @@ function buildTablaTratamientos() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenNewTrat(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={doAddTratamiento}>Crear</Button>
+          <Button variant="contained" onClick={doAddTratamiento}>Agregar</Button>
+          <Button color="error" variant="contained" onClick={() => setOpenNewTrat(false)}>Cancelar</Button>
         </DialogActions>
       </Dialog>
     </>
