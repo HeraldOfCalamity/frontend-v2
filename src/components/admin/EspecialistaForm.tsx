@@ -8,6 +8,7 @@ import { getEspecialidades, type Especialidad } from "../../api/especialidadServ
 import InputFileUpload from "../InputFileUpload";
 import { BASE_URL } from "../../config/benedetta.api.config";
 import dayjs from "dayjs";
+import ImagePreviewDialog from "../common/ImagePreviewDialog";
 
 export type EspecialistaFormField = "name"
  | "lastname"
@@ -192,6 +193,18 @@ export default function ({
         setDisponibilidades(disponibilidades.filter((_, i) => i !== idx));
         setDisponibilidadError('');
     };
+
+    const resolveImageSrc = (val?: string) => {
+        if (!val) return "";
+        if (val.startsWith("data:")) return val;        // base64 del FileReader
+        if (val.startsWith("blob:")) return val;        // object URL local
+        if (/^https?:\/\//i.test(val)) return val;      // URL firmada absoluta (R2/S3/CDN)
+        if (val.startsWith("/")) return `${BASE_URL}${val}`; // ruta relativa tipo /static/...
+        // si te llega una KEY S3 (ej. "especialidades/uuid.webp"), pide URL firmada:
+        return `${BASE_URL}/especialidades/images/signed-get?key=${encodeURIComponent(val)}`;
+    };
+
+    const src = resolveImageSrc(preview ?? initialData?.especialista?.image ?? "");
 
     return(
         <>
@@ -664,20 +677,12 @@ export default function ({
                     </DialogActions>
                 </form>
             </Dialog>
-            <Dialog
+            <ImagePreviewDialog
                 open={openImagePreviewDialog}
+                image={src}
                 onClose={() => setOpenImagePreviewDialog(false)}
-            >
-                <DialogTitle>
-                    Imagen Cargada
-                </DialogTitle>
-                <DialogContent>
-                    <img height={210} src={initialData ? `${BASE_URL}${preview}` : preview || ''} alt="Especialista Image"/>
-                </DialogContent>
-                <DialogActions>
-                    <Button color="error" variant="contained" onClick={() => setOpenImagePreviewDialog(false)}>Cerrar</Button>
-                </DialogActions>
-            </Dialog>
+                alt="Especialista Image"
+            />
             {/* Dialog Nueva Inactividad */}
             <Dialog open={openInactividadDialog} onClose={() => setOpenInactividadDialog(false)} maxWidth="sm" fullWidth>
             <DialogTitle>Agregar periodo de inactividad</DialogTitle>

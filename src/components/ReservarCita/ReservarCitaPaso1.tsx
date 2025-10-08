@@ -43,7 +43,17 @@ export default function ReservarCitaPaso1({
         console.log('espcialidad', especialidad)
         console.log('especialistas', especialistas)
     }, [especialidad, especialistas])
+    const resolveImageSrc = (val?: string) => {
+        if (!val) return "";
+        if (val.startsWith("data:")) return val;        // base64 del FileReader
+        if (val.startsWith("blob:")) return val;        // object URL local
+        if (/^https?:\/\//i.test(val)) return val;      // URL firmada absoluta (R2/S3/CDN)
+        if (val.startsWith("/")) return `${BASE_URL}${val}`; // ruta relativa tipo /static/...
+        // si te llega una KEY S3 (ej. "especialidades/uuid.webp"), pide URL firmada:
+        return `${BASE_URL}/especialidades/images/signed-get?key=${encodeURIComponent(val)}`;
+    };
 
+    
     return (
         <Box sx={{overflowY: 'scroll'}}>
             <Grid justifyContent={'space-around'} container spacing={1}>
@@ -69,7 +79,7 @@ export default function ReservarCitaPaso1({
                                         <Box minWidth={'40%'} height={'200px'} border={1} borderColor={theme => theme.palette.grey[500]} borderRadius={1} bgcolor={theme => theme.palette.common.white}>
                                             <CardMedia  
                                                 sx={{ height: '100%', display: esp.especialista.image ? "block" : "none", opacity:1 }}
-                                                image={`${BASE_URL}${esp.especialista.image}`}
+                                                image={resolveImageSrc(esp?.especialista?.image ?? "")}
                                                 title={`Imagen ${esp.user.name}`}
                                             />
                                             {!esp.especialista.image && <Skeleton variant="rounded" width={'100%'} height={'100%'}  />}
