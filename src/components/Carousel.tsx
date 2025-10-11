@@ -17,14 +17,17 @@ function CustomNextArrow(props: any) {
       sx={{
         position: "absolute",
         top: "50%",
-        right: -35,
+        right: -20,
         transform: "translateY(-50%)",
         zIndex: 2,
+        bgcolor: 'background.paper',
+        border: (t) => `1px solid ${t.palette.divider}`,
+        '&:hover': { bgcolor: 'background.paper' }
       }}
       size="small"
       aria-label="Siguiente especialidad"
     >
-      <ArrowCircleRightRounded fontSize="large" sx={{opacity: 0.5, ":hover":{opacity: 1}}}/>
+      <ArrowCircleRightRounded fontSize="large" sx={{ opacity: 0.7, ":hover": { opacity: 1 } }} />
     </IconButton>
   );
 }
@@ -37,14 +40,17 @@ function CustomPrevArrow(props: any) {
       sx={{
         position: "absolute",
         top: "50%",
-        left: -35,
+        left: -20,
         transform: "translateY(-50%)",
         zIndex: 2,
+        bgcolor: 'background.paper',
+        border: (t) => `1px solid ${t.palette.divider}`,
+        '&:hover': { bgcolor: 'background.paper' }
       }}
       size="small"
       aria-label="Anterior especialidad"
     >
-      <ArrowCircleLeft fontSize="large" sx={{opacity: 0.5, ":hover":{opacity: 1}}}/>
+      <ArrowCircleLeft fontSize="large" sx={{ opacity: 0.7, ":hover": { opacity: 1 } }} />
     </IconButton>
   );
 }
@@ -98,49 +104,59 @@ export default function EspecialidadesCarousel() {
   }, [])
 
   return (
-    <Box sx={{ maxWidth: 1100, mx: "auto", my: 4 }}>
-      <Slide 
-        direction="left" 
-        in={isTitleVisible} 
-        {...(isTitleVisible ? { timeout: 1000 } : {})}
-      >
-        <Typography 
-          component={'div'} 
-          variant="h4" 
-          align="left" 
-          fontWeight={700} 
-          gutterBottom 
-          ref={titleRef} 
-        >
+    <Box sx={{ maxWidth: 1200, mx: "auto", my: 4, px: { xs: 1, sm: 2 } }}>
+      <Slide direction="left" in={isTitleVisible} {...(isTitleVisible ? { timeout: 1000 } : {})}>
+        <Typography component={'div'} variant="h4" align="left" fontWeight={800} gutterBottom ref={titleRef}>
           Nuestras Especialidades
         </Typography>
       </Slide>
+      <Box
+        sx={{
+          // Estilo para crear padding entre slides
+          '& .slick-slide > div': { px: { xs: 0.5, sm: 1.5 }, py: 1 },
+          '& .slick-dots li button:before': { fontSize: 10 },
+          '& .slick-dots li.slick-active button:before': { opacity: 0.9 },
+        }}
+      >
+
         <Slider 
-            centerMode
-            dots
-            infinite
-            autoplay
-            draggable
-            slidesToShow={2}
-            slidesToScroll={1}
-            autoplaySpeed={5600}
-            responsive={[
-                {breakpoint: 600, settings: {slidesToShow: 1}},
-                {breakpoint: 1024, settings: {slidesToShow: 2}},
-            ]}
-            prevArrow={<CustomPrevArrow />}
-            nextArrow={<CustomNextArrow />}
-            >
-            {!isloading ? especialidades.map((esp) => (
-              <EspecialidadCard
-                description={esp.descripcion}
-                name={esp.nombre}
-                image={esp.image}
+          centerMode
+          dots
+          infinite
+          autoplay
+          draggable
+          slidesToShow={2}
+          slidesToScroll={1}
+          autoplaySpeed={5600}
+          responsive={[
+            { breakpoint: 600, settings: { slidesToShow: 1 } },
+            { breakpoint: 1024, settings: { slidesToShow: 2 } },
+          ]}
+          prevArrow={<CustomPrevArrow />}
+          nextArrow={<CustomNextArrow />}
+        >
+           {!isloading ? (
+            especialidades.length > 0 ? (
+              especialidades.map((esp) => (
+                <EspecialidadCard
+                  key={(esp as any).id ?? esp.nombre}
+                  description={esp.descripcion}
+                  name={esp.nombre}
+                  image={esp.image}
                 />
-            )) : [1,2,3,4].map((n) => (
-              <EspecialidadSkeleton key={n} />
-            ))}
+              ))
+            ) : (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <Typography color="text.secondary">Pronto publicaremos nuestras especialidades.</Typography>
+              </Box>
+            )
+          ) : (
+            [1, 2, 3, 4].map((n) => <EspecialidadSkeleton key={n} />)
+          )}
         </Slider>
+      </Box>
     </Box>
   );
 }
+
+

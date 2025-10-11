@@ -21,7 +21,7 @@ const EspecialidadCard: React.FC<EspecialidadCardProps> = ({description, name, i
     const src = resolveImageSrc(image)
     return (
         <Box key={name} p={2}>
-            <Card elevation={7} sx={{height: 350}}>
+            <Card elevation={7} sx={{height: 350, overflowY: 'auto'}} >
                 {image ? (
                     <CardMedia
                         sx={{ height: 140, display: image ? "block" : "none" }}
