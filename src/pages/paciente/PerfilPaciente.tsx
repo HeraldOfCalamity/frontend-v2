@@ -58,28 +58,28 @@ export default function PerfilPaciente(){
       <form onSubmit={handleSubmit((values) => onUpdatePhone(values.phone || ''))}>
         <Grid container spacing={2}>
           <Grid size={{xs:12, md:6}} >
-            <TextField label="Nombre" fullWidth value={paciente.user.name} slotProps={{
+            <TextField label="Nombre" fullWidth value={paciente?.user?.name} slotProps={{
                 input:{
                     readOnly: true
                 }
             }} />
           </Grid>
           <Grid size={{xs:12, md:6}} >
-            <TextField label="Apellido" fullWidth value={paciente.user.lastname} slotProps={{
+            <TextField label="Apellido" fullWidth value={paciente?.user?.lastname} slotProps={{
                 input:{
                     readOnly: true
                 }
             }}  />
           </Grid>
           <Grid size={{xs:12, md:6}} >
-            <TextField label="Correo" fullWidth value={paciente.user.email} slotProps={{
+            <TextField label="Correo" fullWidth value={paciente?.user?.email} slotProps={{
                 input:{
                     readOnly: true
                 }
             }}  />
           </Grid>
           <Grid size={{xs:12, md:6}} >
-            <TextField label="CI" fullWidth value={paciente.user.ci} slotProps={{
+            <TextField label="CI" fullWidth value={paciente?.user?.ci} slotProps={{
                 input:{
                     readOnly: true
                 }
@@ -100,14 +100,14 @@ export default function PerfilPaciente(){
             }}  />
           </Grid>
           <Grid size={{xs:12, md:6}} >
-            <TextField label="Creado el" fullWidth value={dayjs(paciente.user.createdAt).format('DD/MM/YYYY')} slotProps={{
+            <TextField label="Creado el" fullWidth value={dayjs(paciente?.user?.createdAt).format('DD/MM/YYYY')} slotProps={{
                 input:{
                     readOnly: true
                 }
             }}  />
           </Grid>
           <Grid size={{xs:12, md:6}} >
-            <TextField label="Última actualización" fullWidth value={dayjs(paciente.user.updatedAt).format('DD/MM/YYYY')} slotProps={{
+            <TextField label="Última actualización" fullWidth value={dayjs(paciente?.user?.updatedAt).format('DD/MM/YYYY')} slotProps={{
                 input:{
                     readOnly: true
                 }
