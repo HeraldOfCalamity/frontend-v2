@@ -99,7 +99,7 @@ export default function PacientesPage(){
         {field: 'lastname', headerName: 'Apellidos', align: 'center'},
         {field: 'tipo_sangre', headerName: 'Tipo de Sangre', align: 'center'},
         {
-            field: 'Fecha_nacimiento', 
+            field: 'fecha_nacimiento', 
             headerName: 'Fecha de Nacimiento', 
             align: 'center',
             render: (v) => dayjs(v).format('DD/MM/YYYY')
