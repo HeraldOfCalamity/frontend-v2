@@ -21,9 +21,9 @@ import {
   getSignedImageUrl,
   agregarEntrada as agregarEntradaService,
   groupNer,
-  NER_COLORS,
   registrarAnexo,
   setRecomendaciones,
+  getNerChipSx,
 } from "../../../api/historialService";
 import { compressToWebp } from "../../../utils/evoImage";
 import Swal from "sweetalert2";
@@ -1211,7 +1211,7 @@ function filterSpansForField(
                           key={`${label}-${i}`}
                           size="small"
                           label={t}
-                          color={NER_COLORS[label] || "default"}
+                          sx={getNerChipSx(label)}
                         />
                       ))}
                     </Stack>

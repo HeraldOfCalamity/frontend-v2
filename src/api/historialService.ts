@@ -70,24 +70,31 @@ export type NerSpan = {
   confidence?: number;
 };
 
-export const NER_COLORS: Record<string, "default"|"primary"|"secondary"|"success"|"warning"|"error"|"info"> = {
-  SYMPTOM: "error",
-  PAIN_QUALITY: "warning",
-  PAIN_INTENSITY: "warning",
-  BODY_PART: "info",
-  MOVEMENT: "info",
-  FUNCTIONAL_LIMITATION: "secondary",
-  DIAGNOSIS: "error",
-  TREATMENT: "success",
-  EXERCISE: "success",
-  FREQUENCY: "secondary",
-  SCALE: "primary",
-  MEASURE: "primary",
-  DURATION: "primary",
-  ROM: "primary",
-  LATERALITY: "secondary",
-  TEST: "info",
+export const NER_PASTELS: Record<string, string> = {
+  SYMPTOM:              '#F7C1C1', 
+  PAIN_QUALITY:         '#FFD2B1', 
+  PAIN_INTENSITY:       '#FFE6BF', 
+  BODY_PART:            '#BFD9F2', 
+  MOVEMENT:             '#B8E6DF', 
+  FUNCTIONAL_LIMITATION:'#D7C4F6', 
+  DIAGNOSIS:            '#F3A5AE', 
+  TREATMENT:            '#B8E8C7', 
+  EXERCISE:             '#D5F3D8', 
+  FREQUENCY:            '#D9C6E8', 
+  SCALE:                '#C9D0FA', 
+  MEASURE:              '#CDEEEA', 
+  DURATION:             '#F7E8C2', 
+  ROM:                  '#E6F2C8', 
+  LATERALITY:           '#EAD2F5', 
+  TEST:                 '#CDE7F7', 
 };
+
+// 2) Helper para estilo del Chip (texto oscuro para todos estos pasteles)
+export const getNerChipSx = (label: string) => ({
+  bgcolor: NER_PASTELS[label] ?? 'grey.100',
+  color: '#1A1A1A',
+  border: '1px solid rgba(0,0,0,0.08)',
+});
 
 export function groupNer(raw?: unknown) {
   // 1) aplanar: soporta array de spans o array de { section, ents: NerSpan[] }

@@ -10,7 +10,7 @@ import { useSpeech, useSpeechCommands } from "../../../context/SpeechContext";
 import type { HistorialClinico, NerSpan } from "../../../api/historialService";
 import { Mic, MicOff } from "@mui/icons-material";
 import Swal from "sweetalert2";
-import { actualizarAnamnesis, groupNer, NER_COLORS, setAnamnesisOnce } from "../../../api/historialService";
+import { actualizarAnamnesis, getNerChipSx, groupNer, NER_PASTELS, setAnamnesisOnce } from "../../../api/historialService";
 import { labelEs } from "../../../utils/nerLabels";
 
 /** Claves de los 4 campos */
@@ -504,7 +504,7 @@ export default function Anamnesis({
                   </Typography>
                   <Stack direction="row" gap={1} flexWrap="wrap">
                     {items.map((t, i) => (
-                      <Chip key={`${label}-${i}`} label={t} color={NER_COLORS[label] || "default"} size="small" />
+                      <Chip key={`${label}-${i}`} label={t} sx={getNerChipSx(label)} size="small" />
                     ))}
                   </Stack>
                 </Box>
