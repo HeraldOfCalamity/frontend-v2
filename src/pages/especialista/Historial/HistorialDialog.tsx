@@ -237,7 +237,7 @@ export default function HistorialDialog({
       setHistorial(fresh)
       setOpenNewTrat(false)
       setMotivoNew('');
-      Swal.fire('Exito', 'Tratamiento agregado', 'success');
+      Swal.fire('Exito', 'Consulta agregada', 'success');
     }catch (err: any){
       Swal.fire('Error', `${err}`, 'error');
     }finally{
@@ -248,7 +248,7 @@ export default function HistorialDialog({
   const handleVolverTratamientos = async () => {
     if(!readonly){
       const result = await Swal.fire({
-        title: 'Volver a tratamientos',
+        title: 'Volver a consultas',
         text: 'Está seguro de volver? La información no guardada se perderá.',
         icon: 'warning',
         showCancelButton: true,
@@ -361,7 +361,7 @@ function buildTablaTratamientos() {
 
   return `
     <div class="section">
-      <div class="section-head">Tratamientos realizados</div>
+      <div class="section-head">Consultar realizadas</div>
       <div class="section-body">
         <table class="table">
           <thead>
@@ -369,7 +369,7 @@ function buildTablaTratamientos() {
               <th>#</th><th>Motivo</th><th>Creado</th><th class="right">Entradas</th><th>Rango de fechas</th>
             </tr>
           </thead>
-          <tbody>${rows || `<tr><td colspan="5">Sin tratamientos.</td></tr>`}</tbody>
+          <tbody>${rows || `<tr><td colspan="5">Sin consultas.</td></tr>`}</tbody>
         </table>
       </div>
     </div>
@@ -423,7 +423,7 @@ function buildTablaTratamientos() {
                 {/* Botón volver en modo detalle */}
                 {uiMode === 'detail' && (
                   <Button variant="contained" onClick={() => handleVolverTratamientos()}>
-                    ← Volver a tratamientos
+                    ← Volver a consultas
                   </Button>
                 )}
                 {showEndAttention && citaId && (
@@ -488,7 +488,7 @@ function buildTablaTratamientos() {
             {uiMode === 'list' && (
               <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                 <Stack direction={{ xs:'column', sm:'row' }} gap={1} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
-                  <Typography variant="h6" fontWeight={700}>Tratamientos</Typography>
+                  <Typography variant="h6" fontWeight={700}>Consultas</Typography>
                   <Button color="secondary" variant="outlined" onClick={handlePrintResumen}>Imprimir resumen</Button>
                   {!readonly && (
                     <Button
@@ -496,13 +496,13 @@ function buildTablaTratamientos() {
                       onClick={() => setOpenNewTrat(true)}
                       disabled={!historial?._id && !pacienteId}
                     >
-                      Agregar tratamiento
+                      Agregar consulta
                     </Button>
                   )}
                 </Stack>
                 <Stack mt={2} gap={1}>
                   {tratamientos.length === 0 ? (
-                    <Alert severity="info">No hay tratamientos. Usa “Agregar tratamiento”.</Alert>
+                    <Alert severity="info">No hay consultar. Usa “Agregar consulta”.</Alert>
                   ) : (
                     tratamientos.map((t: any) => (
                       <Paper key={t.id} variant="outlined" sx={{ p: 1.5 }}>
@@ -595,7 +595,7 @@ function buildTablaTratamientos() {
       </Dialog>
       {/* Nuevo Tratamiento */}
       <Dialog open={openNewTrat} onClose={() => setOpenNewTrat(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Nuevo tratamiento</DialogTitle>
+        <DialogTitle>Nueva consulta</DialogTitle>
         <DialogContent dividers>
           <TextField
             label="Motivo (opcional)"
