@@ -88,7 +88,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
         <>
             <Dialog open={openLoginModal} onClose={handleLoginModalClose} maxWidth='xs' fullWidth>
                 <DialogTitle variant="h5" fontWeight={600} >
-                    Iniciar Sesion
+                    Iniciar Sesión
                 </DialogTitle>
                 <form>
                     <DialogContent>
